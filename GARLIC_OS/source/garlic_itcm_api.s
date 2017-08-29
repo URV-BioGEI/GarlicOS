@@ -98,7 +98,9 @@ _ga_printf:
 	ldr r4, =_gd_pidz		@; R4 = dirección _gd_pidz
 	ldr r3, [r4]
 	and r3, #0x3			@; R3 = ventana de salida (zócalo actual MOD 4)
-	bl _gg_escribir
+	push {r12}
+	bl printf				@; llamada de prueba
+	pop {r12}
 	pop {r4, pc}
 
 
