@@ -1,0 +1,6 @@
+*.d
+*.o
+*.elf
+*.nds
+*.pnps
+*.DS_Store

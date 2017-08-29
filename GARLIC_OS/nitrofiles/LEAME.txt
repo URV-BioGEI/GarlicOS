@@ -1,0 +1,12 @@
+Este fichero describe el proposito del directorio donde se encuentra.
+
+Se trata del contenido de un disco "virtual" que carga en la ROM definida por el fichero NDS
+que contiene el proyecto ejecutable.
+
+Desde el código del proyecto se puede acceder al contenido de los ficheros y directorios
+almacenados en el directorio "nitrofiles", usando las funciones de la librería "libfilesystem.a",
+que implementa las funciones de acceso a ficheros definidas por el sistema NITRO.
+
+Para más información, consultar los ficheros siguientes:
+- "devkitPro/libnds/include/filesystem.h"
+- "devkitPro/examples/nds/filesystem/nitrofs/nitrodir/source/directory.c"

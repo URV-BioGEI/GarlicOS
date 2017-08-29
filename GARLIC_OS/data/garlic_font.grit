@@ -1,0 +1,6 @@
+gfx: tile, 8bpp, cprs: lz77
+area: (0,0)-(1024,8)   [1024, 8]
+meta: 1x1 tiles (8x8 px)
+map: -
+pal: 0-256 [256]
+files:  garlic_font.h   garlic_font.s
