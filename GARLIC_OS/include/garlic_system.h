@@ -4,7 +4,7 @@
 						rutinas del sistema operativo GARLIC (versión 1.0)
 
 	Analista-programador: santiago.romani@urv.cat
-	Programador P: xxx.xxx@estudiants.urv.cat
+	Programador P: cristofol.dauden@estudiants.urv.cat
 	Programador M: yyy.yyy@estudiants.urv.cat
 	Programador G: zzz.zzz@estudiants.urv.cat
 	Programador T: uuu.uuu@estudiants.urv.cat
