@@ -69,8 +69,33 @@ _gp_IntrMain:
 	@; se encarga de actualizar los tics, intercambiar procesos, etc.
 _gp_rsiVBL:
 	push {r4-r7, lr}
-
-
+	ldr r4, =_gd_tickCount	@; obtenim pa posició de la variable _tickCount
+	ldr r5,[r4]				@; obtenim el nombre de tics en r5
+	add r5, r5, #1			@; incrementem el nombre de tics en 1
+	str r5, [r4]			@; actualitzem la variable _tickCount
+	ldr r4, =_gd_nReady		@; obtenim la posició de la variable _gd_nReady
+	ldr r5, [r4]			@; r1= processos en la cola de ready
+	cmp r5, #0				@; mirem si hi ha processos en la cua
+	beq .Lfi_rsiVBL			@; sortim de la RSI sense dur a terme un canvi de context
+	ldr r4, =_gd_pidz		@; obtim la variable _gd_pidz on hi ha (Identificador de proceso + zócalo actual)
+	ldr r5, [r4]			@; obtenim l'identificador del procés
+	cmp r5, #0				@; mirem si el procés en execució és el SO
+	beq .Lrsi_salvar_context	@; si ho és passem directament a salvar el seu context
+	lsr r5, r4, #4			@; mirem el cas que no sigui un procés que ha acabat, pid=0, per fer-ho desplacem els 4 bits de menys pes (zòcalo)
+	cmp r5, #0				@; comprobem que el pid no sigui 0
+	beq .Lrsi_restauraProc	@; si ho és no salvem el context
+.Lrsi_salvar_context:
+	ldr r4, =_gd_nReady		@; r4= direcció de _gd_nready
+	ldr r5, [r4]			@; r5= núm de processos en Ready
+	ldr r6, =_gd_pidz		@; r6= direcció de _gd_pidz
+	bl _gp_salvarProc		@; cridem la funció salvar context amb els paràmetres en els registres que toca
+	str r5, [r4]			@; Actualitzem el num de processos en la cua de Ready, valor que ens retorna la funció 
+.Lrsi_restauraProc:
+	ldr r4, =_gd_nReady		@; r4= direcció de _gd_nready
+	ldr r5, [r4]			@; r5= núm de processos en Ready
+	ldr r6, =_gd_pidz		@; r6= direcció de _gd_pidz
+	bl _gp_restaurarProc	@;cridem la funció salvar context amb els paràmetres en els registres que toca
+.Lfi_rsiVBL:
 	pop {r4-r7, pc}
 
 
