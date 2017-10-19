@@ -109,8 +109,62 @@ _gp_rsiVBL:
 	@; R5: nuevo número de procesos en READY (+1)
 _gp_salvarProc:
 	push {r8-r11, lr}
-
-
+	ldr r8, [r6]  			@; obteim el PID més zócalo
+	and r8, r8, #15			@; r8= num de zócalo, ens quedem amb els 4 bits de menys pes del pidz
+	ldr r9, =_gd_qReady		@; carreguem en r9 la direccio de la cua de Ready
+	strb r8, [r9, r5]		@; guardem el nombre de zocalo del procés en l'última posició de la cua de Ready
+	add r5, #1				@; incrementem el nombre de processos en la cua de Ready
+	ldr r9, =_gd_pcbs		@; direcció del array de PCBs
+	@;mul r10, r8, #24		@; desplaçament per arrivar al PCB del zócalo actual: num de zócalo * 24, on 24 es la mida de cada PCB (6 ints, 6 * 4 bytes per int)
+	@;add r9, r10				@; R9 = direcció del PCB del procés actual
+	mov r10, #24
+	mla r9, r10, r8, r9		@; mateix que en les dos opp comentades anteriorment
+	@; guardem PC
+	mov r10, sp				@; r10 = SP_irq (punter al top de la pila IRQ)
+	ldr r8, [r10, #60]		@; r8 = PC del procés a desbancar (+60 per l'estruct. de la pila IRQ veure a imatge)
+	str r8, [r9, #4]		@; guardem el PC(r15) en la seva posició del PCB
+	@; guardem el CSPR
+	mrs r11, SPSR			@; movem el contingut del SPSR (CSPR del procés) al registre r11
+	str r11, [r9, #12]		@; guardem el CSPR en el camp Status del PCB
+	@; canviem el mode d'execució
+	mrs r8, CPSR			@; r8 = CPSR
+	orr r8, #0x1F			@; Mode System, 5 últims bits a 1
+	msr CPSR, r8			@; Canvem el mode
+	@; apilem els registres r0-r12 i r14
+	push {r14}				@; Apilem R14
+	ldr r8, [r10, #56]		@; r8 = R12 (emmagatzemat en la posició 14 de SP_IRQ)
+	push {r8}				@; Apilem R12
+	ldr r8, [r10, #12]		@; r8 = R11 (emmagatzemat en la posició 3 de SP_IRQ)
+	push {r8}				@; Apilem R11
+	ldr r8, [r10, #8]		@; r8 = R10 (emmagatzemat en la posició 2 de SP_IRQ)
+	push {r8}				@; Apilem R10
+	ldr r8, [r10, #4]		@; r8 = R9 (emmagatzemat en la posició 1 de SP_IRQ)
+	push {r8}				@; Apilem R9	
+	ldr r8, [r10]			@; r8 = R8 (emmagatzemat en la posició 0 de SP_IRQ)
+	push {r8}				@; Apilem R8
+	ldr r8, [r10, #32]		@; r8 = R7 (emmagatzemat en la posició 8 de SP_IRQ)
+	push {r8}				@; Apilem R7	
+	ldr r8, [r10, #28]		@; r8 = R6 (emmagatzemat en la posició 7 de SP_IRQ)
+	push {r8}				@; Apilem R6
+	ldr r8, [r10, #24]		@; r8 = R5 (emmagatzemat en la posició 6 de SP_IRQ)
+	push {r8}				@; Apilem R5	
+	ldr r8, [r10, #20]		@; r8 = R4 (emmagatzemat en la posició 5 de SP_IRQ)
+	push {r8}				@; Apilem R4
+	ldr r8, [r10, #52]		@; r8 = R3 (emmagatzemat en la posició 13 de SP_IRQ)
+	push {r8}				@; Apilem R3	
+	ldr r8, [r10, #48]		@; r8 = R2 (emmagatzemat en la posició 12 de SP_IRQ)
+	push {r8}				@; Apilem R2
+	ldr r8, [r10, #44]		@; r8 = R1 (emmagatzemat en la posició 11 de SP_IRQ)
+	push {r8}				@; Apilem R1
+	ldr r8, [r10, #40]		@; r8 = R0 (emmagatzemat en la posició 10 de SP_IRQ)
+	push {r8}				@; Apilem R0	
+	@; guardem el SP(r13) del proces en el PCB
+	str r13, [r9, #8]		@; guardem el r13 en la pos. SP del PCB
+	@; canviem el mode d'execució
+	mrs r8, CPSR			@; r8 = CPSR
+	and r8, #0xFFFFFFE0		@; Mode User
+	orr r8, #0x12			@; Mode IRQ
+	msr CPSR, r8			@; Canvem el mode
 	pop {r8-r11, pc}
 
 
@@ -121,7 +175,7 @@ _gp_salvarProc:
 	@; R6: dirección _gd_pidz
 _gp_restaurarProc:
 	push {r8-r11, lr}
-
+	
 
 	pop {r8-r11, pc}
 
