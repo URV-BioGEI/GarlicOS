@@ -114,16 +114,16 @@ $(BUILD):
 clean:
 	@echo "Removing ALL intermediate files... "
 	@echo "Por favor, recuerda que habitualmente NO es necesario hacer un 'clean' antes de un 'make'"
-	@sleep 3
+#	@sleep 3
 	@rm -fr $(BUILD) $(TARGET).elf $(TARGET).nds
 
 #---------------------------------------------------------------------------------
-run : $(TARGET).nds
+run: $(TARGET).nds
 	@echo "runing $(TARGET).nds with DesmuME"
 	@$(DESMUME)/DeSmuME.exe $(TARGET).nds &
 
 #---------------------------------------------------------------------------------
-debug : $(TARGET).nds $(TARGET).elf
+debug: $(TARGET).nds $(TARGET).elf
 	@echo "testing $(TARGET).nds/.elf with DeSmuME_dev/Insight (gdb) through TCP port=1000"
 	@$(DESMUME)/DeSmuME_dev.exe --arm9gdb=1000 $(TARGET).nds &
 	@$(DEVKITPRO)/insight/bin/arm-eabi-insight $(TARGET).elf &
@@ -147,7 +147,7 @@ $(OUTPUT).elf	:	$(OFILES) $(SFILES)
 #---------------------------------------------------------------------------------
 %.elf:
 	@echo linking $(notdir $@)
-	$(LD)  $(LDFLAGS) $(OFILES) $(LIBPATHS) $(LIBS) $(SFILES) -o $@
+	$(LD)  $(LDFLAGS) $(OFILES) $(LIBPATHS) $(LIBS) $(SFILES) $(GARLICAPI)/GARLIC_API.o -o $@
 
 #---------------------------------------------------------------------------------
 %.bin.o	:	%.bin
