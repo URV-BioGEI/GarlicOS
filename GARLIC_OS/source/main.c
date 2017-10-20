@@ -1,21 +1,19 @@
 /*------------------------------------------------------------------------------
 
-	"main.c" : fase 1 / programador G
+	"main.c" : fase 1 / programador P
 
-	Programa de prueba de llamada de funciones gráficas de GARLIC 1.0,
-	pero sin cargar procesos en memoria ni multiplexación.
+	Programa de prueba de creación y multiplexación de procesos en GARLIC 1.0,
+	pero sin cargar procesos en memoria ni utilizar llamadas a _gg_escribir().
 
 ------------------------------------------------------------------------------*/
 #include <nds.h>
-
+#include <stdio.h>
 #include <garlic_system.h>	// definición de funciones y variables de sistema
-
 #include <GARLIC_API.h>		// inclusión del API para simular un proceso
 
 int hola(int);				// función que simula la ejecución del proceso
 extern int prnt(int);		// otra función (externa) de test correspondiente
 							// a un proceso de usuario
-
 extern int * punixTime;		// puntero a zona de memoria con el tiempo real
 
 
@@ -28,9 +26,18 @@ void inicializarSistema() {
 	_gg_iniGrafA();			// inicializar procesador gráfico A
 	for (v = 0; v < 4; v++)	// para todas las ventanas
 		_gd_wbfs[v].pControl = 0;		// inicializar los buffers de ventana
+
+	consoleDemoInit();		// inicializar consola, sólo para esta simulación
 	
 	_gd_seed = *punixTime;	// inicializar semilla para números aleatorios con
 	_gd_seed <<= 16;		// el valor de tiempo real UNIX, desplazado 16 bits
+	
+	irqInitHandler(_gp_IntrMain);	// instalar rutina principal interrupciones
+	irqSet(IRQ_VBLANK, _gp_rsiVBL);	// instalar RSI de vertical Blank
+	irqEnable(IRQ_VBLANK);			// activar interrupciones de vertical Blank
+	REG_IME = IME_ENABLE;			// activar las interrupciones en general
+	
+	_gd_pcbs[0].keyName = 0x4C524147;	// "GARL"
 }
 
 
@@ -63,7 +70,8 @@ int main(int argc, char **argv) {
 }
 
 
-/* Proceso de prueba */
+
+/* Proceso de prueba, con llamadas a las funciones del API del sistema Garlic */
 //------------------------------------------------------------------------------
 int hola(int arg) {
 //------------------------------------------------------------------------------
