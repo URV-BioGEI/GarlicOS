@@ -10,6 +10,8 @@
 #include <GARLIC_API.h>			/* definición de las funciones API de GARLIC */
 #include <nds.h>
 #include <stdio.h>
+#include <garlic_system.h>	// definición de funciones y variables de sistema
+#include <garlic_font.h>	// definición gráfica de caracteres
 
 /* definicion de variables globales */
 
