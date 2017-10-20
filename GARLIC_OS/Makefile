@@ -147,7 +147,7 @@ $(OUTPUT).elf	:	$(OFILES) $(SFILES)
 #---------------------------------------------------------------------------------
 %.elf:
 	@echo linking $(notdir $@)
-	$(LD)  $(LDFLAGS) $(OFILES) $(LIBPATHS) $(LIBS) $(SFILES) $(GARLICAPI)/GARLIC_API.o -o $@
+	$(LD)  $(LDFLAGS) $(OFILES) $(LIBPATHS) $(LIBS) $(SFILES) -o $@
 
 #---------------------------------------------------------------------------------
 %.bin.o	:	%.bin
