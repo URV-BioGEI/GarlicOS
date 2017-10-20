@@ -272,8 +272,63 @@ _gp_numProc:
 	@; R0: 0 si no hay problema, >0 si no se puede crear el proceso
 _gp_crearProc:
 	push {lr}
-
-
+	@; comprovem que el  num de zócalo no sigui el del So o ja estigui assignat a un procés
+	cmp r1, #0				@; comprovem si el num de zócalo és 0 (SO)
+	beq .Lcrear_proc_err	@; si ho és final de la funció
+	mov r4, #24
+	ldr r5, =_gd_pcbs		@; r5=direcció de l'array de PCBs
+	mla r6, r1, r4, r5		@; desplaçament per arrivar al PCB del zócalo actual: num de zócalo * 24 + direcció _gd_pcbs, on 24 es la mida de cada PCB (6 ints, 6 * 4 bytes per int)
+	ldr r7, [r6]			@; r7= PID del procés
+	cmp r7, #0				@; comprovem que el PID sigui 0, cap procés assignat a aquest zócalo
+	bne .Lcrear_proc_err	@; si ja esta ocupat per un altre procés, final de la funció
+	@; nou PID pel procés i el guardem en el PCB
+	ldr r4, =_gd_pidCount	@; r4=direcció on tenim el pidCount
+	ldr r5, [r4]			@; r5=valor de la variable pidCount
+	add r5, #1				@; incrementem la variable pidCount
+	str r5, [r4]			@; actulitzem la variable pidCount
+	str r5, [r6]			@; guardem la nova pid del procés en el seu PCB
+	@; guardem la direcció de la primera instrucció de la funció
+	str r0, [r6, #4]		@; guardem primera inst, en el camp PC del PCB
+	@; guardem 4 primers caràcters del prog.
+	ldr r4, [r2]			@; r4=4 primers caràct. del prog
+	str r4, [r6, #16]		@; guardem els caràc. en el camp KeyName  del PCB
+	@; calculem la direcció base de la pila del procés
+	ldr r4, =_gd_stacks		@; vector de piles dels processos actius (15*128*4)
+	mov r5, #512			@; r5=mida de cada pila (128*4)
+	mla r7, r5, r1, r4		@; càlcul de la pos. de la pila actual (núm zóclao*mida_pila + direcció inicial vector piles
+	@; sub r7, #4				
+	@; guardem en la pila el valor inicial dels registres
+	ldr r4, =_gp_terminarProc	@;r4= direcció de la rutina terminar_proc
+	str r4, [r7]			@;guardem r4 (r14) en la pila  
+	mov r4, #0				@; valor que adoptaran els registres
+	mov r5, #0				@; comptador de bucle
+.Lcrear_proc_bucle:
+	sub r7, #4				@; augmentem el top de la pila
+	str r4, [r7]			@; guardem registre
+	add r5, #1				@; incrementem el comptador
+	cmp r5, #12				@; mirem si s'han guardat els registres de (r12-r1)
+	bne .Lcrear_proc_bucle	@; sinó retornem a l'inici del bucle
+	sub r7, #4				@; augmentem el top de la pila
+	str r3, [r7]			@; guardem en r0 els arguments de programa
+	@; guardem el regitre r13 en el camp SP del PCB
+	str r7, [r6, #8]		@; guardem el top de la pila en el camp SP del PCB
+	@; guardem el registre CPSR amb els seus valors inicials per defecte i mode systema
+	mov r7, #0x1F			@;Tots els flags a 0 i el mode de execució System
+	str r7, [r6, #12]		@; guardem el registre CPSR en el camp status del PCB
+	@; inicialtzem els altres camps del PCB
+	str r4, [r6, #20]		@; camp workTocks del PCB a 0
+	@; guardem el num de zócalo en la última pos. de la cua de Ready i augmentem el num de proc en nReady
+	ldr r5, =_gd_nReady		@; carreguem en r5 la direcció de nReady
+	ldr r6, [r5]			@; r6=num de proc. en la cua de Ready
+	ldr r4, =_gd_qReady		@; carreguem en r4 la direccio de la cua de Ready
+	strb r1, [r4, r6]		@; guardem el nombre de zocalo del procés en l'última posició de la cua de Ready
+	add r6, #1				@; incrementem el nombre de processos en la cua de Ready
+	str r6, [r5]			@; actualitzem el nombre de proc. en la cua de REady
+	mov r0, #0				@; retornem 0 ja que s'ha creat el procés correctament
+	b .Lfi_crear_proc		@; saltem al final de la funció
+.Lcrear_proc_err:
+	mov r0, #1				@; no s'ha pogut crear el procés
+.Lfi_crear_proc:
 	pop {pc}
 
 
