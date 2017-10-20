@@ -25,7 +25,14 @@ void _gt_initKB()
 		arg 3: MapBase = 0 -> @fondo + 0*2KB = 0x0600 0000
 		arg 4: TileBase = 1 -> @fondo + 1*16KB = 0x0600 0400
 	*/
-	bgInitSub(BG_PRIORITY(0), BgType_Text4bpp, BgSize_T_256x256, 0, 1)
+	int tecl_bg = bgInitSub(BG_PRIORITY(0), BgType_Text4bpp, BgSize_T_256x256, 0, 1);
+	//inicialització del fons gràfics 2 i 3: S'ha de tenir en compte el tamany que ocupará cada mapa
+	//tamany mapa=nº posicions*nºbytes/posició=64*64posicions * 2bytes/posició =8192bytes= 8K (separació de 4 mapbase)
+	//void decompress(const void * data, void * dst, DecompressType type)
+	decompress(garlic_fontTiles, bgGetGfxPtr(tecl_bg), LZ77Vram);
+	dmaCopy(garlic_fontPal, BG_PALETTE, sizeof(garlic_fontPal));
+	
+	bgUpdate();
 }
 
 void _gt_showKB()
