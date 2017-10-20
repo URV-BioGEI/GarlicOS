@@ -175,8 +175,75 @@ _gp_salvarProc:
 	@; R6: dirección _gd_pidz
 _gp_restaurarProc:
 	push {r8-r11, lr}
-	
-
+	ldr r8, =_gd_qReady 		@; carreguem en r8 la direccio de la cua de Ready
+	ldrb r9, [r8]				@; R9= zócalo del procés en la primera pos. de la cua de Ready
+	sub r5, r5, #1				@; decrementem el nombre de processos en la cua de Ready
+	str r5, [r4]				@; actualitzem el nombre de proc. en Ready
+	mov r10, #0					@; r10=num de proc desplaçats (en la pos. corresponent)
+	@; reordenem la cua de Ready
+.Lrest_proc_bucle1:
+	cmp r10, r5					@; mirem que quedin processos desordenats en la cua de Ready
+	beq .Lrest_proc_fibucle1	@; si no n'hi ha sortim del bucle
+	ldrb r11, [r8, #1]			@; r11 = zòcalo guardat en la següent posició de la cua de ready (i+1) 
+	strb r11, [r8]				@; guardem el nombre de zòcalo en la pos anterior a la que estava (i)
+	add r9, #1					@; avancem en la cua de Ready
+	add r10, #1					@; incrementem el comptador que indica el nombre de processos ordenats 
+	b .Lrest_proc_bucle1		@; retornem a l'inici del bucle
+.Lrest_proc_fibucle1:
+	@; construim el PIDz i el guardem en el _gd_pidz
+	mov r10, #24
+	ldr r8, =_gd_pcbs			@; r8=direcció de l'array de PCBs
+	mla r11, r10, r9, r8		@; desplaçament per arrivar al PCB del zócalo actual: num de zócalo * 24 + direcció _gd_pcbs, on 24 es la mida de cada PCB (6 ints, 6 * 4 bytes per int)
+	ldr r10, [r11]				@; r10= PID del procés
+	lsl r10, #4					@; desplacem els bits del PID als 28 de més pes
+	orr r10, r9					@; afegim en els 4 bits de menys el zócalo del proces
+	str r10, [r6]				@; guardem el pidz en _gd_pidz
+	@;recuperem r15 i el guradem en la pos. corresponent de la pila de procés
+	ldr r10, [r11, #4]			@; carreguem el PC del PCB
+	mov r8, sp					@; r8= punter de la pila IRQ
+	str r10, [r8, #60]			@; guardem el registre r15 (PC en la posició corresponent (15) de la pla IRQ)
+	@; recuperem el CPSR del procés i el guardem en el registre SPSR_irq
+	ldr r10, [r11, #12]			@; r10=CPSR del procés
+	msr SPSR, r10				@; guardem el CPSR en el registre SPSR_irq
+	@; canviem el mode d'execució
+	mrs r10, CPSR			@; r8 = CPSR
+	orr r10, #0x1F			@; Mode System, 5 últims bits a 1
+	msr CPSR, r10			@; Canvem el mode
+	@; recuperem el valor del registre r13 del procés a recuperar
+	ldr r13, [r11, #8]		@; guardem el SP del PCB en r13
+	@; desapilem els registres r0-r12 i r14 i els guardem en la pila IRQ
+	pop {r10}				@; Desapilem R0
+	ldr r10, [r8, #40]		@; R0 (emmagatzemat en la posició 10 de SP_IRQ)
+	pop {r10}				@; Desapilem R1
+	ldr r10, [r8, #44]		@; R1 (emmagatzemat en la posició 11 de SP_IRQ)
+	pop {r10}				@; Desapilem R2
+	ldr r10, [r8, #48]		@; R2 (emmagatzemat en la posició 12 de SP_IRQ)
+	pop {r10}				@; Desapilem R3
+	ldr r10, [r8, #52]		@; R3 (emmagatzemat en la posició 13 de SP_IRQ)
+	pop {r10}				@; Desapilem R4
+	ldr r10, [r8, #20]		@; R4 (emmagatzemat en la posició 5 de SP_IRQ)
+	pop {r10}				@; Desapilem R5
+	ldr r10, [r8, #24]		@; R5 (emmagatzemat en la posició 6 de SP_IRQ)
+	pop {r10}				@; Desapilem R6
+	ldr r10, [r8, #28]		@; R6 (emmagatzemat en la posició 7 de SP_IRQ)
+	pop {r10}				@; Desapilem R7
+	ldr r10, [r8, #32]		@; R7 (emmagatzemat en la posició 8 de SP_IRQ)
+	pop {r10}				@; Desapilem R8
+	ldr r10, [r8]			@; R8 (emmagatzemat en la posició 0 de SP_IRQ)
+	pop {r10}				@; Desapilem R9
+	ldr r10, [r8, #4]		@; R9 (emmagatzemat en la posició 1 de SP_IRQ)
+	pop {r10}				@; Desapilem R10
+	ldr r10, [r8, #8]		@; R10 (emmagatzemat en la posició 2 de SP_IRQ)
+	pop {r10}				@; Desapilem R11
+	ldr r10, [r8, #12]		@; R11 (emmagatzemat en la posició 3 de SP_IRQ)
+	pop {r10}				@; Desapilem R12
+	ldr r10, [r8, #56]		@; R12 (emmagatzemat en la posició 14 de SP_IRQ)
+	pop {r14}				@; Desapilem R14
+	@; canviem el mode d'execució
+	mrs r10, CPSR			@; r8 = CPSR
+	and r10, #0xFFFFFFE0	@; Mode User
+	orr r10, #0x12			@; Mode IRQ
+	msr CPSR, r10			@; Canvem el mode
 	pop {r8-r11, pc}
 
 
