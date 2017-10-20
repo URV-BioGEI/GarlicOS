@@ -101,6 +101,20 @@ _ga_printf:
 	bl _gg_escribir
 	pop {r4, pc}
 
-
+.global _ga_getstring
+	@;Parámetros
+	@; R0: 
+	@; R1: 
+	@; R2: 
+	@; R3: 
+	@;Resultado
+	@; R0: 0 si no hay problema, !=0 
+_ga_getstring:
+	push {r4, lr}
+	ldr r4, =_gd_pidz		@; R4 = direcció _gd_pidz, que conté PID (28 b) + Sòcol (4 b) d'esquerra a dreta
+	ldr r2, [r4]			@; Carreguem contingut de pidz a r2 (passada de parámetre)
+	and r2, #0x7			@; Fem clean dels bits de PID i obtenim Sòcol
+	bl _gg_escribir			@; Cridem a la rutina per a escriure
+	pop {r4, pc}
 .end
 
