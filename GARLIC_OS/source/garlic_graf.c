@@ -39,25 +39,25 @@ void _gg_generarMarco(int v)
 		for(int j=0;j<VCOLS;j++){
 			if(i==0){
 				if(j==0)
-					mapPtr[j+i*64]=103;
+					mapPtr[j+i*PCOLS]=103;
 				else 
 				{
 				if(j==VCOLS-1)
-					mapPtr[j+i*64]=102;
+					mapPtr[j+i*PCOLS]=102;
 				else{
-					mapPtr[j+i*64]=99;
+					mapPtr[j+i*PCOLS]=99;
 					}
 				}
 			}
 			else if(i==VFILS-1){
 				if(j==0)
-					mapPtr[j+i*64]=100;
+					mapPtr[j+i*PCOLS]=100;
 				else 
 				{
 				if(j==VCOLS-1)
-					mapPtr[j+i*64]=101;
+					mapPtr[j+i*PCOLS]=101;
 				else
-					mapPtr[j+i*64]=97;
+					mapPtr[j+i*PCOLS]=97;
 					}
 				}
 			else{
@@ -119,7 +119,7 @@ void _gg_iniGrafA()
 void _gg_procesarFormato(char *formato, unsigned int val1, unsigned int val2,
 																char *resultado)
 {
-
+	
 }
 
 
@@ -138,5 +138,52 @@ void _gg_procesarFormato(char *formato, unsigned int val1, unsigned int val2,
 */
 void _gg_escribir(char *formato, unsigned int val1, unsigned int val2, int ventana)
 {
-
+	int numChars, filaActual, i=0;
+	char caracter;
+	char resultado[98];
+	
+	_gg_procesarFormato(formato,val1,val2,resultado);
+	
+	//_gd_wbfs:vector con los buffers de las 4  ventanas
+	//garlicWBUF: estructura buffer de una ventana: pControl: 16 bits altos->número de línea ; 16 bits bajos->chars pendientes de escritura
+	
+	numChars= _gd_wbfs[ventana].pControl & 0xFFFF;  	//Seleccionamos los bits bajos de pControl con bitwise AND de 16 bits a 1
+	
+	filaActual= _gd_wbfs[ventana].pControl >> 16;		//Seleccionamos los bits altos de pControl mediante un shift de 16 bits
+	
+	caracter=resultado[i];
+	//mientras no se llegue al final de la cadena de formato
+	while(caracter!='\0'){
+		if(caracter=='\t'){
+			//mientras no se acaben de poner los 4 espacios o no se tenga que pasar a la siguiente linea
+			while(numChars<VCOLS && (numChars+1)%4 !=0){
+				_gd_wbfs[ventana].pChars[numChars]=' ';
+				numChars++;
+			}
+		}
+		else if(caracter!='\n'&&numChars<VCOLS){
+			//número ascii-32-> posición 0 será espacio en blanco. Adaptado para tiles
+			_gd_wbfs[ventana].pChars[numChars]=caracter;
+			numChars++;
+		}
+		else if(caracter=='\n'||numChars==VCOLS){
+			swiWaitForVBlank();		//Esperamos al siguiente periodo de retroceso vertical
+			//Cuando filaActual=VFILS tendremos que desplazar la ventana
+			if(filaActual+1==VFILS){
+				//_gg_desplazar(ventana);
+				filaActual--;
+			}
+			//_gg_escribirLinea();
+			numChars=0;				//numero de carácteres de la nueva linea=0
+			filaActual++;			//Saltamos a la siguiente linea
+		}
+		else{
+			
+		}
+		//Se actualiza pControl: shift a l'esquerra de filaActual->El que afegim quedará als 16 bits baixos, on estará numChars restant de la fila
+		_gd_wbfs[ventana].pControl=(filaActual<<16)+numChars;
+		
+		i++;
+		caracter=resultado[i];
+	}
 }
