@@ -21,14 +21,14 @@
 #define PCOLS	 VCOLS * PPART		// número de columnas totales (en pantalla)
 #define PFILS	 VFILS * PPART		// número de filas totales (en pantalla)
 
-int bg2, bg3;
+int bg2, bg3, bg2map;
 
 
 /* _gg_generarMarco: dibuja el marco de la ventana que se indica por parámetro*/
 void _gg_generarMarco(int v)
 {
 	//mapPtr=mapbase_bg3+desplazamiento de filas
-	u16 * mapPtr=bgGetMapPtr(bg3)+(((v)/PPART)*VFILS*2*VCOLS);
+	u16 * mapPtr=bgGetMapPtr(bg3)+(((v)/PPART)*VFILS*PCOLS);
 	//si es impar mapPtr=mapPtr+numColumnas de 1 ventana
 	if(v%PPART!=0){
 		mapPtr=(u16*)mapPtr+VCOLS*(v%PPART);
@@ -81,6 +81,7 @@ void _gg_iniGrafA()
 	//tamany mapa=nº posicions*nºbytes/posició=64*64posicions * 2bytes/posició =8192bytes= 8K (separació de 4 mapbase)
 	bg2=bgInit(2, BgType_ExRotation,BgSize_ER_512x512,0,3);
 	bg3=bgInit(3, BgType_ExRotation,BgSize_ER_512x512,4,3);
+	bg2map=(int)bgGetMapPtr(bg2);
 	//Prioritat fons 3>fons 2
 	bgSetPriority(bg3,0);
 	bgSetPriority(bg2,1);
@@ -95,8 +96,8 @@ void _gg_iniGrafA()
 	}
 	//escalar los fondos 2 y 3 para que se ajusten exactamente a las dimensiones de una pantalla de la nds
 	//zoom al 50%
-	bgSetScale(bg3,520, 520);
-	bgSetScale(bg2, 520, 520);
+	bgSetScale(bg3,512, 512);
+	bgSetScale(bg2, 512, 512);
 	bgUpdate();
 }
 
@@ -119,7 +120,48 @@ void _gg_iniGrafA()
 void _gg_procesarFormato(char *formato, unsigned int val1, unsigned int val2,
 																char *resultado)
 {
+	/*char caract;
+	int j=0,i=0,comptador,funcion;
+	caract=formato[j];
+	int var=2;
+	char *val;
 	
+	while(caract!='\0'){
+		if (caract=='%' && (formato[j+1]=='s'||formato[j+1]=='x'||formato[j+1]=='d'||formato[j+1]=='c')&&var>0){
+			j++;
+			caract=formato[j];
+			if(caract=='s'){
+			}
+			else if(caract=='c'){
+				if(var==2)
+					resultado[j]=val1;
+				else if(var==1)
+					resultado[j]=val2;
+			}
+			else if(caract=='d'){
+				if(var==2)
+					funcion=_gs_num2str_dec(val,sizeof(val),val1);
+				else if(var==1)
+					funcion=_gs_num2str_dec(val,sizeof(val),val);
+				var--;
+				comptador=0;
+				while(val[comptador]!='\0'){
+					resultado[i]=val[comptador];
+				}
+			}
+			else if(caract=='x'){
+				if(var==2)
+					funcion=_gs_num2str_hex(val,sizeof(val),val1);
+				else if(var==1)
+					funcion=_gs_num2str_hex(val,sizeof(val),val1);
+				var--;
+				comptador=0;
+				while(val[comptador]!='\0'){
+					resultado[i]=val[comptador];
+				}
+			}
+		}
+	}*/
 }
 
 
@@ -138,42 +180,44 @@ void _gg_procesarFormato(char *formato, unsigned int val1, unsigned int val2,
 */
 void _gg_escribir(char *formato, unsigned int val1, unsigned int val2, int ventana)
 {
-	int numChars, filaActual, i=0;
+	int numChars, filaActual, i=0,primer=0;
 	char caracter;
-	char resultado[98];
 	
-	_gg_procesarFormato(formato,val1,val2,resultado);
+	//char resultado[3*VCOLS];
+	//_gg_procesarFormato(formato,val1,val2,resultado);
 	
 	//_gd_wbfs:vector con los buffers de las 4  ventanas
 	//garlicWBUF: estructura buffer de una ventana: pControl: 16 bits altos->número de línea ; 16 bits bajos->chars pendientes de escritura
 	
 	numChars= _gd_wbfs[ventana].pControl & 0xFFFF;  	//Seleccionamos los bits bajos de pControl con bitwise AND de 16 bits a 1
-	
 	filaActual= _gd_wbfs[ventana].pControl >> 16;		//Seleccionamos los bits altos de pControl mediante un shift de 16 bits
 	
-	caracter=resultado[i];
+	caracter=formato[i];
 	//mientras no se llegue al final de la cadena de formato
 	while(caracter!='\0'){
 		if(caracter=='\t'){
+			if (numChars%4==0)
+				primer=1;
 			//mientras no se acaben de poner los 4 espacios o no se tenga que pasar a la siguiente linea
-			while(numChars<VCOLS && (numChars+1)%4 !=0){
+			while(((numChars<VCOLS) && (numChars%4 !=0 ))|| (primer==1)){
+				primer=0;
 				_gd_wbfs[ventana].pChars[numChars]=' ';
 				numChars++;
 			}
 		}
-		else if(caracter!='\n'&&numChars<VCOLS){
+		else if(caracter!='\n'&& numChars<VCOLS){
 			//número ascii-32-> posición 0 será espacio en blanco. Adaptado para tiles
 			_gd_wbfs[ventana].pChars[numChars]=caracter;
 			numChars++;
 		}
-		else if(caracter=='\n'||numChars==VCOLS){
+		if(caracter=='\n'|| numChars==VCOLS){
 			swiWaitForVBlank();		//Esperamos al siguiente periodo de retroceso vertical
 			//Cuando filaActual=VFILS tendremos que desplazar la ventana
-			if(filaActual+1==VFILS){
+			/*if(filaActual==VFILS-1){
 				//_gg_desplazar(ventana);
 				filaActual--;
-			}
-			//_gg_escribirLinea();
+			}*/
+			_gg_escribirLinea(ventana,filaActual,numChars);
 			numChars=0;				//numero de carácteres de la nueva linea=0
 			filaActual++;			//Saltamos a la siguiente linea
 		}
@@ -184,6 +228,6 @@ void _gg_escribir(char *formato, unsigned int val1, unsigned int val2, int venta
 		_gd_wbfs[ventana].pControl=(filaActual<<16)+numChars;
 		
 		i++;
-		caracter=resultado[i];
+		caracter=formato[i];
 	}
 }
