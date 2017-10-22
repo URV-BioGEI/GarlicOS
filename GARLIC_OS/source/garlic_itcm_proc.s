@@ -81,7 +81,7 @@ _gp_rsiVBL:
 	ldr r5, [r4]			@; obtenim l'identificador del procés
 	cmp r5, #0				@; mirem si el procés en execució és el SO
 	beq .Lrsi_salvar_context	@; si ho és passem directament a salvar el seu context
-	lsr r5, r4, #4			@; mirem el cas que no sigui un procés que ha acabat, pid=0, per fer-ho desplacem els 4 bits de menys pes (zòcalo)
+	lsr r5, #4				@; mirem el cas que no sigui un procés que ha acabat, pid=0, per fer-ho desplacem els 4 bits de menys pes (zòcalo)
 	cmp r5, #0				@; comprobem que el pid no sigui 0
 	beq .Lrsi_restauraProc	@; si ho és no salvem el context
 .Lrsi_salvar_context:
@@ -164,7 +164,7 @@ _gp_salvarProc:
 	mrs r8, CPSR			@; r8 = CPSR
 	and r8, #0xFFFFFFE0		@; Mode User
 	orr r8, #0x12			@; Mode IRQ
-	msr CPSR, r8			@; Canvem el mode
+	msr CPSR, r8			@; Canviem el mode
 	pop {r8-r11, pc}
 
 
@@ -186,7 +186,7 @@ _gp_restaurarProc:
 	beq .Lrest_proc_fibucle1	@; si no n'hi ha sortim del bucle
 	ldrb r11, [r8, #1]			@; r11 = zòcalo guardat en la següent posició de la cua de ready (i+1) 
 	strb r11, [r8]				@; guardem el nombre de zòcalo en la pos anterior a la que estava (i)
-	add r9, #1					@; avancem en la cua de Ready
+	add r8, #1					@; avancem en la cua de Ready
 	add r10, #1					@; incrementem el comptador que indica el nombre de processos ordenats 
 	b .Lrest_proc_bucle1		@; retornem a l'inici del bucle
 .Lrest_proc_fibucle1:
@@ -201,7 +201,8 @@ _gp_restaurarProc:
 	@;recuperem r15 i el guradem en la pos. corresponent de la pila de procés
 	ldr r10, [r11, #4]			@; carreguem el PC del PCB
 	mov r8, sp					@; r8= punter de la pila IRQ
-	str r10, [r8, #60]			@; guardem el registre r15 (PC en la posició corresponent (15) de la pla IRQ)
+	@; ######str r10, [r8, #60]			@; guardem el registre r15 (PC en la posició corresponent (15) de la pla IRQ)
+	str r10, [r13, #60] @;########
 	@; recuperem el CPSR del procés i el guardem en el registre SPSR_irq
 	ldr r10, [r11, #12]			@; r10=CPSR del procés
 	msr SPSR, r10				@; guardem el CPSR en el registre SPSR_irq
@@ -240,7 +241,7 @@ _gp_restaurarProc:
 	ldr r10, [r8, #56]		@; R12 (emmagatzemat en la posició 14 de SP_IRQ)
 	pop {r14}				@; Desapilem R14
 	@; canviem el mode d'execució
-	mrs r10, CPSR			@; r8 = CPSR
+	mrs r10, CPSR			@; r10 = CPSR
 	and r10, #0xFFFFFFE0	@; Mode User
 	orr r10, #0x12			@; Mode IRQ
 	msr CPSR, r10			@; Canvem el mode
@@ -271,7 +272,7 @@ _gp_numProc:
 	@;Resultado
 	@; R0: 0 si no hay problema, >0 si no se puede crear el proceso
 _gp_crearProc:
-	push {lr}
+	push {r4-r7, lr}
 	@; comprovem que el  num de zócalo no sigui el del So o ja estigui assignat a un procés
 	cmp r1, #0				@; comprovem si el num de zócalo és 0 (SO)
 	beq .Lcrear_proc_err	@; si ho és final de la funció
@@ -295,8 +296,8 @@ _gp_crearProc:
 	@; calculem la direcció base de la pila del procés
 	ldr r4, =_gd_stacks		@; vector de piles dels processos actius (15*128*4)
 	mov r5, #512			@; r5=mida de cada pila (128*4)
-	mla r7, r5, r1, r4		@; càlcul de la pos. de la pila actual (núm zóclao*mida_pila + direcció inicial vector piles
-	@; sub r7, #4				
+	mla r7, r5, r1, r4		@; càlcul de la pos. de la pila actual (núm zóclao*mida_pila + direcció inicial vector piles)-> apunta a la última pos de la pila del zócalo anterior
+	sub r7, #4				@; TOP de la pila		
 	@; guardem en la pila el valor inicial dels registres
 	ldr r4, =_gp_terminarProc	@;r4= direcció de la rutina terminar_proc
 	str r4, [r7]			@;guardem r4 (r14) en la pila  
@@ -329,7 +330,7 @@ _gp_crearProc:
 .Lcrear_proc_err:
 	mov r0, #1				@; no s'ha pogut crear el procés
 .Lfi_crear_proc:
-	pop {pc}
+	pop {r4-r7, pc}
 
 
 	@; Rutina para terminar un proceso de usuario:
