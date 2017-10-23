@@ -115,10 +115,8 @@ _gp_salvarProc:
 	strb r8, [r9, r5]		@; guardem el nombre de zocalo del procés en l'última posició de la cua de Ready
 	add r5, #1				@; incrementem el nombre de processos en la cua de Ready
 	ldr r9, =_gd_pcbs		@; direcció del array de PCBs
-	@;mul r10, r8, #24		@; desplaçament per arrivar al PCB del zócalo actual: num de zócalo * 24, on 24 es la mida de cada PCB (6 ints, 6 * 4 bytes per int)
-	@;add r9, r10				@; R9 = direcció del PCB del procés actual
 	mov r10, #24
-	mla r9, r10, r8, r9		@; mateix que en les dos opp comentades anteriorment
+	mla r9, r10, r8, r9		@; desplaçament per arrivar al PCB del zócalo actual: num de zócalo * 24 + direcció _gd_pcbs, on 24 es la mida de cada PCB (6 ints, 6 * 4 bytes per int)
 	@; guardem PC
 	mov r10, sp				@; r10 = SP_irq (punter al top de la pila IRQ)
 	ldr r8, [r10, #60]		@; r8 = PC del procés a desbancar (+60 per l'estruct. de la pila IRQ veure a imatge)
@@ -201,8 +199,7 @@ _gp_restaurarProc:
 	@;recuperem r15 i el guradem en la pos. corresponent de la pila de procés
 	ldr r10, [r11, #4]			@; carreguem el PC del PCB
 	mov r8, sp					@; r8= punter de la pila IRQ
-	@; ######str r10, [r8, #60]			@; guardem el registre r15 (PC en la posició corresponent (15) de la pla IRQ)
-	str r10, [r13, #60] @;########
+	str r10, [r8, #60]				@; guardem el registre r15 (PC en la posició corresponent (15) de la pla IRQ)
 	@; recuperem el CPSR del procés i el guardem en el registre SPSR_irq
 	ldr r10, [r11, #12]			@; r10=CPSR del procés
 	msr SPSR, r10				@; guardem el CPSR en el registre SPSR_irq
@@ -211,34 +208,34 @@ _gp_restaurarProc:
 	orr r10, #0x1F			@; Mode System, 5 últims bits a 1
 	msr CPSR, r10			@; Canvem el mode
 	@; recuperem el valor del registre r13 del procés a recuperar
-	ldr r13, [r11, #8]		@; guardem el SP del PCB en r13
+	ldr r13, [r11, #8]		@; recuperem el SP del PCB en r13
 	@; desapilem els registres r0-r12 i r14 i els guardem en la pila IRQ
 	pop {r10}				@; Desapilem R0
-	ldr r10, [r8, #40]		@; R0 (emmagatzemat en la posició 10 de SP_IRQ)
+	str r10, [r8, #40]		@; R0 (emmagatzemat en la posició 10 de SP_IRQ)
 	pop {r10}				@; Desapilem R1
-	ldr r10, [r8, #44]		@; R1 (emmagatzemat en la posició 11 de SP_IRQ)
+	str r10, [r8, #44]		@; R1 (emmagatzemat en la posició 11 de SP_IRQ)
 	pop {r10}				@; Desapilem R2
-	ldr r10, [r8, #48]		@; R2 (emmagatzemat en la posició 12 de SP_IRQ)
+	str r10, [r8, #48]		@; R2 (emmagatzemat en la posició 12 de SP_IRQ)
 	pop {r10}				@; Desapilem R3
-	ldr r10, [r8, #52]		@; R3 (emmagatzemat en la posició 13 de SP_IRQ)
+	str r10, [r8, #52]		@; R3 (emmagatzemat en la posició 13 de SP_IRQ)
 	pop {r10}				@; Desapilem R4
-	ldr r10, [r8, #20]		@; R4 (emmagatzemat en la posició 5 de SP_IRQ)
+	str r10, [r8, #20]		@; R4 (emmagatzemat en la posició 5 de SP_IRQ)
 	pop {r10}				@; Desapilem R5
-	ldr r10, [r8, #24]		@; R5 (emmagatzemat en la posició 6 de SP_IRQ)
+	str r10, [r8, #24]		@; R5 (emmagatzemat en la posició 6 de SP_IRQ)
 	pop {r10}				@; Desapilem R6
-	ldr r10, [r8, #28]		@; R6 (emmagatzemat en la posició 7 de SP_IRQ)
+	str r10, [r8, #28]		@; R6 (emmagatzemat en la posició 7 de SP_IRQ)
 	pop {r10}				@; Desapilem R7
-	ldr r10, [r8, #32]		@; R7 (emmagatzemat en la posició 8 de SP_IRQ)
+	str r10, [r8, #32]		@; R7 (emmagatzemat en la posició 8 de SP_IRQ)
 	pop {r10}				@; Desapilem R8
-	ldr r10, [r8]			@; R8 (emmagatzemat en la posició 0 de SP_IRQ)
+	str r10, [r8]			@; R8 (emmagatzemat en la posició 0 de SP_IRQ)
 	pop {r10}				@; Desapilem R9
-	ldr r10, [r8, #4]		@; R9 (emmagatzemat en la posició 1 de SP_IRQ)
+	str r10, [r8, #4]		@; R9 (emmagatzemat en la posició 1 de SP_IRQ)
 	pop {r10}				@; Desapilem R10
-	ldr r10, [r8, #8]		@; R10 (emmagatzemat en la posició 2 de SP_IRQ)
+	str r10, [r8, #8]		@; R10 (emmagatzemat en la posició 2 de SP_IRQ)
 	pop {r10}				@; Desapilem R11
-	ldr r10, [r8, #12]		@; R11 (emmagatzemat en la posició 3 de SP_IRQ)
+	str r10, [r8, #12]		@; R11 (emmagatzemat en la posició 3 de SP_IRQ)
 	pop {r10}				@; Desapilem R12
-	ldr r10, [r8, #56]		@; R12 (emmagatzemat en la posició 14 de SP_IRQ)
+	str r10, [r8, #56]		@; R12 (emmagatzemat en la posició 14 de SP_IRQ)
 	pop {r14}				@; Desapilem R14
 	@; canviem el mode d'execució
 	mrs r10, CPSR			@; r10 = CPSR
@@ -289,6 +286,7 @@ _gp_crearProc:
 	str r5, [r4]			@; actulitzem la variable pidCount
 	str r5, [r6]			@; guardem la nova pid del procés en el seu PCB
 	@; guardem la direcció de la primera instrucció de la funció
+	add r0, #4				@; sumem 4 a la primera instrucció
 	str r0, [r6, #4]		@; guardem primera inst, en el camp PC del PCB
 	@; guardem 4 primers caràcters del prog.
 	ldr r4, [r2]			@; r4=4 primers caràct. del prog
