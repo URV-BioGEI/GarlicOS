@@ -120,48 +120,89 @@ void _gg_iniGrafA()
 void _gg_procesarFormato(char *formato, unsigned int val1, unsigned int val2,
 																char *resultado)
 {
-	/*char caract;
-	int j=0,i=0,comptador,funcion;
+	char caract;
+	int j=0,i=0,comptador;
 	caract=formato[j];
-	int var=2;
-	char *val;
+	int var=2;char val[11];
 	
 	while(caract!='\0'){
-		if (caract=='%' && (formato[j+1]=='s'||formato[j+1]=='x'||formato[j+1]=='d'||formato[j+1]=='c')&&var>0){
+		if (caract=='%'){
 			j++;
 			caract=formato[j];
-			if(caract=='s'){
-			}
-			else if(caract=='c'){
+			//Si se trata de un string
+			if(caract=='s' && var>0){
+				char * valor=(char *) 0;		//Creamos un puntero a un string
+				//Copiamos la direccion del puntero con el valor a transcribir a nuestro puntero
 				if(var==2)
-					resultado[j]=val1;
+					valor=(char *)val1;	
 				else if(var==1)
-					resultado[j]=val2;
+					valor=(char *)val2;
+				comptador=0;
+				var--;
+				//Recorremos el string y lo copiamos a resultado
+				while(valor[comptador]!='\0'){
+					resultado[i]=valor[comptador];
+					comptador++;i++;
+				}	
+				j++;
 			}
-			else if(caract=='d'){
+			if(caract=='c' && var>0){
 				if(var==2)
-					funcion=_gs_num2str_dec(val,sizeof(val),val1);
+					resultado[i]=(char)val1;
 				else if(var==1)
-					funcion=_gs_num2str_dec(val,sizeof(val),val);
+					resultado[i]=(char)val2;
+				var--;
+				i++;
+				j++;
+			}
+			else if(caract=='d' && var>0){
+				//Guardaremos a val los codigos ascii del valor decimal a transcribir
+				if(var==2)
+					_gs_num2str_dec(val,sizeof(val),val1);
+				else if(var==1)
+					_gs_num2str_dec(val,sizeof(val),val2);
 				var--;
 				comptador=0;
 				while(val[comptador]!='\0'){
-					resultado[i]=val[comptador];
+					if(val[comptador]!=' '){
+						resultado[i]=val[comptador];
+						i++;}
+					comptador++;
 				}
+				j++;
 			}
-			else if(caract=='x'){
+			else if(caract=='x' && var>0){
 				if(var==2)
-					funcion=_gs_num2str_hex(val,sizeof(val),val1);
+					_gs_num2str_hex(val,sizeof(val),val1);
 				else if(var==1)
-					funcion=_gs_num2str_hex(val,sizeof(val),val1);
+					_gs_num2str_hex(val,sizeof(val),val2);
 				var--;
 				comptador=0;
 				while(val[comptador]!='\0'){
-					resultado[i]=val[comptador];
+					if(val[comptador]!='0'){
+						resultado[i]=val[comptador];i++;
+					}	
+					comptador++;
 				}
+				j++;
+			}
+			//Si se tiene que escribir % o no hay mas variables a transcribir
+			else if(caract=='%'||var==0){
+				if(caract=='%')
+					resultado[i]='%';
+				else if(var==0){
+					resultado[i]='%';i++;
+					resultado[i]=caract;
+					}
+				i++;j++;
 			}
 		}
-	}*/
+		else{
+			resultado[i]=formato[j];
+			i++;j++;
+		}
+		caract=formato[j];
+	}
 }
 
 
@@ -183,8 +224,9 @@ void _gg_escribir(char *formato, unsigned int val1, unsigned int val2, int venta
 	int numChars, filaActual, i=0,primer=0;
 	char caracter;
 	
-	//char resultado[3*VCOLS];
-	//_gg_procesarFormato(formato,val1,val2,resultado);
+	char resultado[3*VCOLS]="";
+	
+	_gg_procesarFormato(formato,val1,val2,resultado);
 	
 	//_gd_wbfs:vector con los buffers de las 4  ventanas
 	//garlicWBUF: estructura buffer de una ventana: pControl: 16 bits altos->número de línea ; 16 bits bajos->chars pendientes de escritura
@@ -192,7 +234,7 @@ void _gg_escribir(char *formato, unsigned int val1, unsigned int val2, int venta
 	numChars= _gd_wbfs[ventana].pControl & 0xFFFF;  	//Seleccionamos los bits bajos de pControl con bitwise AND de 16 bits a 1
 	filaActual= _gd_wbfs[ventana].pControl >> 16;		//Seleccionamos los bits altos de pControl mediante un shift de 16 bits
 	
-	caracter=formato[i];
+	caracter=resultado[i];
 	//mientras no se llegue al final de la cadena de formato
 	while(caracter!='\0'){
 		if(caracter=='\t'){
@@ -205,29 +247,25 @@ void _gg_escribir(char *formato, unsigned int val1, unsigned int val2, int venta
 				numChars++;
 			}
 		}
-		else if(caracter!='\n'&& numChars<VCOLS){
-			//número ascii-32-> posición 0 será espacio en blanco. Adaptado para tiles
+		else if(caracter!='\n'|| numChars<VCOLS){
 			_gd_wbfs[ventana].pChars[numChars]=caracter;
 			numChars++;
 		}
 		if(caracter=='\n'|| numChars==VCOLS){
 			swiWaitForVBlank();		//Esperamos al siguiente periodo de retroceso vertical
 			//Cuando filaActual=VFILS tendremos que desplazar la ventana
-			/*if(filaActual==VFILS-1){
-				//_gg_desplazar(ventana);
+			if(filaActual==VFILS){
+				_gg_desplazar(ventana);
 				filaActual--;
-			}*/
+			}
 			_gg_escribirLinea(ventana,filaActual,numChars);
 			numChars=0;				//numero de carácteres de la nueva linea=0
 			filaActual++;			//Saltamos a la siguiente linea
-		}
-		else{
-			
 		}
 		//Se actualiza pControl: shift a l'esquerra de filaActual->El que afegim quedará als 16 bits baixos, on estará numChars restant de la fila
 		_gd_wbfs[ventana].pControl=(filaActual<<16)+numChars;
 		
 		i++;
-		caracter=formato[i];
+		caracter=resultado[i];
 	}
 }
