@@ -40,7 +40,7 @@ GARLIC_divmod:
 	.global GARLIC_printf
 GARLIC_printf:
 	push {r4, lr}
-	mov r4, #0
+	mov r4, #0 
 	mov lr, pc
 	ldr pc, [r4, #12]		@; llamada indirecta a rutina 0x03
 	pop {r4, pc}
