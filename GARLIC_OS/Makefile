@@ -115,7 +115,7 @@ clean:
 	@echo "Removing ALL intermediate files... "
 	@echo "Por favor, recuerda que habitualmente NO es necesario hacer un 'clean' antes de un 'make'"
 #	@sleep 3
-	@rm -fr $(BUILD) $(TARGET).elf $(TARGET).nds
+	rm -fr $(BUILD) $(TARGET).elf $(TARGET).nds
 
 #---------------------------------------------------------------------------------
 run: $(TARGET).nds
