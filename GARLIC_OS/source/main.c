@@ -1,6 +1,5 @@
 /*------------------------------------------------------------------------------
 
-<<<<<<< HEAD
 	"main.c" : fase 1 / programador P
 
 	Programa de prueba de creación y multiplexación de procesos en GARLIC 1.0,
@@ -17,26 +16,17 @@ int detm(int);
 
 extern int * punixTime;		// puntero a zona de memoria con el tiempo real
 extern bool _gt_KBvisible;
-=======
+/*
 	"main.c" : fase 1 / programador M
 
 	Programa de prueba de carga de un fichero ejecutable en formato ELF,
-	pero sin multiplexación de procesos ni utilizar llamadas a _gg_escribir().
-------------------------------------------------------------------------------*/
-#include <nds.h>
-#include <stdio.h>
+	pero sin multiplexación de procesos ni utilizar llamadas a _gg_escribir().*/
 
-#include <garlic_system.h>	// definición de funciones y variables de sistema
-
-extern int * punixTime;		// puntero a zona de memoria con el tiempo real
-
->>>>>>> origin/progM
 
 /* Inicializaciones generales del sistema Garlic */
 //------------------------------------------------------------------------------
 void inicializarSistema() {
 //------------------------------------------------------------------------------
-<<<<<<< HEAD
 	int v;
 	_gg_iniGrafA();			// inicializar procesador gráfico A
 	for (v = 0; v < 4; v++)	// para todas las ventanas
@@ -52,38 +42,24 @@ void inicializarSistema() {
 	irqEnable(IRQ_VBLANK);			// activar interrupciones de vertical Blank
 	REG_IME = IME_ENABLE;			// activar las interrupciones en general
 	_gd_pcbs[0].keyName = 0x4C524147;	// "GARL"
-=======
-	
-	consoleDemoInit();		// inicializar console, sólo para esta simulación
-	
-	_gd_seed = *punixTime;	// inicializar semilla para números aleatorios con
-	_gd_seed <<= 16;		// el valor de tiempo real UNIX, desplazado 16 bits
 
 	if (!_gm_initFS()) {
 		printf("ERROR: ¡no se puede inicializar el sistema de ficheros! Y PUTA MIERDA");
 		exit(0);
 	}
->>>>>>> origin/progM
 }
 
 
 //------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 //------------------------------------------------------------------------------
-<<<<<<< HEAD
-	
-	inicializarSistema();
-	
-=======
 	intFunc start;
 	inicializarSistema();
->>>>>>> origin/progM
 	printf("********************************");
 	printf("*                              *");
 	printf("* Sistema Operativo GARLIC 1.0 *");
 	printf("*                              *");
 	printf("********************************");
-<<<<<<< HEAD
 	printf("*** Inicio fase 1_P\n");
 	
 	_gp_crearProc(hola, 7, "HOLA", 1);
@@ -99,7 +75,48 @@ int main(int argc, char **argv) {
 	while(1) {
 		swiWaitForVBlank();
 	}							// parar el procesador en un bucle infinito
+	
+	
+	// ProgM
+	
+	printf("*** Inicio fase 1_M\n");
+	
+	printf("*** Carga de programa HOLA.elf\n");
+	start = _gm_cargarPrograma("HOLA");
+	if (start)
+	{	printf("*** Direccion de arranque :\n\t\t%p\n", start);
+		printf("*** Pusle tecla \'START\' ::\n\n");
+		while(1) {
+			swiWaitForVBlank();
+			scanKeys();
+			if (keysDown() & KEY_START) break;
+		}
+		start(1);		// llamada al proceso HOLA con argumento 1
+	} else
+		printf("*** Programa \"HOLA\" NO cargado\n");
+	
+	printf("\n\n\n*** Carga de programa PRNT.elf\n");
+	start = _gm_cargarPrograma("PRNT");
+	if (start)
+	{	printf("*** Direccion de arranque :\n\t\t%p\n", start);
+		printf("*** Pusle tecla \'START\' ::\n\n");
+		while(1) {
+			swiWaitForVBlank();
+			scanKeys();
+			if (keysDown() & KEY_START) break;
+		}
+		start(0);		// llamada al proceso PRNT con argumento 0
+	} else
+		printf("*** Programa \"PRNT\" NO cargado\n");
+
+	printf("*** Final fase 1_M\n");
+
+	while (1) {
+		swiWaitForVBlank();
+	}							// parar el procesador en un bucle infinito
 	return 0;
+	
+	
 }
 
 
@@ -247,43 +264,4 @@ int detm(int arg)
 	else GARLIC_printf("(%d)\tDETERMINANT = %d\n",GARLIC_pid(),det);
 	return 0;
 }
-=======
-	printf("*** Inicio fase 1_M\n");
-	
-	printf("*** Carga de programa HOLA.elf\n");
-	start = _gm_cargarPrograma("HOLA");
-	if (start)
-	{	printf("*** Direccion de arranque :\n\t\t%p\n", start);
-		printf("*** Pusle tecla \'START\' ::\n\n");
-		while(1) {
-			swiWaitForVBlank();
-			scanKeys();
-			if (keysDown() & KEY_START) break;
-		}
-		start(1);		// llamada al proceso HOLA con argumento 1
-	} else
-		printf("*** Programa \"HOLA\" NO cargado\n");
-	
-	printf("\n\n\n*** Carga de programa PRNT.elf\n");
-	start = _gm_cargarPrograma("PRNT");
-	if (start)
-	{	printf("*** Direccion de arranque :\n\t\t%p\n", start);
-		printf("*** Pusle tecla \'START\' ::\n\n");
-		while(1) {
-			swiWaitForVBlank();
-			scanKeys();
-			if (keysDown() & KEY_START) break;
-		}
-		start(0);		// llamada al proceso PRNT con argumento 0
-	} else
-		printf("*** Programa \"PRNT\" NO cargado\n");
 
-	printf("*** Final fase 1_M\n");
-
-	while (1) {
-		swiWaitForVBlank();
-	}							// parar el procesador en un bucle infinito
-	return 0;
-}
-
->>>>>>> origin/progM

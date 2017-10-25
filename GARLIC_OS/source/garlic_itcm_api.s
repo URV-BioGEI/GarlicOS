@@ -98,10 +98,9 @@ _ga_printf:
 	ldr r4, =_gd_pidz		@; R4 = dirección _gd_pidz
 	ldr r3, [r4]
 	and r3, #0x3			@; R3 = ventana de salida (zócalo actual MOD 4)
-<<<<<<< HEAD
-	bl _gp_WaitForVBlank
-=======
->>>>>>> origin/progM
+
+	bl _gp_WaitForVBlank	@; ***
+
 	push {r12}
 	bl printf				@; llamada de prueba
 	pop {r12}
