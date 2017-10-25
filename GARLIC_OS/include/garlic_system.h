@@ -4,8 +4,8 @@
 						rutinas del sistema operativo GARLIC (versión 1.0)
 
 	Analista-programador: santiago.romani@urv.cat
-	Programador P: xxx.xxx@estudiants.urv.cat
-	Programador M: yyy.yyy@estudiants.urv.cat
+	Programador P: cristofol.dauden@estudiants.urv.cat
+	Programador M: aleix.marine@estudiants.urv.cat
 	Programador G: zzz.zzz@estudiants.urv.cat
 	Programador T: uuu.uuu@estudiants.urv.cat
 
@@ -68,7 +68,38 @@ extern garlicWBUF _gd_wbfs[4];	// vector con los buffers de 4 ventanas
 
 extern int _gd_stacks[15*128];	// vector con las pilas de los procesos activos
 
+//VARIABLES AÑADIDAS 
+// Direcciones de memoria de los fondos del procesador gráfico secundario 
+extern int _gt_bginfo;
+extern int _gt_bgbox;
+extern int _gt_bgcursor;
 
+// Direcciones de memoria de los los mapas de baldosas de los fondos 
+extern u16* _gt_mapbaseinfo;
+extern u16* _gt_mapbasebox;
+extern u16* _gt_mapbasecursor;
+
+// Indica si el teclado se muestra por pantalla 
+extern bool _gt_kbvisible;
+
+// Señal de RSI 
+extern char _gd_kbsignal;
+
+// Array de procesos esperando para entrada por teclado con su índice correspondiente
+extern char _gd_kbwait[16];
+extern char _gd_kbwait_num;
+
+// Contiene el número de caracteres que ha introducido el usuario
+extern char _gt_inputl;			
+
+// Vector de caracters introduits
+extern char _gt_input[28];
+
+// Posició del cursor
+extern char _gt_cursor_pos;
+
+// buffer de caracteres temporal usado por _gt_writePID(char zoc) para contener el PID de un proceso
+extern char _gt_PIDZ_tmp[6];
 
 
 //------------------------------------------------------------------------------
@@ -235,5 +266,21 @@ extern int _gs_num2str_hex(char * numstr, unsigned int length, unsigned int num)
 extern void _gs_copiaMem(const void *source, void *dest, unsigned int numBytes);
 
 
+
+//------------------------------------------------------------------------------
+//	Rutinas de teclado (garlic_tecl.c)
+//------------------------------------------------------------------------------
+
+extern void _gt_initKB();
+extern void _gt_showKB(char zoc);
+extern void _gt_hideKB();
+extern void _gt_rsiKB();
+extern void _gt_resetKB();
+
+extern void _gt_cursorini();
+extern void _gt_updatechar(char pos);
+extern char _gt_getchar(char pos);
+extern void _gt_putchar(char pos, char caracter);
+extern void _gt_writePIDZ(char zoc);
 
 #endif // _GARLIC_SYSTEM_h_

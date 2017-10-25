@@ -98,9 +98,25 @@ _ga_printf:
 	ldr r4, =_gd_pidz		@; R4 = dirección _gd_pidz
 	ldr r3, [r4]
 	and r3, #0x3			@; R3 = ventana de salida (zócalo actual MOD 4)
-	bl _gg_escribir
+	bl _gp_WaitForVBlank
+	push {r12}
+	bl printf				@; llamada de prueba
+	pop {r12}
 	pop {r4, pc}
 
-
+.global _ga_getstring
+	@; Parámetros
+	@; R0: string -> dirección base del vector de caracteres (bytes)
+	@; R1: max_char -> número máximo de caracteres del vector
+	@; R2: PIDZ -> PIDZ del proceso invocador
+	@;Resultado
+	@; R0: 0 si no hay problema, !=0 
+_ga_getstring:
+	push {r3, lr}
+	ldr r3, =_gd_pidz		@; R4 = direcció _gd_pidz, que conté PID (28 b) + Sòcol (4 b) d'esquerra a dreta
+	ldr r2, [r3]			@; Carreguem contingut de pidz a r2 (passada de parámetre)
+	and r2, #0x7			@; Fem clean dels bits de PID i obtenim Sòcol (MOD 4)
+	bl _gg_escribir			@; Cridem a la rutina per a escriure
+	pop {r3, pc}
 .end
 

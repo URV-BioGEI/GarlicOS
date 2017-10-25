@@ -40,6 +40,10 @@ extern int GARLIC_divmod(unsigned int num, unsigned int den,
 		Además, también procesa los metacarácteres '\t' (tabulador) y '\n'
 		(salto de línia). */
 extern void GARLIC_printf(char * format, ...);
-
-
+	/* GARLIC_getstring: recibe la dirección de memoria donde guardar el string
+		introducido por teclado así como el máximo número de carácteres que 
+		puede contener el vector sin contar al centinela (/0). Devuelve el número
+		máximo de carácteres leídos finalmente sin contar al centinela. 
+		*/
+extern int GARLIC_getstring(char * string, int max_char);
 #endif // _GARLIC_API_h_
