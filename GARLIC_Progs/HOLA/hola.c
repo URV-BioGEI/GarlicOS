@@ -10,6 +10,7 @@
 
 #include <GARLIC_API.h>			/* definición de las funciones API de GARLIC */
 
+
 int _start(int arg)				/* función de inicio : no se usa 'main' */
 {
 	unsigned int i, j, iter;

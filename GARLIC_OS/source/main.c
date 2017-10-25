@@ -24,12 +24,16 @@ void inicializarSistema() {
 	_gd_seed <<= 16;		// el valor de tiempo real UNIX, desplazado 16 bits
 
 	if (!_gm_initFS()) {
-		printf("ERROR: ¡no se puede inicializar el sistema de ficheros! Y PUTA MIERDA");
+		printf("ERROR: ¡no se puede inicializar el sistema de ficheros!");
 		exit(0);
 	}
 }
 
 
+void inicializarSeed() {
+	_gd_seed = *punixTime;	// inicializar semilla para números aleatorios con
+	_gd_seed <<= 16;		// el valor de tiempo real UNIX, desplazado 16 bits
+}
 //------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 //------------------------------------------------------------------------------
@@ -39,7 +43,7 @@ int main(int argc, char **argv) {
 	printf("*                              *");
 	printf("* Sistema Operativo GARLIC 1.0 *");
 	printf("*                              *");
-	printf("********************************");
+	printf("*******************************");
 	printf("*** Inicio fase 1_M\n");
 	
 	printf("*** Carga de programa HOLA.elf\n");
@@ -52,10 +56,10 @@ int main(int argc, char **argv) {
 			scanKeys();
 			if (keysDown() & KEY_START) break;
 		}
-		start(1);		// llamada al proceso HOLA con argumento 1
+		start(2);		// llamada al proceso HOLA con argumento 2
 	} else
 		printf("*** Programa \"HOLA\" NO cargado\n");
-	
+
 	printf("\n\n\n*** Carga de programa PRNT.elf\n");
 	start = _gm_cargarPrograma("PRNT");
 	if (start)
@@ -66,10 +70,24 @@ int main(int argc, char **argv) {
 			scanKeys();
 			if (keysDown() & KEY_START) break;
 		}
-		start(0);		// llamada al proceso PRNT con argumento 0
+		start(0); // llamada al proceso PRNT con argumento 0
 	} else
 		printf("*** Programa \"PRNT\" NO cargado\n");
-
+	
+	inicializarSeed();
+	printf("\n\n\n*** Carga de programa CUAD.elf\n");
+	start = _gm_cargarPrograma("CUAD");
+	if (start)
+	{	printf("*** Direccion de arranque :\n\t\t%p\n", start);
+		printf("*** Pusle tecla \'START\' ::\n\n");
+		while(1) {
+			swiWaitForVBlank();
+			scanKeys();
+			if (keysDown() & KEY_START) break;
+		}
+		start(1);		// llamada al proceso CUAD con argumento 2
+	} else
+		printf("*** Programa \"CUAD\" NO cargado\n");
 	printf("*** Final fase 1_M\n");
 
 	while (1) {

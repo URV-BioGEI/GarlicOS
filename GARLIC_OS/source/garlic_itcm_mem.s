@@ -49,30 +49,31 @@ _gm_reubicar:
 		ldr r2, =quo
 		bl _ga_divmod		@; en r2 tenemos el numero de reubicadores
 		ldr r2, [r2]
-		
 	.LBucleReubicadores:
 		cmp r2, #0
 		beq .LBuclesecciones
 		sub r2, #1
 		ldr r1, [r8, r7]	@; guardo en r1 el valor del primer reubicador, el offset
 		add r7, #4
-		ldrb r0, [r8, r7]	@; guardo en r0 el tipo de reubicador
+		ldr r0, [r8, r7]	@; guardo en r0 el tipo de reubicador
 		and r0, #0xFF
 		cmp r0, #2
+		beq .Lreubicar
+		beq .Lreubicar
+		b .Ladd
 		
-		addne r7, #4
-		b .LBucleReubicadores			@; si no es del tipo correcto, siguiente reubicador
-
-		
+	.Lreubicar:
 		add r1, r10
 		sub r1, r9			@; en r1 tengo la direccion de reubicación
 		ldr r12, [r1]		@; obtengo el contenido de la dirección	
 		add r12, r10
 		sub r12, r9
 		str r12, [r1]
-		add r7, #4
-		b .LBucleReubicadores
+		b .Ladd
 		
+	.Ladd:
+		add r7,#4
+		b .LBucleReubicadores
 
 	.LFin:
 	

@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
 
 #include <garlic_system.h>	// definición de funciones y variables de sistema
 
@@ -23,6 +22,7 @@ typedef unsigned short Elf32_Half;
 typedef unsigned int Elf32_Off;
 typedef signed int Elf32_Sword;
 typedef unsigned int Elf32_Word;
+
 
 typedef struct {
 unsigned char e_ident[EI_NIDENT];
@@ -61,8 +61,6 @@ Elf32_Word p_align;
 					para indiciar si dicha inicialización ha tenido éxito; */
 int _gm_initFS()
 {
-
-
 	return nitroFSInit(NULL);
 	
 }
@@ -106,7 +104,7 @@ intFunc _gm_cargarPrograma(char *keyName)
 
 	
 	//dar tamaño a la memoria para que contenga todo el fichero
-	buffer = (char*) malloc (sizeof(char)*lSize);
+	buffer = (char*) malloc (sizeof(char)*(lSize+1));
 	if (buffer == NULL) return ((intFunc) 0);
 
 	//copiar el fichero en el buffer
@@ -131,7 +129,6 @@ intFunc _gm_cargarPrograma(char *keyName)
 	aa = head.e_shoff;
 	size_st= head.e_phentsize;
 	num_st= head.e_phnum;
-	iprintf("aa: %d\n", aa);
 	
 	if(num_st!= 0){
 		fseek(pFile, offset, SEEK_SET);
@@ -150,7 +147,6 @@ intFunc _gm_cargarPrograma(char *keyName)
 		
 		//comprueba que sea del tipo PT_LOAD
 		if(segment_type == 1){
-			iprintf("segmenttipe:%d\n", segment_type);
 			//trobat = 1;
 			Elf32_Off desp_prog;
 			Elf32_Addr dir_ref;
@@ -160,10 +156,6 @@ intFunc _gm_cargarPrograma(char *keyName)
 			desp_prog = segments_table.p_offset;
 			dir_ref = segments_table.p_paddr;
 			size_prog = segments_table.p_filesz;
-			iprintf("desp_prog:%d\n", desp_prog);
-			iprintf("dir_ref:%d\n", dir_ref);
-			iprintf("size_prog:%d\n", size_prog);
-			iprintf("mem:%d\n", _gm_first_mem_pos);
 			//copia direcciones en memoria
 			_gs_copiaMem((const void *) &buffer[desp_prog],  (void *) _gm_first_mem_pos, size_prog);
 			
@@ -172,13 +164,12 @@ intFunc _gm_cargarPrograma(char *keyName)
 			
 			//damos valor a la dirección inicial de donde se encuentra el programa en memoria
 			dirprog = (int) _gm_first_mem_pos;
-			_gm_first_mem_pos = _gm_first_mem_pos + size_prog+ 1; //actualizamos para el siguiente progrma
+			_gm_first_mem_pos = _gm_first_mem_pos + size_prog+1; //actualizamos para el siguiente progrma
 			
 		}
 		
 		if(i+1<num_st){
 			//actualizar offset
-			iprintf("deberia de entrar aqui?");
 			offset=offset+size_st;
 			
 			
