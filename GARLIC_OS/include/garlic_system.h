@@ -39,7 +39,8 @@ extern char _gd_qReady[16];	// Cola de READY (procesos preparados) : vector
 							// ordenado con _gd_nReady entradas, conteniendo
 							// los identificadores (0-15) de los zócalos de los
 							// procesos (máx. 15 procesos + sistema operativo)
-
+							
+extern int _gm_first_mem_pos; //Valor de la 1a posicion de memoria libre para procesos
 
 typedef struct				// Estructura del bloque de control de un proceso
 {							// (PCB: Process Control Block)

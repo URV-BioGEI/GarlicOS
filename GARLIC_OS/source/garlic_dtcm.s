@@ -36,6 +36,7 @@ _gd_wbfs:	.space 4 * (4 + 32)
 	.global _gd_stacks			@; Vector de pilas de los procesos activos
 _gd_stacks:	.space 15 * 128 * 4
 
+<<<<<<< HEAD
 @;VARIABLES GLOBALS AFEGIDES
 	.global _gt_bginfo			@; Fondo de prioridad 2, muestra info del teclado
 _gt_bginfo: .space 4
@@ -80,4 +81,11 @@ _gt_cursor_pos: .space 1
 _gt_PIDZ_tmp: .space 6
 
 .end
+=======
+	.global _gm_first_mem_pos	@; posición de memoria inicial donde cargar los programas 
+_gm_first_mem_pos: .word 0x01002000 
+>>>>>>> origin/progM
 
+	.global quo
+quo:    .space 4
+.end
