@@ -36,5 +36,9 @@ _gd_wbfs:	.space 4 * (4 + 32)
 	.global _gd_stacks			@; Vector de pilas de los procesos activos
 _gd_stacks:	.space 15 * 128 * 4
 
-.end
+	.global _gm_first_mem_pos	@; posición de memoria inicial donde cargar los programas 
+_gm_first_mem_pos: .word 0x01002000 
 
+	.global quo
+quo:    .space 4
+.end

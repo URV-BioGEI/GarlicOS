@@ -10,10 +10,50 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dirent.h>
 
 #include <garlic_system.h>	// definición de funciones y variables de sistema
 
 #define INI_MEM 0x01002000		// dirección inicial de memoria para programas
+#define END_MEM 0x01008000		// direccion final de memoria para programas
+#define EI_NIDENT 16
+
+typedef unsigned int Elf32_Addr;
+typedef unsigned short Elf32_Half;
+typedef unsigned int Elf32_Off;
+typedef signed int Elf32_Sword;
+typedef unsigned int Elf32_Word;
+
+typedef struct {
+unsigned char e_ident[EI_NIDENT];
+Elf32_Half e_type;
+Elf32_Half e_machine;
+Elf32_Word e_version;
+Elf32_Addr e_entry;
+Elf32_Off e_phoff;
+Elf32_Off e_shoff;
+Elf32_Word e_flags;
+Elf32_Half e_ehsize;
+Elf32_Half e_phentsize;
+Elf32_Half e_phnum;
+Elf32_Half e_shentsize;
+Elf32_Half e_shnum;
+Elf32_Half e_shstrndx;
+} Elf32_Ehdr;
+
+typedef struct {
+Elf32_Word p_type;
+Elf32_Off p_offset;
+Elf32_Addr p_vaddr;
+Elf32_Addr p_paddr;
+Elf32_Word p_filesz;
+Elf32_Word p_memsz;
+Elf32_Word p_flags;
+Elf32_Word p_align;
+} Elf32_Phdr;
+
+
+
 
 
 
@@ -21,7 +61,10 @@
 					para indiciar si dicha inicialización ha tenido éxito; */
 int _gm_initFS()
 {
-	return 0;
+
+
+	return nitroFSInit(NULL);
+	
 }
 
 
@@ -40,7 +83,115 @@ int _gm_initFS()
 */
 intFunc _gm_cargarPrograma(char *keyName)
 {
+	//variables iniciales relacionadas con el cargar el vector en memoria dinámica
+	
+	long lSize;
+	char *buffer;
+	size_t result;
+	
+	
+	//coger nombre del fichero
+	char path[19];
+	
+	sprintf(path, "/Programas/%s.elf", keyName);
+	
+	FILE *pFile = fopen(path, "rb");
+	
+	if (pFile==NULL) return ((intFunc) 0);
+	
+	//obtener tamaño de la file
+	fseek(pFile, 0, SEEK_END);
+	lSize = ftell (pFile);
+	fseek(pFile,0,SEEK_SET);
 
-	return ((intFunc) 0);
+	
+	//dar tamaño a la memoria para que contenga todo el fichero
+	buffer = (char*) malloc (sizeof(char)*lSize);
+	if (buffer == NULL) return ((intFunc) 0);
+
+	//copiar el fichero en el buffer
+	result = fread(buffer,sizeof(char),lSize,pFile); //1 o size(char)??
+	if (result!=lSize) return ((intFunc) 0);
+
+	/*ya tenemos la file cargada en el buffer*/
+	//variables para tratar con partes del archivo .elf
+	Elf32_Ehdr head;
+	Elf32_Phdr segments_table;
+	Elf32_Off offset; Elf32_Off aa;
+	Elf32_Half size_st;
+	Elf32_Half num_st;
+	
+	fseek(pFile,0,SEEK_SET);
+
+	//buscamos la cabecera de fichero ELF
+	fread(&head,1,sizeof(Elf32_Ehdr), pFile);
+	
+	//guardamos offset, bytes de los headers de programa, y numero de headers de programa.
+	offset= head.e_phoff;
+	aa = head.e_shoff;
+	size_st= head.e_phentsize;
+	num_st= head.e_phnum;
+	iprintf("aa: %d\n", aa);
+	
+	if(num_st!= 0){
+		fseek(pFile, offset, SEEK_SET);
+		fread(&segments_table,1,sizeof(Elf32_Phdr), pFile); // lee la tabla de segmentos
+	}
+	
+	//dirección enviada como result
+	int dirprog=0; //setteada a 0 por si no hubieran segmentos = error.
+	//bucle que accede a la tabla de segmentos
+	int i;
+	for(i=0;((i<num_st) /*&& (trobat == 0)*/);i++){
+		
+		//selecciona el tipo de segmento
+		Elf32_Word segment_type;
+		segment_type = segments_table.p_type;
+		
+		//comprueba que sea del tipo PT_LOAD
+		if(segment_type == 1){
+			iprintf("segmenttipe:%d\n", segment_type);
+			//trobat = 1;
+			Elf32_Off desp_prog;
+			Elf32_Addr dir_ref;
+			Elf32_Word size_prog;
+			
+			//obtencion dirección inicial del segmento a cargar y desplazamiento y size programa
+			desp_prog = segments_table.p_offset;
+			dir_ref = segments_table.p_paddr;
+			size_prog = segments_table.p_filesz;
+			iprintf("desp_prog:%d\n", desp_prog);
+			iprintf("dir_ref:%d\n", dir_ref);
+			iprintf("size_prog:%d\n", size_prog);
+			iprintf("mem:%d\n", _gm_first_mem_pos);
+			//copia direcciones en memoria
+			_gs_copiaMem((const void *) &buffer[desp_prog],  (void *) _gm_first_mem_pos, size_prog);
+			
+			//hace las reubicaciones
+			_gm_reubicar( buffer, dir_ref, (unsigned int *) _gm_first_mem_pos);
+			
+			//damos valor a la dirección inicial de donde se encuentra el programa en memoria
+			dirprog = (int) _gm_first_mem_pos;
+			_gm_first_mem_pos = _gm_first_mem_pos + size_prog+ 1; //actualizamos para el siguiente progrma
+			
+		}
+		
+		if(i+1<num_st){
+			//actualizar offset
+			iprintf("deberia de entrar aqui?");
+			offset=offset+size_st;
+			
+			
+			fseek(pFile, offset, SEEK_SET);
+			fread(&segments_table,1,sizeof(Elf32_Phdr), pFile); // lee la tabla de segmentos
+		}
+	}
+	
+	//cierra fichero y buffer de memoria
+	fclose(pFile);
+	free(buffer);
+	
+	return ((intFunc) dirprog);	//devuelve la dirección del programa en que se encuentra en el segmento
+	
 }
 

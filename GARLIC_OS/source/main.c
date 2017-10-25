@@ -24,7 +24,7 @@ void inicializarSistema() {
 	_gd_seed <<= 16;		// el valor de tiempo real UNIX, desplazado 16 bits
 
 	if (!_gm_initFS()) {
-		printf("ERROR: ¡no se puede inicializar el sistema de ficheros!");
+		printf("ERROR: ¡no se puede inicializar el sistema de ficheros! Y PUTA MIERDA");
 		exit(0);
 	}
 }
@@ -35,7 +35,6 @@ int main(int argc, char **argv) {
 //------------------------------------------------------------------------------
 	intFunc start;
 	inicializarSistema();
-
 	printf("********************************");
 	printf("*                              *");
 	printf("* Sistema Operativo GARLIC 1.0 *");
@@ -56,7 +55,7 @@ int main(int argc, char **argv) {
 		start(1);		// llamada al proceso HOLA con argumento 1
 	} else
 		printf("*** Programa \"HOLA\" NO cargado\n");
-
+	
 	printf("\n\n\n*** Carga de programa PRNT.elf\n");
 	start = _gm_cargarPrograma("PRNT");
 	if (start)
