@@ -63,8 +63,8 @@ void _gt_initKB()
 	secundario */
 	dmaCopy(garlic_fontPal, BG_PALETTE_SUB, garlic_fontPalLen);
 	
-	/* Inicialitzem index de l'array de preocessos esperant per entrada de kb */
-	_gd_kbwait_i = -1; 
+	/* Inicialitzem comptador de processos */
+	_gd_kbwait_num = 0; 
 	
 	/* Posem la visbilitat del teclat a fals */
 	_gt_kbvisible = false;
@@ -106,23 +106,29 @@ void _gt_initKB()
 	//bgUpdate();
 }
 
-void _gt_showKB(int zoc)
+void _gt_showKB(char zoc)
 {
 	
-	irqEnable(IRQ_KEYS);
-	bgShow(_gt_bginfo);
+	irqEnable(IRQ_KEYS);	// activem interrupcions per teclat
+	
+	_gt_kbvisible = true;	// indiquem que teclat mostrat
+
+	bgShow(_gt_bginfo);		// activem els fons del teclat
 	bgShow(_gt_bgbox);
 	bgShow(_gt_bgcursor);
-	_gt_kbvisible = true;
-	//_gt_escriurePIDZ(zoc);
+	
+	_gt_writePIDZ(zoc);	// escribim el pidz del procés rebut per parametre en la finestreta
 }
 
 void _gt_hideKB(){
-	irqDisable(IRQ_KEYS);
-	_gt_kbvisible = false;
-	bgHide(_gt_bginfo);
+	irqDisable(IRQ_KEYS);	// desactivem interrupcions per teclat
+	
+	_gt_kbvisible = false;	// indiquem que teclat amagat
+	
+	bgHide(_gt_bginfo);		// amaguem tots els background
 	bgHide(_gt_bgbox);
 	bgHide(_gt_bgcursor);
-	//_gt_resetKB();
+	
+	_gt_resetKB();
 	
 }

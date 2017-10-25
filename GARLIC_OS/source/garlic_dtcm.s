@@ -61,8 +61,8 @@ _gt_kbvisible: .space 1
 	.global _gd_kbwait			@; Cua de processos que esperen la entrada pel teclat
 _gd_kbwait: .space 16*1
 	
-	.global _gd_kbwait_i		@; Índex de l'array de processos esperant per teclat
-_gd_kbwait_i: .space 1
+	.global _gd_kbwait_num		@; Índex de l'array de processos esperant per teclat
+_gd_kbwait_num: .space 1
 
 	.global _gd_kbsignal		@; La funció _gt_getstring espera a que el bit corresponent al proces d'aquesta variable es posi a 1 
 _gd_kbsignal: .space 2
@@ -76,8 +76,8 @@ _gt_input: .space 28*1
 	.global _gt_cursor_pos	 	@; Posició del cursor
 _gt_cursor_pos: .space 1
 
-.align 2
-	.global _gm_Init_Mem
-_gm_Init_Mem: .word 0x01002000 
+	.global _gt_PIDZ_tmp		@; Buffer de caracters que s'utilitza com a variable temporal per a mostrar PID i socol per pantalla
+_gt_PIDZ_tmp: .space 6
+
 .end
 

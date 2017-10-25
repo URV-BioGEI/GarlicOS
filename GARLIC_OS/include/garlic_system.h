@@ -87,7 +87,7 @@ extern char _gd_kbsignal;
 
 // Array de procesos esperando para entrada por teclado con su índice correspondiente
 extern char _gd_kbwait[16];
-extern char _gd_kbwait_i;
+extern char _gd_kbwait_num;
 
 // Contiene el número de caracteres que ha introducido el usuario
 extern char _gt_inputl;			
@@ -97,6 +97,10 @@ extern char _gt_input[28];
 
 // Posició del cursor
 extern char _gt_cursor_pos;
+
+// buffer de caracteres temporal usado por _gt_writePID(char zoc) para contener el PID de un proceso
+extern char _gt_PIDZ_tmp[6];
+
 
 //------------------------------------------------------------------------------
 //	Rutinas de gestión de procesos (garlic_itcm_proc.s)
@@ -268,13 +272,15 @@ extern void _gs_copiaMem(const void *source, void *dest, unsigned int numBytes);
 //------------------------------------------------------------------------------
 
 extern void _gt_initKB();
-extern void _gt_showKB();
+extern void _gt_showKB(char zoc);
 extern void _gt_hideKB();
 extern void _gt_rsiKB();
+extern void _gt_resetKB();
 
+extern void _gt_cursorini();
 extern void _gt_updatechar(char pos);
-extern short _gt_getchar(char pos);
+extern char _gt_getchar(char pos);
 extern void _gt_putchar(char pos, char caracter);
-extern void _gt_escriurePIDZ(int zoc);
+extern void _gt_writePIDZ(char zoc);
 
 #endif // _GARLIC_SYSTEM_h_

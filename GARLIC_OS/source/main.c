@@ -34,7 +34,7 @@ void inicializarSistema() {
 	irqEnable(IRQ_VBLANK);			// activar interrupciones de vertical Blank
 	REG_IME = IME_ENABLE;			// activar las interrupciones en general
 	_gt_initKB();
-	_gt_showKB();
+	_gt_showKB(0);
 	_gd_pcbs[0].keyName = 0x4C524147;	// "GARL"
 }
 
