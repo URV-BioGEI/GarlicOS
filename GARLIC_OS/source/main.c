@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 	
 	_gp_crearProc(hola, 7, "HOLA", 1);
 	_gp_crearProc(hola, 14, "HOLA", 2);
-	_gp_crearProc(detm, 8, "DETM", 1);
+	_gp_crearProc(detm, 8, "DETM", 2);
 	
 	
 	while (_gp_numProc() > 1) {
@@ -97,54 +97,118 @@ int hola(int arg) {
 
 /* Proceso de prueba ProgP, con llamadas a las funciones del API del sistema Garlic */
 //------------------------------------------------------------------------------
+int det3(int a[][3]){
+	return (a[0][0]*a[1][1]*a[2][2]+a[0][1]*a[1][2]*a[2][0]+a[1][0]*a[2][1]*a[0][2]-a[0][2]*a[1][1]*a[2][0]-a[0][1]*a[1][0]*a[2][2]-a[1][2]*a[2][1]*a[0][0]);
+}
+
+int det4(int a[][4]){
+	int factor=1;
+	int n=4;
+	int det=0;
+	int a2[n-1][n-1];
+	int i,j,k;
+	for(i=0; i<n; i++){
+		for(j=0; j<n; j++){
+			for(k=0; k<n; k++){
+				if(k<i) a2[j][k]=a[j+1][k];
+				else a2[j][k]=a[j+1][k+1];
+			}
+		}
+		det+=factor*a[0][i]*det3(a2);
+		factor=factor*-1;
+	}
+	return det;
+}
+
+int det5(int a[][5]){
+	int factor=1;
+	int n=5;
+	int det=0;
+	int a2[n-1][n-1];
+	int i,j,k;
+	for(i=0; i<n; i++){
+		for(j=0; j<n; j++){
+			for(k=0; k<n; k++){
+				if(k<i) a2[j][k]=a[j+1][k];
+				else a2[j][k]=a[j+1][k+1];
+			}
+		}
+		det+=factor*a[0][i]*det4(a2);
+		factor=factor*-1;
+	}
+	return det;
+}
+
 int detm(int arg)				
-{	
-	int i,j,k,l,m,n ; 
-	unsigned int a[6][6]; 
-	int det;
+{	  
+	int det, n, i,j;
 	if (arg < 0) arg = 0;			// limitar valor máximo y 
 	else if (arg > 3) arg = 3;		// valor mínimo del argumento
-	
 	//ordre =2+arguments de entrada
 	n=2+arg;
-	m=n-1;
+	int a[n][n];
 	
 	GARLIC_printf("-- Programa DETM  -  PID (%d) --\n", GARLIC_pid());
 
-	for(i=1;i<=n;i++){ 
-		for(j=1;j<=n;j++){
+	for(i=0;i<n;i++){ 
+		for(j=0;j<n;j++){
 			a[i][j]=GARLIC_random()%10;
 		}
 	}
 	
+	/*
+	//2x2
+	a[0][0]=7;
+	a[0][1]=6;
+	a[1][0]=4;
+	a[1][1]=9;
+	//3x3
+	a[0][2]=2;
+	a[1][2]=9;
+	a[2][0]=4;
+	a[2][1]=2;
+	a[2][2]=1;
+	//4x4
+	a[0][3]=3;
+	a[1][3]=6;
+	a[2][3]=1;
+	a[3][0]=4;
+	a[3][1]=2;
+	a[3][2]=1;
+	a[3][3]=5;
+	//5x5
+	a[0][4]=4;
+	a[1][4]=7;
+	a[2][4]=8;
+	a[3][4]=9;
+	a[4][0]=1;
+	a[4][1]=1;
+	a[4][2]=1;
+	a[4][3]=1;
+	a[4][4]=1;*/
+	
 /* Llegim elements matriu */ 
-	for(i=1;i<=n;i++){ 
-		for(j=1;j<=n;j++){
+	for(i=0;i<n;i++){ 
+		for(j=0;j<n;j++){
 			GARLIC_printf("(%d)\tElement: %d\n",GARLIC_pid(),a[i][j]);
 		}
-	} 
-
+	}
+	
+	det=-10;
 /*****Càlcul del DETERMINANT*****/
-	unsigned int quo, res;
-	//unsigned int num, den;
-	det=a[1][1];
-	for(k=1;k<=m;k++){
-		l=k+1; 
-		for(i=l;i<=n;i++){	
-			for(j=l;j<=n;j++){
-				//num=a[k][k]*a[i][j]-a[k][j]*a[i][k];
-				//den=a[k][k];
-				//GARLIC_printf("\t\t\tA(%d,%d)\n",num,den);
-				GARLIC_divmod((a[k][k]*a[i][j]-a[k][j]*a[i][k]), a[k][k], &quo, &res);
-				//GARLIC_printf("\t\t\tA(%d,%d)\n",quo,res);				
-				a[i][j] = quo;
+	if(n==2) det=a[0][0]*a[1][1]-a[0][1]*a[1][0];
+	else{
+		if(n==3) det=det3(a);
+		else{
+			if(n==4) det=det4(a);
+			else{
+				//det=det5(a);
+				det=-1;
 			}
-		} 
-		det=det*a[k+1][k+1]; 
-	} 
-	//GARLIC_printf("\n\n"); 
-	GARLIC_printf("(%d)\tDETERMINANT = %d\n",GARLIC_pid(),det); 
-	//GARLIC_printf("\t\t\t-------------------------\n");
-
+		}
+	}
+	
+	if(n==5) GARLIC_printf("(%d)\tERROR MEMORIA EN MATRIU 5X5\n",GARLIC_pid());
+	else GARLIC_printf("(%d)\tDETERMINANT = %d\n",GARLIC_pid(),det);
 	return 0;
 }
