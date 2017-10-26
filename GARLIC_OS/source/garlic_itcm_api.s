@@ -102,7 +102,7 @@ _ga_printf:
 	bl _gp_WaitForVBlank	@; ***
 
 	push {r12}
-	bl printf				@; llamada de prueba
+	bl _gg_escribir				@; llamada de prueba
 	pop {r12}
 	pop {r4, pc}
 
