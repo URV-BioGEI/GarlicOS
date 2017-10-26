@@ -1,6 +1,6 @@
 /*------------------------------------------------------------------------------
 
-	"main.c" : fase 1 / programador M
+	"main.c" : fase 1 / programador M: manuel.ruiz@estudiants.urv.cat
 
 	Programa de prueba de carga de un fichero ejecutable en formato ELF,
 	pero sin multiplexación de procesos ni utilizar llamadas a _gg_escribir().
@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
 			scanKeys();
 			if (keysDown() & KEY_START) break;
 		}
-		start(2);		// llamada al proceso HOLA con argumento 2
+		start(1);		// llamada al proceso HOLA con argumento 1
 	} else
 		printf("*** Programa \"HOLA\" NO cargado\n");
 
@@ -70,11 +70,10 @@ int main(int argc, char **argv) {
 			scanKeys();
 			if (keysDown() & KEY_START) break;
 		}
-		start(0); // llamada al proceso PRNT con argumento 0
+		start(2); // llamada al proceso PRNT con argumento 2
 	} else
 		printf("*** Programa \"PRNT\" NO cargado\n");
 	
-	inicializarSeed();
 	printf("\n\n\n*** Carga de programa CUAD.elf\n");
 	start = _gm_cargarPrograma("CUAD");
 	if (start)

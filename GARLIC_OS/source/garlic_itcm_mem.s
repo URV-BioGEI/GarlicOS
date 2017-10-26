@@ -37,9 +37,11 @@ _gm_reubicar:
 		sub r5, #1			@; añade uno al contador
 		ldr r0, [r8, r11]	@; carga el tipo de la sección
 		cmp r0, #9
-		
-		addne r11, #40
-		bne .LBuclesecciones
+		beq .LTipoSeleccion
+		beq .LTipoSeleccion
+		add r11, #40
+		b .LBuclesecciones
+	.LTipoSeleccion:
 		add r11, #12		@; sh_offset offset del segmento
 		ldr r7, [r8, r11]	@; valor del offset cargado en r7
 		add r11, #4			
@@ -51,7 +53,7 @@ _gm_reubicar:
 		ldr r2, [r2]
 	.LBucleReubicadores:
 		cmp r2, #0
-		beq .LBuclesecciones
+		beq .Laddr11
 		sub r2, #1
 		ldr r1, [r8, r7]	@; guardo en r1 el valor del primer reubicador, el offset
 		add r7, #4
@@ -74,6 +76,9 @@ _gm_reubicar:
 	.Ladd:
 		add r7,#4
 		b .LBucleReubicadores
+	.Laddr11:
+		add r11,#8
+		b .LBuclesecciones
 
 	.LFin:
 	

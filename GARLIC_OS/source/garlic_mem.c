@@ -1,6 +1,6 @@
 /*------------------------------------------------------------------------------
 
-	"garlic_mem.c" : fase 1 / programador M
+	"garlic_mem.c" : fase 1 / programador M manuel.ruiz@estudiants.urv.cat
 
 	Funciones de carga de un fichero ejecutable en formato ELF, para GARLIC 1.0
 
@@ -129,6 +129,7 @@ intFunc _gm_cargarPrograma(char *keyName)
 	aa = head.e_shoff;
 	size_st= head.e_phentsize;
 	num_st= head.e_phnum;
+
 	
 	if(num_st!= 0){
 		fseek(pFile, offset, SEEK_SET);
@@ -152,6 +153,7 @@ intFunc _gm_cargarPrograma(char *keyName)
 			Elf32_Addr dir_ref;
 			Elf32_Word size_prog;
 			
+			if (_gm_first_mem_pos>END_MEM) return 0;
 			//obtencion dirección inicial del segmento a cargar y desplazamiento y size programa
 			desp_prog = segments_table.p_offset;
 			dir_ref = segments_table.p_paddr;
@@ -162,9 +164,14 @@ intFunc _gm_cargarPrograma(char *keyName)
 			//hace las reubicaciones
 			_gm_reubicar( buffer, dir_ref, (unsigned int *) _gm_first_mem_pos);
 			
+			//para que en el siguiente programa, el gm_first_mem_pos sea multiplo de 4
+			int valor = size_prog%4;
+			if(valor!=0){
+				size_prog = size_prog + (4-valor);
+			}
 			//damos valor a la dirección inicial de donde se encuentra el programa en memoria
 			dirprog = (int) _gm_first_mem_pos;
-			_gm_first_mem_pos = _gm_first_mem_pos + size_prog+1; //actualizamos para el siguiente progrma
+			_gm_first_mem_pos = _gm_first_mem_pos + size_prog; //actualizamos para el siguiente progrma
 			
 		}
 		
