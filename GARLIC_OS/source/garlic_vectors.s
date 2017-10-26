@@ -4,7 +4,7 @@
 @;
 @;==============================================================================
 
-.section .vectors,"a",%note
+.section .vectors,"a",%note 
 
 
 APIVector:						@; Vector de direcciones de rutinas del API

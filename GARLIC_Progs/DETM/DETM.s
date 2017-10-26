@@ -6,7 +6,7 @@
 	.eabi_attribute 30, 6
 	.eabi_attribute 34, 0
 	.eabi_attribute 18, 4
-	.file	"detm.c"
+	.file	"DETM.c"
 	.text
 	.align	2
 	.global	det3
