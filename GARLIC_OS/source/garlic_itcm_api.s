@@ -22,6 +22,16 @@ _ga_pid:
 		mov r0, r1, lsr #0x4	@; R0 = PID del proceso actual
 		pop {r1, pc}
 
+	.global _ga_zocalo
+	@; Obtiene el zocalo del proceso actual (usada por las funciones que necesitan saber su zocalo para llamar a _gt_getstring)
+	@; R0 = zocalo del proceso actual
+_ga_zocalo:
+		push {r1, lr}
+		ldr r0, =_gd_pidz
+		ldrb r1, [r0]		@; R1 = 4 bits basura + zócalo
+		and r0, r1, #0x4	@; R0 = PID del proceso actual. clean de los bits residuales del PID
+		pop {r1, pc} 
+
 
 	.global _ga_random
 	@;Resultado:
@@ -98,11 +108,7 @@ _ga_printf:
 	ldr r4, =_gd_pidz		@; R4 = dirección _gd_pidz
 	ldr r3, [r4]
 	and r3, #0x3			@; R3 = ventana de salida (zócalo actual MOD 4)
-
-	bl _gp_WaitForVBlank	@; ***
-
-	push {r12}
-	bl printf				@; llamada de prueba
+	bl _gg_escribir				@; llamada de prueba
 	pop {r12}
 	pop {r4, pc}
 

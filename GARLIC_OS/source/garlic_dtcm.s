@@ -37,6 +37,8 @@ _gd_wbfs:	.space 4 * (4 + 32)
 _gd_stacks:	.space 15 * 128 * 4
 
 @;VARIABLES GLOBALS AFEGIDES
+
+@; progT
 	.global _gt_bginfo			@; Fondo de prioridad 2, muestra info del teclado
 _gt_bginfo: .space 4
 
@@ -79,8 +81,15 @@ _gt_cursor_pos: .space 1
 	.global _gt_PIDZ_tmp		@; Buffer de caracters que s'utilitza com a variable temporal per a mostrar PID i socol per pantalla
 _gt_PIDZ_tmp: .space 6
 
+	.global _gt_button_tics		@; Variable per a normalitzar la velocitat de reacció dels botons per part de la rsi de teclat
+_gt_button_tics: .space 1
+
+@; progM
+
 	.global _gm_first_mem_pos	@; posición de memoria inicial donde cargar los programas 
 _gm_first_mem_pos: .word 0x01002000 
+
+
 
 	.global quo
 quo:    .space 4

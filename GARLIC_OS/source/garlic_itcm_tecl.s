@@ -16,22 +16,25 @@
 	@; R2: zocalo -> número de zócalo del proceso invocador
 	@; Return
 	@; R0: int -> Número de carácteres leídos
-	@; si la interfaz de teclado está desactivada (oculta), mostrarla
+	@;	•	Si la interfaz de teclado está desactivada (oculta), mostrarla
 	@;	(ver punto 8) y activar la RSI de teclado (ver punto 9).
-	@;• añadir el número de zócalo sobre un vector global
-	@;_gd_kbwait[], que se comportará como una cola en la cual
-	@;estarán registrados los procesos que esperan la entrada de
-	@;un string por teclado,
-	@;• esperar a que el bit de una variable global _gd_kbsignal,
-	@;correspondiente al número de zócalo indicado, se ponga a 1,
-	@;• poner el bit anterior a cero, copiar el string leído sobre el
-	@;vector que se ha pasado por parámetro, filtrando el número
-	@;total de caracteres y añadiendo el centinela, y devolviendo
-	@;el número total de caracteres leídos (excluido el centinela).
+	
+	@;	•	Añadir el número de zócalo sobre un vector global
+	@;	_gd_kbwait[], que se comportará como una cola en la cual
+	@;	estarán registrados los procesos que esperan la entrada de
+	@;	un string por teclado,
+	
+	@;	•	Esperar a que el bit de una variable global _gd_kbsignal,
+	@;	correspondiente al número de zócalo indicado, se ponga a 1,
+	
+	@;	•	Poner el bit anterior a cero, copiar el string leído sobre el
+	@;	vector que se ha pasado por parámetro, filtrando el número
+	@;	total de caracteres y añadiendo el centinela, y devolviendo
+	@;	el número total de caracteres leídos (excluido el centinela).
 _gt_getstring:
 	push {r1-r7, lr}
 	
-	@; si KB IF oculta -> KB IF visible i activamos interrupciones de teclado
+	@; si KB IF oculta -> KB IF visible i activamos interrupciones de teclado (llamada a _gt_showKB)
 	
 	ldr r4, =_gt_kbvisible		@; Cargamos @ de _gt_visible
 	ldrb r3, [r4]				@; r3 = _gt_visible
@@ -56,6 +59,7 @@ _gt_getstring:
 	ldrsb r4, [r3]				@; r4 = num procesos
 	ldr r5, =_gd_kbwait			@; cargamos @base de la cola de espera del KB (vector de char)
 	strb r2, [r5, r4]			@; guardamos el zócalo recibido por parámetro a la posicion
+	add r4, #1					@; sumamos 1 al índice
 	strb r4, [r3]				@; actualizamos el índice
 
 	@;Bucle de espera a _gd_kbsignal
@@ -83,10 +87,9 @@ _gt_getstring:
 	mov r5, #0					@; r5 = comptador. Inicialitzem comptador
 
 .Lgtgetstr_copystr:
-	@;mov r6, r5, lsl #1			@; Multipliquem per 2 (deplaçament en un vector de halfwords)
 	ldrsb r3, [r4, r5]			@; Carreguem signed (per a reconeixer caracter centinella) sobre r3. Conté el vector a tractar
-	cmp r3, #-1					@; Mirem que no sigui caracter de final de linea
-	beq .Lgtgetstr_copystrfi	@; Si es sortim
+	@;cmp r3, #-1					@; Mirem que no sigui caracter de final de linea No cal mirar-ho ja que es un cas que no es dona
+	@;beq .Lgtgetstr_copystrfi	@; Si es sortim
 	add r3, #32					@; Factor de correcció per a transformar al codi ASCII
 	strb r3, [r0, r5]			@; Guardem sobre l'string que rebem per parametre
 	add r5, #1					@; Incrementem comptador
@@ -95,6 +98,9 @@ _gt_getstring:
 .Lgtgetstr_copystrfi:
 	mov r6, #0					@; Afegim el caracter de final de string (el \0 de tota la vida)
 	strb r6, [r0, r5]			@; Guardem el caracter de final de linia
+	
+	bl _gt_hideKB				@; Amaguem interficie de teclat
+	bl _gt_resetKB				@; resetegem per al següent us
 	
 	mov r0, r2					@; Retorn de parametres
 	pop {r1-r7, pc}			
@@ -282,6 +288,16 @@ _gt_putchar:
 	.global _gt_rsiKB
 _gt_rsiKB:
 	push {r0-r4, lr}
+
+	@; NORMALITZACIO A VELOCITAT HUMANA PER ALS BOTONS
+	
+	ldr r0, =_gt_button_tics	@; r0 = @_gt_button_tics
+	ldrb r1, [r0]				@; r0 = _gt_button_tics. Comptem X pulsacions per a que la rsi s'activi (sino va massa rapid)
+	cmp r1, #10					@; Comparem amb _gt_num_hits_for_rsi
+	moveq r1, #0				@; Si hem arribat a 10 reiniciem variable
+	addne r1, #1				@; Sinó sumem 1 al comptador de tics
+	strb r1, [r0]				@; i actualitzem la variable
+	bne .Lgtrsi_end				@; si n ha arribat a 10 sortim
 	ldr r0, =0x04000130 @; r0 = @REG_KEYINPUT
 	ldrh r0, [r0]		@; r0 = REG_KEYINPUT
 	
@@ -414,7 +430,8 @@ _gt_rsiKB:
 	ldrb r1, [r0]				@; r1 = _gd_kbwait_num
 	sub r1, #1					@; disminuim en un el nombre de processos
 	strb r1, [r0]				@; actualitzem el nombre de processos
-	
+	cmp r1, #0					@; Si només hi ha un procés sortim
+	beq .Lgtrsi_end				@; Anem al final de la rsi
 	mov r3, #0					@; inicialitzem comptador
 .Lgtrsi_START_move:
 	add r3, #1					@; afegim un al comptador

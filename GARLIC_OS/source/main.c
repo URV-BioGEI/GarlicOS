@@ -13,9 +13,13 @@
 int hola(int);				// función que simula la ejecución del proceso
 int detm(int);
 
+char* str(unsigned char arg);
+
+char v1[28];					// vector per a probar la funcio de progT
+char v2[28];
+char vresultat[56];
 
 extern int * punixTime;		// puntero a zona de memoria con el tiempo real
-extern bool _gt_KBvisible;
 /*
 	"main.c" : fase 1 / programador M
 
@@ -32,11 +36,11 @@ void inicializarSistema() {
 	for (v = 0; v < 4; v++)	// para todas las ventanas
 		_gd_wbfs[v].pControl = 0;		// inicializar los buffers de ventana
 
-	consoleDemoInit();		// inicializar consola, sólo para esta simulación
+	//consoleDemoInit();		// inicializar consola, sólo para esta simulación
 	
 	_gd_seed = *punixTime;	// inicializar semilla para números aleatorios con
 	_gd_seed <<= 16;		// el valor de tiempo real UNIX, desplazado 16 bits
-	
+	_gg_escribir("hola k ase fdgdgdfgdfgdfgdfdfgdgf", 0, 0, 1);
 	irqInitHandler(_gp_IntrMain);	// instalar rutina principal interrupciones
 	irqSet(IRQ_VBLANK, _gp_rsiVBL);	// instalar RSI de vertical Blank
 	irqEnable(IRQ_VBLANK);			// activar interrupciones de vertical Blank
@@ -47,34 +51,26 @@ void inicializarSistema() {
 		printf("ERROR: ¡no se puede inicializar el sistema de ficheros! Y PUTA MIERDA");
 		exit(0);
 	}
+	
 }
 
 
 //------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 //------------------------------------------------------------------------------
-	intFunc start;
+	//intFunc start;
 	inicializarSistema();
-	printf("********************************");
-	printf("*                              *");
-	printf("* Sistema Operativo GARLIC 1.0 *");
-	printf("*                              *");
-	printf("********************************");
-	printf("*** Inicio fase 1_P\n");
 	
+	_gt_initKB();
+	str();
 	_gp_crearProc(hola, 7, "HOLA", 1);
-	//_gp_crearProc(hola, 14, "HOLA", 2);
-	_gp_crearProc(detm, 8, "DETM", 2);
+	_gp_crearProc(detm, 8, "DETM", 2); 
 	
-	
+	/*
 	while (_gp_numProc() > 1) {
 		_gp_WaitForVBlank();
 		printf("*** Test %d:%d\n", _gd_tickCount, _gp_numProc());
-	}						// esperar a que terminen los procesos de usuario
-
-	while(1) {
-		swiWaitForVBlank();
-	}							// parar el procesador en un bucle infinito
+	}						// esperar a que terminen los procesos de usuari
 	
 	
 	// ProgM
@@ -110,7 +106,7 @@ int main(int argc, char **argv) {
 		printf("*** Programa \"PRNT\" NO cargado\n");
 
 	printf("*** Final fase 1_M\n");
-
+	*/
 	while (1) {
 		swiWaitForVBlank();
 	}							// parar el procesador en un bucle infinito
@@ -119,7 +115,39 @@ int main(int argc, char **argv) {
 	
 }
 
+char* str(unsigned char arg)
+{	
+	unsigned char lengthv1 = _gt_getstring(v1, 28, _ga_zocalo());
+	unsigned char lengthv2;
+	int i, temp;
+	switch (arg)
+	{
+		case 0:
+		lengthv2 = _gt_getstring(v2, 28, _ga_zocalo());
+		for (i = lengthv1; i< lengthv1+lengthv2; i++)
+		{
+			vresultat[i] = v2[i-lengthv];
+		}
+		vresultat[i
+		_gg_escribir(vresultat, 0, 0, 0);
 
+		break;
+		case 1:
+				for (i = 0; i < lengthv1; i++)
+				{
+					temp = v1[i];
+					v1[i] = v1[lengthv1-i-1];
+					v1[i] = temp;
+				}
+		break;
+		case 2:
+		break;
+		case 3:
+		break;
+	}
+	_gg_escribir(v1, 0, 0, 0);
+	return v;
+}
 
 /* Proceso de prueba, con llamadas a las funciones del API del sistema Garlic */
 //------------------------------------------------------------------------------

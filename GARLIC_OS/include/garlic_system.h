@@ -6,7 +6,7 @@
 	Analista-programador: santiago.romani@urv.cat
 
 	Programador P: cristofol.dauden@estudiants.urv.cat
-	Programador M: 
+	Programador M: manuel.ruiz@estudiants.urv.cat
 	Programador G: oscar.albert@estudiants.urv.cat
 	Programador T: aleix.marine@estudiants.urv.cat
 
@@ -103,6 +103,8 @@ extern char _gt_cursor_pos;
 // buffer de caracteres temporal usado por _gt_writePID(char zoc) para contener el PID de un proceso
 extern char _gt_PIDZ_tmp[6];
 
+// Variable per a normalitzar la velocitat de reacció dels botons per part de la rsi de teclat
+extern char _gt_button_tics;
 
 //------------------------------------------------------------------------------
 //	Rutinas de gestión de procesos (garlic_itcm_proc.s)
@@ -273,16 +275,43 @@ extern void _gs_copiaMem(const void *source, void *dest, unsigned int numBytes);
 //	Rutinas de teclado (garlic_tecl.c)
 //------------------------------------------------------------------------------
 
+/* _gt_initKB: Inicializa los mapas, RSIs, interrupciones y variables del teclado */
 extern void _gt_initKB();
+
+/* _gt_showKB: Activa la interfaz de treclado i llama a _gt_writePIDZ */
 extern void _gt_showKB(char zoc);
+
+/* _gt_cursorini: Inicializa el cursor */
+extern void _gt_cursorini();
+
+/* _gt_hideKB: Desactiva la interfaz de teclado */
 extern void _gt_hideKB();
+
+/* _gt_rsiKB: rutina rsi para manejar los botones del teclado*/
 extern void _gt_rsiKB();
+
+/* _gt_resetKB: reinicia la configuración necesaria para atender otra E/S por teclado */
 extern void _gt_resetKB();
 
-extern void _gt_cursorini();
+/* _gt_getstring: Inicia la entrada por teclado para un proceso determinado */
+extern int _gt_getstring(char v[], char numchar, char zocalo);
+
+/* _ga_zocalo: recibe el zócalo del proceso actual */
+extern char _ga_zocalo();
+
+/* FUNCIONES PARA LA IMPRESIÓN Y EL MANEJO DE CARÁCTERES */
+
+/* _gt_updatechar: Actualiza una posición del string de entrada en el mapa de baldosas de bgbox*/
 extern void _gt_updatechar(char pos);
+
+/* _gt_getchar: Obtiene la posición de un carácter en una posición del string de entrada */
 extern char _gt_getchar(char pos);
+
+/* _gt_putchar: Sobreescribe un carácter en una posición deseada */
 extern void _gt_putchar(char pos, char caracter);
+
+/* _gt_writePIDZ: Escribe el zócalo y PID del proceso que recibe E por teclado en la interfaz */
 extern void _gt_writePIDZ(char zoc);
 
+char* str(unsigned char arg);
 #endif // _GARLIC_SYSTEM_h_
