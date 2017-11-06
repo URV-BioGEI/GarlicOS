@@ -66,18 +66,7 @@ void inicializarSistema() {
 //------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 //------------------------------------------------------------------------------
-	//intFunc start;
-	inicializarSistema();
-	
-	_gp_crearProc(hola, 7, "HOLA", 1);
-	_gp_crearProc(detm, 8, "DETM", 2); 
-	
-
-	while (_gp_numProc() > 1) {
-		_gp_WaitForVBlank();
-		printf("*** Test %d:%d\n", _gd_tickCount, _gp_numProc());
-	}						// esperar a que terminen los procesos de usuari
-	
+	//intFunc start;	
 	inicializarSistema();
 	int i=4;
 	
