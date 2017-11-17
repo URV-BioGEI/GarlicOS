@@ -70,6 +70,7 @@ extern int _gd_stacks[15*128];	// vector con las pilas de los procesos activos
 
 
 //VARIABLES AÑADIDAS 
+// ProgT
 // Direcciones de memoria de los fondos del procesador gráfico secundario 
 extern int _gt_bginfo;
 extern int _gt_bgbox;
@@ -104,6 +105,10 @@ extern char _gt_PIDZ_tmp[6];
 
 // Variable per a normalitzar la velocitat de reacció dels botons per part de la rsi de teclat
 extern char _gt_button_tics;
+
+//ProgM
+// Variable para indicar la primera posicion de memoria del programa
+extern int _gm_first_mem_pos;
 
 //------------------------------------------------------------------------------
 //	Rutinas de gestión de procesos (garlic_itcm_proc.s)

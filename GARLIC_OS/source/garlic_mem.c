@@ -115,7 +115,7 @@ intFunc _gm_cargarPrograma(char *keyName)
 	//variables para tratar con partes del archivo .elf
 	Elf32_Ehdr head;
 	Elf32_Phdr segments_table;
-	Elf32_Off offset; Elf32_Off aa;
+	Elf32_Off offset;
 	Elf32_Half size_st;
 	Elf32_Half num_st;
 	
@@ -126,7 +126,6 @@ intFunc _gm_cargarPrograma(char *keyName)
 	
 	//guardamos offset, bytes de los headers de programa, y numero de headers de programa.
 	offset= head.e_phoff;
-	aa = head.e_shoff;
 	size_st= head.e_phentsize;
 	num_st= head.e_phnum;
 

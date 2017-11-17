@@ -42,7 +42,7 @@ void inicializarSistema() {
 	
 	_gd_seed = *punixTime;	// inicializar semilla para números aleatorios con
 	_gd_seed <<= 16;		// el valor de tiempo real UNIX, desplazado 16 bits
-	_gg_escribir("hola k ase fdgdgdfgdfgdfgdfdfgdgf", 0, 0, 1);
+	
 	irqInitHandler(_gp_IntrMain);	// instalar rutina principal interrupciones
 	irqSet(IRQ_VBLANK, _gp_rsiVBL);	// instalar RSI de vertical Blank
 	irqEnable(IRQ_VBLANK);			// activar interrupciones de vertical Blank
@@ -50,40 +50,61 @@ void inicializarSistema() {
 	
 	_gd_pcbs[0].keyName = 0x4C524147;	// "GARL"
 
-	if (!_gm_initFS()) {
-		printf("ERROR: ¡no se puede inicializar el sistema de ficheros!");
-		exit(0);
-	} */
-	
+	// Inicializar EDs i interrupciones de botones para el teclado
 	_gt_initKB();	
-	_gt_showKB(1);
+
+	if (!_gm_initFS()) {
+		GARLIC_printf("ERROR: ¡no se puede inicializar el sistema de ficheros!");
+		exit(0);
+	} 
+	
+	//_gt_showKB(1);
 
 
 	
 }
 
-
-void inicializarSeed() {
-	_gd_seed = *punixTime;	// inicializar semilla para números aleatorios con
-	_gd_seed <<= 16;		// el valor de tiempo real UNIX, desplazado 16 bits
-}
 //------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 //------------------------------------------------------------------------------
-	//intFunc start;	
+	intFunc start;	
 	inicializarSistema();
 	int i=4;
 	
-	_gg_escribir("********************************", 0, 0, 0);
-	_gg_escribir("*                              *", 0, 0, 0);
-	_gg_escribir("* Sistema Operativo GARLIC 1.0 *", 0, 0, 0);
-	_gg_escribir("*                              *", 0, 0, 0);
-	_gg_escribir("********************************", 0, 0, 0);
-	_gg_escribir("*** Inicio fase 1_G-P\n", 0, 0, 0);
+	GARLIC_printf("********************************");
+	GARLIC_printf("*                              *");
+	GARLIC_printf("* Sistema Operativo GARLIC 1.0 *");
+	GARLIC_printf("*                              *");
+	GARLIC_printf("********************************");
+	GARLIC_printf("*** Inicio fase 1_G-P\n");
+
+	start = _gm_cargarPrograma("HOLA");
+		GARLIC_printf("*** Direccion de arranque :\n\t\t%p\n", start);
+	if (start)
+	{	
+		_gp_crearProc(start, 0, "HOLA", 1);
+		GARLIC_printf("*** Direccion de arranque :\n\t\t%p\n", start);
+	} else printf("*** Programa \"HOLA\" NO cargado\n");
+
+	GARLIC_printf("*** SHEGUEEEE\n");
+
+
+	start = _gm_cargarPrograma("PRNT");
+	if (start)
+	{	
+		_gp_crearProc(start, 1, "PRNT", 2);
+		GARLIC_printf("*** Direccion de arranque :\n\t\t%p\n", start);
+	} 
+	else printf("*** Programa \"PRNT\" NO cargado\n");
 	
-	_gp_crearProc(tern, 7, "TERN", 0);
-	_gp_crearProc(hola, 14, "HOLA", 1);
-	_gp_crearProc(detm, 9, "DETM", 2);
+	start = _gm_cargarPrograma("CUAD");
+	if (start)
+	{	
+		GARLIC_printf("*** Direccion de arranque :\n\t\t%p\n", start);
+		_gp_crearProc(start, 2, "CUAD", 2);
+	} else printf("*** Programa \"CUAD\" NO cargado\n");
+	
+	printf("*** Final fase 1_M\n");
 	
 	//mentre hi hagi processos en execució diferents del S.O
 	while(_gp_numProc()>1){
@@ -92,101 +113,16 @@ int main(int argc, char **argv) {
 			i--;
 		}
 	}
-
-	_gg_escribir("*** Final fase 1_G-P\n", 0, 0, 0);
-	printf("********************************");
-	printf("*                              *");
-	printf("* Sistema Operativo GARLIC 1.0 *");
-	printf("*                              *");
-	printf("*******************************");
-	printf("*** Inicio fase 1_M\n");
 	
-	printf("*** Carga de programa HOLA.elf\n");
-	start = _gm_cargarPrograma("HOLA");
-	if (start)
-	{	printf("*** Direccion de arranque :\n\t\t%p\n", start);
-		printf("*** Pusle tecla \'START\' ::\n\n");
-		while(1) {
-			swiWaitForVBlank();
-			scanKeys();
-			if (keysDown() & KEY_START) break;
-		}
-		start(1);		// llamada al proceso HOLA con argumento 1
-	} else
-		printf("*** Programa \"HOLA\" NO cargado\n");
-
-	printf("\n\n\n*** Carga de programa PRNT.elf\n");
-	start = _gm_cargarPrograma("PRNT");
-	if (start)
-	{	printf("*** Direccion de arranque :\n\t\t%p\n", start);
-		printf("*** Pusle tecla \'START\' ::\n\n");
-		while(1) {
-			swiWaitForVBlank();
-			scanKeys();
-			if (keysDown() & KEY_START) break;
-		}
-		start(2); // llamada al proceso PRNT con argumento 2
-	} else
-		printf("*** Programa \"PRNT\" NO cargado\n");
-	
-	printf("\n\n\n*** Carga de programa CUAD.elf\n");
-	start = _gm_cargarPrograma("CUAD");
-	if (start)
-	{	printf("*** Direccion de arranque :\n\t\t%p\n", start);
-		printf("*** Pusle tecla \'START\' ::\n\n");
-		while(1) {
-			swiWaitForVBlank();
-			scanKeys();
-			if (keysDown() & KEY_START) break;
-		}
-		start(1);		// llamada al proceso CUAD con argumento 2
-	} else
-		printf("*** Programa \"CUAD\" NO cargado\n");
-	printf("*** Final fase 1_M\n");
-
+	// parar el procesador en un bucle infinito
 	while (1) {
 		swiWaitForVBlank();
-	}							// parar el procesador en un bucle infinito
+	}							
 	
 return 0;
 }
 
-/*
-char* str(unsigned char arg)
-{	
-	unsigned char lengthv1 = _gt_getstring(v1, 28, _ga_zocalo());
-	unsigned char lengthv2;
-	int i, temp;
-	switch (arg)
-	{
-		case 0:
-		lengthv2 = _gt_getstring(v2, 28, _ga_zocalo());
-		for (i = lengthv1; i< lengthv1+lengthv2; i++)
-		{
-			vresultat[i] = v2[i-lengthv];
-		}
-		vresultat[i
-		_gg_escribir(vresultat, 0, 0, 0);
-
-		break;
-		case 1:
-				for (i = 0; i < lengthv1; i++)
-				{
-					temp = v1[i];
-					v1[i] = v1[lengthv1-i-1];
-					v1[i] = temp;
-				}
-		break;
-		case 2:
-		break;
-		case 3:
-		break;
-	}
-	_gg_escribir(v1, 0, 0, 0);
-	return v;
-}*/
-
-/* Proceso de prueba, con llamadas a las funciones del API del sistema Garlic */
+/* Proceso de prueba, con llamadas a las funciones del API del sistema Garlic 
 
 //------------------------------------------------------------------------------
 int hola(int arg) {
@@ -212,7 +148,7 @@ int hola(int arg) {
 	return 0;
 }
 
-/* Proceso de prueba ProgP, con llamadas a las funciones del API del sistema Garlic */
+ Proceso de prueba ProgP, con llamadas a las funciones del API del sistema Garlic 
 //------------------------------------------------------------------------------
 int det3(int a[][3]){
 	return (a[0][0]*a[1][1]*a[2][2]+a[0][1]*a[1][2]*a[2][0]+a[1][0]*a[2][1]*a[0][2]-a[0][2]*a[1][1]*a[2][0]-a[0][1]*a[1][0]*a[2][2]-a[1][2]*a[2][1]*a[0][0]);
@@ -273,7 +209,7 @@ int detm(int arg)
 		}
 	}
 	
-	/*
+
 	//2x2
 	a[0][0]=7;
 	a[0][1]=6;
@@ -304,7 +240,7 @@ int detm(int arg)
 	a[4][3]=1;
 	a[4][4]=1;*/
 	
-/* Llegim elements matriu */ 
+/* Llegim elements matriu 
 	for(i=0;i<n;i++){ 
 		for(j=0;j<n;j++){
 			GARLIC_printf("(%d)\tElement: %d\n",GARLIC_pid(),a[i][j]);
@@ -312,7 +248,7 @@ int detm(int arg)
 	}
 	
 	det=-10;
-/*****Càlcul del DETERMINANT*****/
+*****Càlcul del DETERMINANT*****
 	if(n==2) det=a[0][0]*a[1][1]-a[0][1]*a[1][0];
 	else{
 		if(n==3) det=det3(a);
@@ -328,9 +264,8 @@ int detm(int arg)
 	if(n==5) GARLIC_printf("(%d)\tERROR MEMORIA EN MATRIU 5X5\n",GARLIC_pid());
 	else GARLIC_printf("(%d)\tDETERMINANT = %d\n",GARLIC_pid(),det);
 	return 0;
-}
-
-/* Proceso de prueba ProgP, con llamadas a las funciones del API del sistema Garlic */
+} 
+ Proceso de prueba ProgP, con llamadas a las funciones del API del sistema Garlic 
 //------------------------------------------------------------------------------
 unsigned int mcd(unsigned int a,unsigned int b){
 	unsigned int aux, quociente, modulo;
@@ -370,4 +305,6 @@ int tern(int arg)
 		m++;
 	}
 	return 0;
-}
+}*/
+
+
