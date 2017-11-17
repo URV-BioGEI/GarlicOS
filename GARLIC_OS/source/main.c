@@ -7,26 +7,7 @@
 #include <garlic_system.h>	// definición de funciones y variables de sistema
 #include <GARLIC_API.h>		// inclusión del API para simular un proceso
 
-int hola(int);				// función que simula la ejecución del proceso
-extern int prnt(int);		// otra función (externa) de test correspondiente a un proceso de usuario
-int detm(int);
-int tern(int);
 extern int * punixTime;		// puntero a zona de memoria con el tiempo real
-extern void _gt_initKB();
-
-char* str(unsigned char arg);
-
-char v1[28];					// vector per a probar la funcio de progT
-char v2[28];
-char vresultat[56];
-
-extern int * punixTime;		// puntero a zona de memoria con el tiempo real
-/*
-	"main.c" : fase 1 / programador M
-
-	Programa de prueba de carga de un fichero ejecutable en formato ELF,
-	pero sin multiplexación de procesos ni utilizar llamadas a _gg_escribir().*/
-
 
 /* Inicializaciones generales del sistema Garlic */
 //------------------------------------------------------------------------------
@@ -54,14 +35,11 @@ void inicializarSistema() {
 	_gt_initKB();	
 
 	if (!_gm_initFS()) {
-		GARLIC_printf("ERROR: ¡no se puede inicializar el sistema de ficheros!");
+		//GARLIC_printf("ERROR: ¡no se puede inicializar el sistema de ficheros!");
 		exit(0);
 	} 
 	
 	//_gt_showKB(1);
-
-
-	
 }
 
 //------------------------------------------------------------------------------
@@ -116,7 +94,7 @@ int main(int argc, char **argv) {
 	
 	// parar el procesador en un bucle infinito
 	while (1) {
-		swiWaitForVBlank();
+		_gp_WaitForVBlank();
 	}							
 	
 return 0;

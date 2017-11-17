@@ -106,6 +106,8 @@ void _gt_initKB()
 	for (i = 0; i < 28; i++) _gt_input[i] = -1;
 	/* inicialitzem el cursor*/
 	_gt_cursorini();
+	/* Amaguem el teclat */
+	_gt_hideKB();
 }
 
 void _gt_showKB(char zoc)
