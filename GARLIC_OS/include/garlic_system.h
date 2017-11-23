@@ -110,6 +110,10 @@ extern char _gt_button_tics;
 // Variable para indicar la primera posicion de memoria del programa
 extern int _gm_first_mem_pos;
 
+extern int quo;
+extern int res;
+
+
 //------------------------------------------------------------------------------
 //	Rutinas de gestión de procesos (garlic_itcm_proc.s)
 //------------------------------------------------------------------------------

@@ -67,7 +67,7 @@ void inicializarSistema() {
 //------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 //------------------------------------------------------------------------------
-	intFunc start;	
+	intFunc start, start1;	
 	inicializarSistema();
 	int i=4;
 	
@@ -79,35 +79,37 @@ int main(int argc, char **argv) {
 	GARLIC_printf("*** Inicio fase 1_G-P\n");
 
 	start = _gm_cargarPrograma("HOLA");
-		GARLIC_printf("*** Direccion de arranque :\n\t\t%p\n", start);
+	GARLIC_printf("*** Direccion de arranque :\n\t\t%p\n", start);
 	if (start)
 	{	
-		_gp_crearProc(start, 0, "HOLA", 1);
-		GARLIC_printf("*** Direccion de arranque :\n\t\t%p\n", start);
+		_gp_crearProc(start, 2, "HOLA", 1);
+		//GARLIC_printf("*** Direccion de arranque :\n\t\t%p\n", start);
 	} else printf("*** Programa \"HOLA\" NO cargado\n");
 
-	GARLIC_printf("*** SHEGUEEEE\n");
+	
 
 
-	start = _gm_cargarPrograma("PRNT");
-	if (start)
+	start1 = _gm_cargarPrograma("PRNT");
+	GARLIC_printf("*** Direccion de arranque :\n\t\t%p\n", start1);
+	if (start1)
 	{	
-		_gp_crearProc(start, 1, "PRNT", 2);
-		GARLIC_printf("*** Direccion de arranque :\n\t\t%p\n", start);
+		_gp_crearProc(start1, 1, "PRNT", 2);
+		//GARLIC_printf("*** Direccion de arranque :\n\t\t%p\n", start1);
 	} 
 	else printf("*** Programa \"PRNT\" NO cargado\n");
+	
 	
 	start = _gm_cargarPrograma("CUAD");
 	if (start)
 	{	
-		GARLIC_printf("*** Direccion de arranque :\n\t\t%p\n", start);
-		_gp_crearProc(start, 2, "CUAD", 2);
+		//GARLIC_printf("*** Direccion de arranque :\n\t\t%p\n", start);
+		_gp_crearProc(start, 3, "CUAD", 2);
 	} else printf("*** Programa \"CUAD\" NO cargado\n");
 	
-	printf("*** Final fase 1_M\n");
+	//printf("*** Final fase 1_M\n");
 	
 	//mentre hi hagi processos en execució diferents del S.O
-	while(_gp_numProc()>1){
+	while(_gp_numProc()>=1){
 		if(_gp_numProc()<i){
 			_gg_escribir("\t*** HA ACABAT UN PROCES\n", 0, 0, 0);
 			i--;

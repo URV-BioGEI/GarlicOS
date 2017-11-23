@@ -37,6 +37,16 @@ _gd_wbfs:	.space 4 * (4 + 32)
 _gd_stacks:	.space 15 * 128 * 4
 
 
+@; progM
+	.global quo
+quo:	.space 4
+
+	.global _gm_first_mem_pos	@; posición de memoria inicial donde cargar los programas 
+_gm_first_mem_pos: .word 0x01002000 
+
+	.global res
+res:    .space 4
+
 @;VARIABLES GLOBALS AFEGIDES
 
 @; progT
@@ -85,14 +95,7 @@ _gt_PIDZ_tmp: .space 6
 	.global _gt_button_tics		@; Variable per a normalitzar la velocitat de reacció dels botons per part de la rsi de teclat
 _gt_button_tics: .space 1
 
-@; progM
-
-	.global _gm_first_mem_pos	@; posición de memoria inicial donde cargar los programas 
-_gm_first_mem_pos: .word 0x01002000 
 
 
-
-	.global quo
-quo:    .space 4
 .end
 
