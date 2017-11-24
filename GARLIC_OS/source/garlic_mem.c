@@ -82,7 +82,6 @@ int _gm_initFS()
 intFunc _gm_cargarPrograma(char *keyName)
 {
 	//variables iniciales relacionadas con el cargar el vector en memoria dinámica
-	
 	long lSize;
 	char *buffer;
 	size_t result;
@@ -153,7 +152,7 @@ intFunc _gm_cargarPrograma(char *keyName)
 			Elf32_Addr dir_ref;
 			Elf32_Word size_prog;
 			
-			if (_gm_first_mem_pos > END_MEM) return 0;
+			//if (_gm_first_mem_pos > END_MEM) return 0;
 			//obtencion dirección inicial del segmento a cargar y desplazamiento y size programa
 			desp_prog = segments_table.p_offset;
 			dir_ref = segments_table.p_paddr;
