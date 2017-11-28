@@ -66,7 +66,7 @@ void _gt_initKB()
 	/* Inicialitzem comptador de processos */
 	_gd_kbwait_num = 0; 
 	
-	/* Posem la visbilitat del teclat a fals */
+	/* Posem la visibilitat del teclat a fals */
 	_gt_kbvisible = false;
 	
 	/* Carreguem els missatges */
@@ -107,6 +107,7 @@ void _gt_initKB()
 	/* inicialitzem el cursor*/
 	_gt_cursorini();
 	/* Amaguem el teclat */
+	//_gt_hideKB();
 	_gt_hideKB();
 }
 
@@ -127,12 +128,13 @@ void _gt_showKB(char zoc)
 void _gt_hideKB(){
 	irqDisable(IRQ_KEYS);	// desactivem interrupcions per teclat
 	
-	_gt_kbvisible = false;	// indiquem que teclat amagat
 	
 	bgHide(_gt_bginfo);		// amaguem tots els background
 	bgHide(_gt_bgbox);
 	bgHide(_gt_bgcursor);
 	
-	_gt_resetKB();
+	_gt_kbvisible = false;	// indiquem que teclat amagat
+
+	//_gt_resetKB();
 	
 }

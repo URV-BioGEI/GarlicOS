@@ -46,6 +46,7 @@ GARLIC_printf:
 	pop {r4, pc}
 	
 	.global GARLIC_getstring
+GARLIC_getstring:
 	push {r4, lr}
 	mov r4, #0				@; Inicializamos r4
 	mov lr, pc				@; Guardamos dirección de retorno de la función del API

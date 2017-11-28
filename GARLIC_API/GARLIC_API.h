@@ -26,7 +26,6 @@ extern int GARLIC_random();
 extern int GARLIC_divmod(unsigned int num, unsigned int den,
 							unsigned int * quo, unsigned int * mod);
 
-
 	/* GARLIC_printf: escribe un string en la ventana del proceso actual,
 		utilizando el string de formato 'format' que se pasa como primer
 		parámetro, insertando los valores que se pasan en los siguientes
@@ -39,11 +38,11 @@ extern int GARLIC_divmod(unsigned int num, unsigned int den,
 			%%	: inserta un carácter '%' literal
 		Además, también procesa los metacarácteres '\t' (tabulador) y '\n'
 		(salto de línia). */
-extern void GARLIC_printf(char * format, ...);
+extern void GARLIC_printf(char * format, ...); 
+
 	/* GARLIC_getstring: recibe la dirección de memoria donde guardar el string
 		introducido por teclado así como el máximo número de carácteres que 
 		puede contener el vector sin contar al centinela (/0). Devuelve el número
-		máximo de carácteres leídos finalmente sin contar al centinela. 
-		*/
+		máximo de carácteres leídos finalmente sin contar al centinela. */
 extern int GARLIC_getstring(char * string, int max_char);
 #endif // _GARLIC_API_h_
