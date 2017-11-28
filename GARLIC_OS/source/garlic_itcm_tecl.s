@@ -33,34 +33,44 @@
 	@;	el número total de caracteres leídos (excluido el centinela).
 _gt_getstring:
 	push {r1-r7, lr}
-	
-	@; si KB IF oculta -> KB IF visible i activamos interrupciones de teclado (llamada a _gt_showKB)
-	
-	ldr r4, =_gt_kbvisible		@; Cargamos @ de _gt_visible
-	ldrb r3, [r4]				@; r3 = _gt_visible
-	cmp r3, #1					@; Comprovamos si la interfaz de teclado está activada...
-	beq .Lgtgetstr_showed		@; Si es así nos saltamos este paso
-	
-	mov r5, r0					@; r5 = @ string. Salvamos la dirección del string en r5
-	mov r0, r2					@; Passada de parametres a _gt_showKB (espera el número de zócalo por r0)
-	bl _gt_showKB 				@; si o esta mostrada mostramos la interfaz
-	mov r0, r5					@; Recuperamos en r0 @ string
-	mov r3, #1					@; cargamos un 1 en r3,
-	strb r3, [r4]				@; indicamos que se esta mostrando,
-	@;ldr r3, =0x04000132			@; cargamos dirección del registro REG_KEYCNT,
-	@;ldrh r4, [r3]				@; cargamos el contenido de este registro,
-	@;orr r4, #0x2000				@; activamos el bit de RSIs general de teclado y
-	@;strh r4, [r3]				@; salvamos en el registro
-	
+
 	@; Ahora registraremos el proceso en la cola de espera del KB
 	
-	.Lgtgetstr_showed:			
 	ldr r3, =_gd_kbwait_num		@; Cargamos la @ el numero de procesos esperando 
 	ldrsb r4, [r3]				@; r4 = num procesos
 	ldr r5, =_gd_kbwait			@; cargamos @base de la cola de espera del KB (vector de char)
 	strb r2, [r5, r4]			@; guardamos el zócalo recibido por parámetro a la posicion
 	add r4, #1					@; sumamos 1 al índice
 	strb r4, [r3]				@; actualizamos el índice
+	
+	@; while (KB IF visible && (proces que crida a getstring != proces de rsi))  
+	
+	.Lgtgetstr_showKBwait:
+		bl _gp_WaitForVBlank		@; Esperamos un retroceso vertical para no sobrecargar CPU
+		ldr r4, =_gt_kbvisible		@; Cargamos @ de _gt_visible
+		ldrb r3, [r4]				@; r3 = _gt_visible
+		cmp r3, #1					@; Comprovamos si la interfaz de teclado está activada...
+	beq .Lgtgetstr_showKBwait	@; Si es así iteramos en el bucle
+		ldr r5, =_gd_kbwait			@; cargamos @base de la cola de espera del KB (vector de char)
+		ldrb r5, [r5]				@; Carreguem el proces que esta servint teclat actualment
+		cmp r2, r5					@; Si el proces en focus no es el que ha cridat aquessta rutia
+	bne .Lgtgetstr_showKBwait	@; continua iterant
+	
+	@; aqui nomes arribara el proces que esta cridant a la rutina getstring quan la rsi de teclat esta servint la seva peticio
+	
+	mov r5, r0					@; r5 = @ string. Salvamos la dirección del string en r5
+	mov r0, r2					@; Passada de parametres a _gt_showKB (espera el número de zócalo por r0)
+	push {r0-r5}
+	bl _gt_showKB 				@; mostramos
+	pop {r0-r5}
+	mov r0, r5					@; Recuperamos en r0 @ string 
+	@;mov r3, #1					@; cargamos un 1 en r3,
+	@;strb r3, [r4]				@; indicamos que se esta mostrando,
+	@;ldr r3, =0x04000132			@; cargamos dirección del registro REG_KEYCNT,
+	@;ldrh r4, [r3]				@; cargamos el contenido de este registro,
+	@;orr r4, #0x2000				@; activamos el bit de RSIs general de teclado y
+	@;strh r4, [r3]				@; salvamos en el registro
+ 
 
 	@;Bucle de espera a _gd_kbsignal
 
@@ -80,28 +90,32 @@ _gt_getstring:
 	@;total de caracteres y añadiendo el centinela, y devolviendo
 	@;el número total de caracteres leídos (excluido el centinela).
 	ldr r3, =_gt_inputl			@; carreguem @ base de la variable de nombre de caracters
-	ldrsb r2, [r3]				@; r2 = nombre de caracters d'input
+	ldrb r2, [r3]				@; r2 = nombre de caracters d'input
 	cmp r1, r2					@; Comparem el nombre de caracters d'input i la capacitat del string destí
 	movlo r2, r1				@; r2 = nombre de caracters maxim (valor més limitant)
+	
+	cmp r2, #0					@; Si no hi ha res al buffer sortim. 
+	beq .Lgtgetstr_copystrfi	@; 
+	
 	ldr r4, =_gt_input			@; r4 = @ base del vector de input
 	mov r5, #0					@; r5 = comptador. Inicialitzem comptador
-
+	
 .Lgtgetstr_copystr:
 	ldrsb r3, [r4, r5]			@; Carreguem signed (per a reconeixer caracter centinella) sobre r3. Conté el vector a tractar
-	@;cmp r3, #-1					@; Mirem que no sigui caracter de final de linea No cal mirar-ho ja que es un cas que no es dona
-	@;beq .Lgtgetstr_copystrfi	@; Si es sortim
 	add r3, #32					@; Factor de correcció per a transformar al codi ASCII
 	strb r3, [r0, r5]			@; Guardem sobre l'string que rebem per parametre
 	add r5, #1					@; Incrementem comptador
 	cmp r5, r2					@; Si el comptador no es igual al valor maxim 
 	bne .Lgtgetstr_copystr		@; tornem a iterar
 .Lgtgetstr_copystrfi:
-	mov r6, #0					@; Afegim el caracter de final de string (el \0 de tota la vida)
+	mov r6, #0					@; Afegim el caracter de final de string (el \0 de tota la, vida)
 	strb r6, [r0, r5]			@; Guardem el caracter de final de linia
 	
-	bl _gt_hideKB				@; Amaguem interficie de teclat
+	push {r0-r5}
 	bl _gt_resetKB				@; resetegem per al següent us
-	
+	bl _gt_hideKB				@; Amaguem interficie de teclat
+	pop {r0-r5}
+
 	mov r0, r2					@; Retorn de parametres
 	pop {r1-r7, pc}			
 	
@@ -198,7 +212,7 @@ _gt_resetKB:
 	@; reiniciar cursor
 		
 	ldr r0, =_gt_cursor_pos		@; r0 = @_gt_cursor_pos	
-	ldr r1, [r0]				@; r1 = _gt_cursor_pos
+	ldrb r1, [r0]				@; r1 = _gt_cursor_pos
 	mov r1, r1, lsl #1			@; r1 = r1*2
 	ldr r2, =_gt_mapbasecursor	@; r2 = @@_gt_mapbasecursor
 	ldr r2, [r2]				@; r2 = @_gt_mapbasecursor
@@ -211,7 +225,7 @@ _gt_resetKB:
 
 	mov r0, #0					@; r0 = 0
 	mov r1, #-1					@; r1 = -1
-	ldr r2, =_gt_input			@; r2 = @_gt_input
+	ldr r2, =_gt_input			@; r2 = @_gt_input 
 	ldr r3, =_gt_inputl			@; r3 = @_gt_inputl
 	ldrb r4, [r3]				@; r4 = _gt_inputl
 .Lgtr_clean_input:
@@ -293,7 +307,7 @@ _gt_rsiKB:
 	
 	ldr r0, =_gt_button_tics	@; r0 = @_gt_button_tics
 	ldrb r1, [r0]				@; r0 = _gt_button_tics. Comptem X pulsacions per a que la rsi s'activi (sino va massa rapid)
-	cmp r1, #10					@; Comparem amb _gt_num_hits_for_rsi
+	cmp r1, #10					@; Comparem amb x
 	moveq r1, #0				@; Si hem arribat a 10 reiniciem variable
 	addne r1, #1				@; Sinó sumem 1 al comptador de tics
 	strb r1, [r0]				@; i actualitzem la variable
@@ -419,7 +433,7 @@ _gt_rsiKB:
 .Lgtrsi_START:
 	ldr r2, =_gd_kbwait			@; r2 @ _gd_kbwait	
 	ldrb r4, [r2]				@; r4 socol del proces a _gd_kbwait[0] 
-	mov r0, #1					@; carreguem un 1 a r2
+	mov r0, #1					@; carreguem un 1 a r0
 	lsl r0, r4 					@; Desplacem tants bits com nombre de socol
 	ldr r1, =_gd_kbsignal		@; r1 = @ _gd_kbsignal
 	ldrh r3, [r1]				@; r3 = _gd_kbsignal

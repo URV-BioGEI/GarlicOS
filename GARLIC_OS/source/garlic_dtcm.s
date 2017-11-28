@@ -95,7 +95,5 @@ _gt_PIDZ_tmp: .space 6
 	.global _gt_button_tics		@; Variable per a normalitzar la velocitat de reacció dels botons per part de la rsi de teclat
 _gt_button_tics: .space 1
 
-
-
 .end
 
