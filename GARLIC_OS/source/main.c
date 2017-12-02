@@ -45,7 +45,6 @@ int main(int argc, char **argv) {
 	intFunc start;	
 
 	inicializarSistema();
-	printf("*** Inicio fase 1_M\n");
 	
 	GARLIC_printf("********************************"); // 32 caracters per fila
 	GARLIC_printf("*                              *");
@@ -85,15 +84,7 @@ int main(int argc, char **argv) {
 	if (start) _gp_crearProc(start, 3, "PRNT", 2);
 	else GARLIC_printf("*** Programa \"PRNT\" NO cargado\n");
 	
-	i=5;
-	//mentre hi hagi processos en execució diferents del S.O
-	while(_gp_numProc()>1){
-		if(_gp_numProc()<i){
-			GARLIC_printf("\n*** HA ACABAT UN PROCES ***\n");
-			i--;
-		}
-	}
-		GARLIC_printf("*** Final fase 1 M,T,G,P\n"); 
+	GARLIC_printf("*** Final fase 1 M,T,G,P\n"); 
 
 	// parar el procesador en un bucle infinito
 	while (1) {
