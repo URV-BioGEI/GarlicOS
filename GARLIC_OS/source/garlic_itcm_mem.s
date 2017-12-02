@@ -49,8 +49,10 @@ _gm_reubicar:
 		add r11, #16
 		ldr r1, [r8, r11]	@; en r1 tenemos el tamaño de cada reubicador
 		ldr r2, =quo
+		ldr r3, =res
 		bl _ga_divmod		@; en r2 tenemos el numero de reubicadores
 		ldr r2, [r2]
+		ldr r3, [r3]
 	.LBucleReubicadores:
 		cmp r2, #0
 		beq .Laddr11
