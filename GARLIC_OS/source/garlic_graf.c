@@ -252,7 +252,7 @@ void _gg_escribir(char *formato, unsigned int val1, unsigned int val2, int venta
 			numChars++;
 		}
 		if(caracter=='\n'|| numChars==VCOLS){
-			swiWaitForVBlank();		//Esperamos al siguiente periodo de retroceso vertical
+			_gp_WaitForVBlank();		//Esperamos al siguiente periodo de retroceso vertical
 			//Cuando filaActual=VFILS tendremos que desplazar la ventana
 			if(filaActual==VFILS){
 				_gg_desplazar(ventana);

@@ -13,6 +13,7 @@ extern int * punixTime;		// puntero a zona de memoria con el tiempo real
 //------------------------------------------------------------------------------
 void inicializarSistema() {
 //------------------------------------------------------------------------------
+	
 	int v;
 
 	_gg_iniGrafA();			// inicializar procesador gráfico A 
@@ -38,13 +39,13 @@ void inicializarSistema() {
 		//GARLIC_printf("ERROR: ¡no se puede inicializar el sistema de ficheros!");
 		exit(0);
 	} 
-	
 }
 
 //------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 //------------------------------------------------------------------------------
 	intFunc start;	
+
 	inicializarSistema();
 	
 	GARLIC_printf("********************************"); // 32 caracters per fila
@@ -64,7 +65,7 @@ int main(int argc, char **argv) {
 		}
 		else GARLIC_printf("* \nPrograma STRN NO cargado\n");
 	}
-	/*
+	
 	start = _gm_cargarPrograma("STRN");
 	if (start) _gp_crearProc(start, 1, "STRN", 2);
 	else GARLIC_printf("* \nPrograma STRN NO cargado\n");
@@ -85,19 +86,11 @@ int main(int argc, char **argv) {
 	if (start) _gp_crearProc(start, 2, "HOLA", 1);
 	else GARLIC_printf("*** Programa \"HOLA\" NO cargado\n");
 
-	start1 = _gm_cargarPrograma("PRNT");
-	if (start1) _gp_crearProc(start1, 3, "PRNT", 2);
-	else GARLIC_printf("*** Programa \"PRNT\" NO cargado\n");*/
+	start = _gm_cargarPrograma("PRNT");
+	if (start) _gp_crearProc(start, 3, "PRNT", 2);
+	else GARLIC_printf("*** Programa \"PRNT\" NO cargado\n");
 	
-	i=5;
-	//mentre hi hagi processos en execució diferents del S.O
-	while(_gp_numProc()>1){
-		if(_gp_numProc()<i){
-			GARLIC_printf("\n*** HA ACABAT UN PROCES ***\n");
-			i--;
-		}
-	}
-		GARLIC_printf("*** Final fase 1 M,T,G,P\n"); 
+	GARLIC_printf("*** Final fase 1 M,T,G,P\n"); 
 
 	// parar el procesador en un bucle infinito
 	while (1) {
@@ -106,5 +99,3 @@ int main(int argc, char **argv) {
 	
 return 0;
 }
-
-
