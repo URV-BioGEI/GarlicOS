@@ -78,28 +78,29 @@ int main(int argc, char **argv) {
 	GARLIC_printf("********************************");
 	GARLIC_printf("*** Inicio fase 1_G-P\n");
 
-	start = _gm_cargarPrograma("HOLA");
-	GARLIC_printf("*** Direccion de arranque :\n\t\t%p\n", start);
+	start = _gm_cargarPrograma("DETM");
+	GARLIC_printf("*** Direccion de arranque de DETM:\n\t\t%x\n", start);
 	if (start)
 	{	
-		_gp_crearProc(start, 2, "HOLA", 1);
+		_gp_crearProc(start, 2, "DETM", 1);
 		//GARLIC_printf("*** Direccion de arranque :\n\t\t%p\n", start);
-	} else printf("*** Programa \"HOLA\" NO cargado\n");
+	} else printf("*** Programa \"DETM\" NO cargado\n");
 
 	
 
 
-	start1 = _gm_cargarPrograma("PRNT");
-	GARLIC_printf("*** Direccion de arranque :\n\t\t%p\n", start1);
+	start1 = _gm_cargarPrograma("TERNS");
+	GARLIC_printf("*** Direccion de arranque de TERNS:\n\t\t%x\n", start1);
 	if (start1)
 	{	
-		_gp_crearProc(start1, 1, "PRNT", 2);
+		_gp_crearProc(start1, 1, "TERNS", 2);
 		//GARLIC_printf("*** Direccion de arranque :\n\t\t%p\n", start1);
 	} 
-	else printf("*** Programa \"PRNT\" NO cargado\n");
+	else printf("*** Programa \"TERNS\" NO cargado\n");
 	
 	
 	start = _gm_cargarPrograma("CUAD");
+	GARLIC_printf("*** Direccion de arranque de CUAD:\n\t\t%x\n", start);
 	if (start)
 	{	
 		//GARLIC_printf("*** Direccion de arranque :\n\t\t%p\n", start);

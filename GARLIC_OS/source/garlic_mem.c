@@ -117,6 +117,7 @@ intFunc _gm_cargarPrograma(char *keyName)
 	Elf32_Off offset;
 	Elf32_Half size_st;
 	Elf32_Half num_st;
+	Elf32_Addr entry;
 	
 	fseek(pFile,0,SEEK_SET);
 
@@ -127,6 +128,7 @@ intFunc _gm_cargarPrograma(char *keyName)
 	offset= head.e_phoff;
 	size_st= head.e_phentsize;
 	num_st= head.e_phnum;
+	entry = head.e_entry;
 
 	
 	if(num_st!= 0)
@@ -152,11 +154,16 @@ intFunc _gm_cargarPrograma(char *keyName)
 			Elf32_Addr dir_ref;
 			Elf32_Word size_prog;
 			
-			//if (_gm_first_mem_pos > END_MEM) return 0;
+			if (_gm_first_mem_pos > END_MEM) 
+			{
+				fclose(pFile);
+				free(buffer);
+				return ((intFunc)0);
+			}
 			//obtencion dirección inicial del segmento a cargar y desplazamiento y size programa
 			desp_prog = segments_table.p_offset;
 			dir_ref = segments_table.p_paddr;
-			size_prog = segments_table.p_filesz;
+			size_prog = segments_table.p_memsz;
 			//copia direcciones en memoria
 			_gs_copiaMem((const void *) &buffer[desp_prog],  (void *) _gm_first_mem_pos, size_prog);
 			
@@ -169,7 +176,7 @@ intFunc _gm_cargarPrograma(char *keyName)
 				size_prog = size_prog + (4-valor);
 			}
 			//damos valor a la dirección inicial de donde se encuentra el programa en memoria
-			dirprog = (int) _gm_first_mem_pos;
+			dirprog = (int) _gm_first_mem_pos+entry-dir_ref;
 			_gm_first_mem_pos = _gm_first_mem_pos + size_prog; //actualizamos para el siguiente progrma
 			
 		}
