@@ -13,14 +13,13 @@ extern int * punixTime;		// puntero a zona de memoria con el tiempo real
 //------------------------------------------------------------------------------
 void inicializarSistema() {
 //------------------------------------------------------------------------------
+	
 	int v;
 
 	_gg_iniGrafA();			// inicializar procesador gráfico A 
 	for (v = 0; v < 4; v++)	// para todas las ventanas
 		_gd_wbfs[v].pControl = 0;		// inicializar los buffers de ventana
 
-	//consoleDemoInit();		// inicializar consola, sólo para esta simulación  
-	 
 	_gd_seed = *punixTime;	// inicializar semilla para números aleatorios con
 	_gd_seed <<= 16;		// el valor de tiempo real UNIX, desplazado 16 bits
 	
@@ -38,14 +37,15 @@ void inicializarSistema() {
 		//GARLIC_printf("ERROR: ¡no se puede inicializar el sistema de ficheros!");
 		exit(0);
 	} 
-	
 }
 
 //------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 //------------------------------------------------------------------------------
 	intFunc start;	
+
 	inicializarSistema();
+	printf("*** Inicio fase 1_M\n");
 	
 	GARLIC_printf("********************************"); // 32 caracters per fila
 	GARLIC_printf("*                              *");
@@ -64,10 +64,6 @@ int main(int argc, char **argv) {
 		}
 		else GARLIC_printf("* \nPrograma STRN NO cargado\n");
 	}
-	/*
-	start = _gm_cargarPrograma("STRN");
-	if (start) _gp_crearProc(start, 1, "STRN", 2);
-	else GARLIC_printf("* \nPrograma STRN NO cargado\n");
 		
 	start = _gm_cargarPrograma("CUAD");
 	if (start)	_gp_crearProc(start, 5, "CUAD", 2);
@@ -85,9 +81,9 @@ int main(int argc, char **argv) {
 	if (start) _gp_crearProc(start, 2, "HOLA", 1);
 	else GARLIC_printf("*** Programa \"HOLA\" NO cargado\n");
 
-	start1 = _gm_cargarPrograma("PRNT");
-	if (start1) _gp_crearProc(start1, 3, "PRNT", 2);
-	else GARLIC_printf("*** Programa \"PRNT\" NO cargado\n");*/
+	start = _gm_cargarPrograma("PRNT");
+	if (start) _gp_crearProc(start, 3, "PRNT", 2);
+	else GARLIC_printf("*** Programa \"PRNT\" NO cargado\n");
 	
 	i=5;
 	//mentre hi hagi processos en execució diferents del S.O
@@ -106,5 +102,4 @@ int main(int argc, char **argv) {
 	
 return 0;
 }
-
 
