@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
 	start1 = _gm_cargarPrograma("PRNT");
 	if (start1) _gp_crearProc(start1, 3, "PRNT", 2);
 	else GARLIC_printf("*** Programa \"PRNT\" NO cargado\n");*/
-	
+	 
 	i=5;
 	//mentre hi hagi processos en execució diferents del S.O
 	while(_gp_numProc()>1){
