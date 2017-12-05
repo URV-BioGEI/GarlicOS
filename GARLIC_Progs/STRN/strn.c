@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 
 	"STRN.c" : programa de test del progT
-				(versión 1.0)
+				(versión 1.0) 
 
 	Duu a terme diferents funcions per a treballar amb strings,aprofitant
 	l'entrada del teclat.

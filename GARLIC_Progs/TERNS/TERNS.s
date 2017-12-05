@@ -1,5 +1,4 @@
 	.arch armv5te
-	.fpu softvfp
 	.eabi_attribute 23, 1
 	.eabi_attribute 24, 1
 	.eabi_attribute 25, 1
@@ -7,12 +6,13 @@
 	.eabi_attribute 30, 6
 	.eabi_attribute 34, 0
 	.eabi_attribute 18, 4
-	.arm
-	.syntax divided
 	.file	"TERNS.c"
 	.text
 	.align	2
 	.global	mcd
+	.syntax unified
+	.arm
+	.fpu softvfp
 	.type	mcd, %function
 mcd:
 	@ args = 0, pretend = 0, frame = 24
@@ -57,6 +57,9 @@ mcd:
 	.text
 	.align	2
 	.global	_start
+	.syntax unified
+	.arm
+	.fpu softvfp
 	.type	_start, %function
 _start:
 	@ args = 0, pretend = 0, frame = 40
@@ -65,9 +68,13 @@ _start:
 	sub	sp, sp, #44
 	str	r0, [sp, #4]
 	ldr	r3, [sp, #4]
-	add	r3, r3, #1
-	mov	r2, #2000
-	mul	r3, r2, r3
+	add	r2, r3, #1
+	mov	r3, r2
+	lsl	r3, r3, #5
+	sub	r3, r3, r2
+	lsl	r3, r3, #2
+	add	r3, r3, r2
+	lsl	r3, r3, #4
 	str	r3, [sp, #20]
 	mov	r3, #0
 	str	r3, [sp, #36]
@@ -85,24 +92,24 @@ _start:
 .L11:
 	ldr	r3, [sp, #24]
 	ldr	r2, [sp, #24]
-	mul	r2, r3, r2
+	mul	r0, r3, r2
 	ldr	r3, [sp, #28]
 	ldr	r1, [sp, #28]
-	mul	r3, r1, r3
-	rsb	r3, r3, r2
+	mul	r2, r1, r3
+	sub	r3, r0, r2
 	str	r3, [sp, #16]
 	ldr	r3, [sp, #24]
-	mov	r3, r3, asl #1
+	lsl	r1, r3, #1
 	ldr	r2, [sp, #28]
-	mul	r3, r2, r3
+	mul	r3, r2, r1
 	str	r3, [sp, #12]
 	ldr	r3, [sp, #24]
 	ldr	r2, [sp, #24]
-	mul	r2, r3, r2
+	mul	r0, r3, r2
 	ldr	r3, [sp, #28]
 	ldr	r1, [sp, #28]
-	mul	r3, r1, r3
-	add	r3, r2, r3
+	mul	r2, r1, r3
+	add	r3, r0, r2
 	str	r3, [sp, #36]
 	ldr	r2, [sp, #36]
 	ldr	r3, [sp, #20]
@@ -140,7 +147,7 @@ _start:
 	blt	.L11
 	b	.L9
 .L14:
-	mov	r0, r0	@ nop
+	nop
 .L9:
 	ldr	r3, [sp, #24]
 	add	r3, r3, #1
@@ -162,4 +169,4 @@ _start:
 	.word	.LC1
 	.word	.LC2
 	.size	_start, .-_start
-	.ident	"GCC: (devkitARM release 45) 5.3.0"
+	.ident	"GCC: (devkitARM release 47) 7.1.0"

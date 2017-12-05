@@ -5,7 +5,7 @@
 #include <nds.h>
 #include <stdio.h>
 #include <garlic_system.h>	// definición de funciones y variables de sistema
-#include <GARLIC_API.h>		// inclusión del API para simular un proceso
+//#include <GARLIC_API.h>		// inclusión del API para simular un proceso
 
 extern int * punixTime;		// puntero a zona de memoria con el tiempo real
 
@@ -48,39 +48,39 @@ int main(int argc, char **argv) {
 
 	inicializarSistema();
 	
-	GARLIC_printf("********************************"); // 32 caracters per fila
-	GARLIC_printf("*                              *");
-	GARLIC_printf("* Sistema Operativo GARLIC 1.0 *");
-	GARLIC_printf("*                              *");
-	GARLIC_printf("********************************");
-	GARLIC_printf("* Inicio fase 1_G-P-M-T        *");
+	_gg_escribir("********************************", 0, 0, 0); // 32 caracters per fila
+	_gg_escribir("*                              *", 0, 0, 0);
+	_gg_escribir("* Sistema Operativo GARLIC 1.0 *", 0, 0, 0);
+	_gg_escribir("*                              *", 0, 0, 0);
+	_gg_escribir("********************************", 0, 0, 0);
+	_gg_escribir("* Inicio fase 1_G-P-M-T        *", 0, 0, 0);
 	
-	int i; 
-	for (i=0; i<4; i++)
+	start = _gm_cargarPrograma("STRN");
+	if (start) _gp_crearProc(start, 4, "STRN", 0);
+	else _gg_escribir("* \nPrograma STRN NO cargado\n", 0, 0, 0);
+		
+	start = _gm_cargarPrograma("CUAD");
+	if (start)	_gp_crearProc(start, 5, "CUAD", 2);
+	else _gg_escribir("*** Programa \"CUAD\" NO cargado\n", 0, 0, 0);
+	
+	start = _gm_cargarPrograma("TERNS");
+	if (start)	_gp_crearProc(start, 6, "TERNS", 2);
+	else _gg_escribir("*** Programa \"TERNS\" NO cargado\n", 0, 0, 0);
+	
+	start = _gm_cargarPrograma("DETM");
+	if (start)	_gp_crearProc(start, 7, "DETM", 2);
+	else _gg_escribir("*** Programa \"DETM\" NO cargado\n", 0, 0, 0);
+	
+	/*
+		for (i=0; i<4; i++)
 	{
 		start = _gm_cargarPrograma("STRN");
 		if (start != 0)  
 		{
-			if (_gp_crearProc(start, i+1, "STRN", i%4) != 0) GARLIC_printf("*\nEl proces STRN no s'ha creat\n*");
+			if (_gp_crearProc(start, i+1, "STRN", i%4) != 0) _gg_escribir("*\nEl proces STRN no s'ha creat\n*",0,0,0);
 		}
-		else GARLIC_printf("* \nPrograma STRN NO cargado\n");
+		else _gg_escribir("* \nPrograma STRN NO cargado\n", 0, 0, 0);
 	}
-	
-	start = _gm_cargarPrograma("STRN");
-	if (start) _gp_crearProc(start, 1, "STRN", 2);
-	else GARLIC_printf("* \nPrograma STRN NO cargado\n");
-		
-	start = _gm_cargarPrograma("CUAD");
-	if (start)	_gp_crearProc(start, 5, "CUAD", 2);
-	else GARLIC_printf("*** Programa \"CUAD\" NO cargado\n");
-	
-	start = _gm_cargarPrograma("TERNS");
-	if (start)	_gp_crearProc(start, 6, "TERNS", 2);
-	else GARLIC_printf("*** Programa \"TERNS\" NO cargado\n");
-	
-	start = _gm_cargarPrograma("DETM");
-	if (start)	_gp_crearProc(start, 3, "DETM", 2);
-	else GARLIC_printf("*** Programa \"DETM\" NO cargado\n");
 	
 	start = _gm_cargarPrograma("HOLA");
 	if (start) _gp_crearProc(start, 2, "HOLA", 1);
@@ -89,8 +89,8 @@ int main(int argc, char **argv) {
 	start = _gm_cargarPrograma("PRNT");
 	if (start) _gp_crearProc(start, 3, "PRNT", 2);
 	else GARLIC_printf("*** Programa \"PRNT\" NO cargado\n");
-	
-	GARLIC_printf("*** Final fase 1 M,T,G,P\n"); 
+	*/
+	_gg_escribir("*** Final fase 1 M,T,G,P\n", 0, 0, 0); 
 
 	// parar el procesador en un bucle infinito
 	while (1) {
