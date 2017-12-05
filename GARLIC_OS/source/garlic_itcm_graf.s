@@ -84,7 +84,7 @@ _gg_escribirCar:
 	
 .global _gg_escribirMat
 _gg_escribirMat:
-	push {lr}
+	push {lr} 
 	pop {pc}
 	
 .global _gs_borrarVentana
