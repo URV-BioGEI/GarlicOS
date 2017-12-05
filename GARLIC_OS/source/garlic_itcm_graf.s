@@ -82,7 +82,7 @@ _gg_escribirCar:
 	push {lr}
 	pop {pc}
 	
-.global _gg_escribirMat
+.global _gg_escribirMat 
 _gg_escribirMat:
 	push {lr}
 	pop {pc}
