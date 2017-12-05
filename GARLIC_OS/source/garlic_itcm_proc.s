@@ -10,6 +10,11 @@
 	.arm
 	.align 2
 	
+	.global _gp_retardarProc
+_gp_retardarProc:
+	push {lr}
+	pop {pc}
+	
 	.global _gp_WaitForVBlank
 	@; rutina para pausar el procesador mientras no se produzca una interrupción
 	@; de retrazado vertical (VBL); es un sustituto de la "swi #5", que evita
@@ -244,7 +249,20 @@ _gp_restaurarProc:
 	msr CPSR, r10			@; Canvem el mode
 	pop {r8-r11, pc}
 
-
+	@;===============
+	.global _gp_numProc
+	@;Resultado
+	@; R0: número de procesos total
+@;_gp_numProc:
+	@;push {r1-r2, lr}
+	@;mov r0, #1				@; contar siempre 1 proceso en RUN
+	@;ldr r1, =_gd_nReady
+	@;ldr r2, [r1]			@; R2 = número de procesos en cola de READY
+	@;add r0, r2				@; añadir procesos en READY
+	@;pop {r1-r2, pc}
+	
+	@;=================
+	
 	.global _gp_numProc
 	@;Resultado
 	@; R0: número de procesos total
@@ -254,8 +272,10 @@ _gp_numProc:
 	ldr r1, =_gd_nReady
 	ldr r2, [r1]			@; R2 = número de procesos en cola de READY
 	add r0, r2				@; añadir procesos en READY
+	ldr r1, =_gd_nDelay
+	ldr r2, [r1]			@; R2 = número de procesos en cola de DELAY
+	add r0, r2				@; añadir procesos retardados
 	pop {r1-r2, pc}
-
 
 
 	.global _gp_crearProc
@@ -330,6 +350,28 @@ _gp_crearProc:
 .Lfi_crear_proc:
 	pop {r4-r7, pc}
 
+@;================
+	@; Rutina para terminar un proceso de usuario:
+	@; pone a 0 el campo PID del PCB del zócalo actual, para indicar que esa
+	@; entrada del vector _gd_pcbs está libre; también pone a 0 el PID de la
+	@; variable _gd_pidz (sin modificar el número de zócalo), para que el código
+	@; de multiplexación de procesos no salve el estado del proceso terminado.
+@;_gp_terminarProc:
+	@;ldr r0, =_gd_pidz
+	@;ldr r1, [r0]			@; R1 = valor actual de PID + zócalo
+	@;and r1, r1, #0xf		@; R1 = zócalo del proceso desbancado
+	@;str r1, [r0]			@; guardar zócalo con PID = 0, para no salvar estado			
+	@;ldr r2, =_gd_pcbs
+	@;mov r10, #24
+	@;mul r11, r1, r10
+	@;add r2, r11				@; R2 = dirección base _gd_pcbs[zocalo]
+	@;mov r3, #0
+	@;str r3, [r2]			@; pone a 0 el campo PID del PCB del proceso
+@;;.LterminarProc_inf:
+	@;bl _gp_WaitForVBlank	@; pausar procesador
+	@;b .LterminarProc_inf	@; hasta asegurar el cambio de contexto
+	
+@;===================
 
 	@; Rutina para terminar un proceso de usuario:
 	@; pone a 0 el campo PID del PCB del zócalo actual, para indicar que esa
@@ -347,9 +389,15 @@ _gp_terminarProc:
 	add r2, r11				@; R2 = dirección base _gd_pcbs[zocalo]
 	mov r3, #0
 	str r3, [r2]			@; pone a 0 el campo PID del PCB del proceso
+	str r3, [r2, #20]		@; borrar porcentaje de USO de la CPU
+	ldr r0, =_gd_sincMain
+	ldr r2, [r0]			@; R2 = valor actual de la variable de sincronismo
+	mov r3, #1
+	mov r3, r3, lsl r1		@; R3 = máscara con bit correspondiente al zócalo
+	orr r2, r3
+	str r2, [r0]			@; actualizar variable de sincronismo
 .LterminarProc_inf:
 	bl _gp_WaitForVBlank	@; pausar procesador
 	b .LterminarProc_inf	@; hasta asegurar el cambio de contexto
-	
 .end
 

@@ -77,7 +77,21 @@ _gg_escribirLinea:
 	
 	pop {r3-r6, pc}
 
-
+.global _gg_escribirCar
+_gg_escribirCar:
+	push {lr}
+	pop {pc}
+	
+.global _gg_escribirMat
+_gg_escribirMat:
+	push {lr}
+	pop {pc}
+	
+.global _gs_borrarVentana
+_gs_borrarVentana:
+	push {lr}
+	pop {pc}
+	
 	.global _gg_desplazar
 	@; Rutina para desplazar una posición hacia arriba todas las filas de la
 	@; ventana (v), y borrar el contenido de la última fila

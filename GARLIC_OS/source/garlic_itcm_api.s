@@ -3,7 +3,7 @@
 @;	"garlic_itcm_api.s":	código de las rutinas del API de GARLIC 1.0
 @;							(ver "GARLIC_API.h" para descripción de las
 @;							 funciones correspondientes)
-@;
+@; SUBSTITUIDES TOTES LES FUNCIONS EXCEPTE GETSTRING
 @;==============================================================================
 
 .section .itcm,"ax",%progbits
@@ -11,42 +11,31 @@
 	.arm
 	.align 2
 
-
 	.global _ga_pid
 	@;Resultado:
 	@; R0 = identificador del proceso actual
 _ga_pid:
-		push {r1, lr}
-		ldr r0, =_gd_pidz
-		ldr r1, [r0]			@; R1 = valor actual de PID + zócalo
-		mov r0, r1, lsr #0x4	@; R0 = PID del proceso actual
-		pop {r1, pc}
-
-	.global _ga_zocalo
-	@; Obtiene el zocalo del proceso actual (usada por las funciones que necesitan saber su zocalo para llamar a _gt_getstring)
-	@; R0 = zocalo del proceso actual
-_ga_zocalo:
-		push {r1, lr}
-		ldr r0, =_gd_pidz
-		ldrb r1, [r0]		@; R1 = 4 bits basura + zócalo
-		and r0, r1, #0x4	@; R0 = PID del proceso actual. clean de los bits residuales del PID
-		pop {r1, pc} 
+	push {r1, lr}
+	ldr r0, =_gd_pidz
+	ldr r1, [r0]			@; R1 = valor actual de PID + zócalo
+	mov r0, r1, lsr #0x4	@; R0 = PID del proceso actual
+	pop {r1, pc}
 
 
 	.global _ga_random
 	@;Resultado:
 	@; R0 = valor aleatorio de 32 bits
 _ga_random:
-		push {r1-r5, lr}
-		ldr r0, =_gd_seed
-		ldr r1, [r0]			@; R1 = valor de semilla de números aleatorios
-		ldr r2, =0x0019660D
-		ldr r3, =0x3C6EF35F
-		umull r4, r5, r1, r2	@; R5:R4 = _gd_seed * 0x19660D
-		add r4, r3				@; R4 += 0x3C6EF35F
-		str r4, [r0]			@; guarda la nueva semilla (R4)
-		mov r0, r5				@; devuelve por R0 el valor aleatorio (R5)
-		pop {r1-r5, pc}
+	push {r1-r5, lr}
+	ldr r0, =_gd_seed
+	ldr r1, [r0]			@; R1 = valor de semilla de números aleatorios
+	ldr r2, =0x0019660D
+	ldr r3, =0x3C6EF35F
+	umull r4, r5, r1, r2	@; R5:R4 = _gd_seed * 0x19660D
+	add r4, r3				@; R4 += 0x3C6EF35F
+	str r4, [r0]			@; guarda la nueva semilla (R4)
+	mov r0, r5				@; devuelve por R0 el valor aleatorio (R5)
+	pop {r1-r5, pc}
 
 
 	.global _ga_divmod
@@ -107,14 +96,78 @@ _ga_printf:
 	push {r4, lr}
 	ldr r4, =_gd_pidz		@; R4 = dirección _gd_pidz
 	ldr r3, [r4]
-	and r3, #0x3			@; R3 = ventana de salida (zócalo actual MOD 4)
-
-	bl _gp_WaitForVBlank
+	and r3, #0xF			@; R3 = ventana de salida (zócalo actual MOD 16)
 	bl _gg_escribir
-
 	pop {r4, pc}
 
-.global _ga_getstring
+
+	.global _ga_printchar
+	@;Parámetros
+	@; R0: int vx
+	@; R1: int vy
+	@; R2: char c
+	@; R3: int color
+_ga_printchar:
+	push {r4-r5, lr}
+	ldr r5, =_gd_pidz		@; R5 = dirección _gd_pidz
+	ldr r4, [r5]
+	and r4, #0xF			@; R4 = ventana de salida (zócalo actual)
+	push {r4}				@; pasar 4º parámetro (núm. ventana) por la pila
+	bl _gg_escribirCar
+	add sp, #4				@; eliminar 4º parámetro de la pila
+	pop {r4-r5, pc}
+
+
+	.global _ga_printmat
+	@;Parámetros
+	@; R0: int vx
+	@; R1: int vy
+	@; R2: char *m[]
+	@; R3: int color
+_ga_printmat:
+	push {r4-r5, lr}
+	ldr r5, =_gd_pidz		@; R5 = dirección _gd_pidz
+	ldr r4, [r5]
+	and r4, #0xF			@; R4 = ventana de salida (zócalo actual)
+	push {r4}				@; pasar 4º parámetro (núm. ventana) por la pila
+	bl _gg_escribirMat
+	add sp, #4				@; eliminar 4º parámetro de la pila
+	pop {r4-r5, pc}
+
+
+	.global _ga_delay
+	@;Parámetros
+	@; R0: int nsec
+_ga_delay:
+	push {r2-r3, lr}
+	ldr r3, =_gd_pidz		@; R3 = dirección _gd_pidz
+	ldr r2, [r3]
+	and r2, #0xf			@; R2 = zócalo actual
+	cmp r0, #0
+	bhi .Ldelay1
+	bl _gp_WaitForVBlank	@; si nsec = 0, solo desbanca el proceso
+	b .Ldelay3				@; y salta al final de la rutina
+.Ldelay1:
+	cmp r0, #600
+	bls .Ldelay2
+	mov r0, #600			@; limitar el número de segundos a 600 (10 minutos)
+.Ldelay2:
+	bl _gp_retardarProc
+.Ldelay3:
+	pop {r2-r3, pc}
+
+
+	.global _ga_clear
+_ga_clear:
+	push {r0-r1, lr}
+	ldr r1, =_gd_pidz
+	ldr r0, [r1]
+	and r0, #0xf			@; R0 = zócalo actual
+	mov r1, #1				@; R1 = 1 -> 16 ventanas
+	bl _gs_borrarVentana
+	pop {r0-r1, pc}
+
+	.global _ga_getstring
 	@; Parámetros
 	@; R0: string -> dirección base del vector de caracteres (bytes)
 	@; R1: max_char -> número máximo de caracteres del vector

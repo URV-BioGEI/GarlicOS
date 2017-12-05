@@ -21,14 +21,14 @@ include $(DEVKITARM)/base_rules
 # BUILD is the directory where object files & intermediate files will be placed
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing extra header files
-# DATA contains .bin files with extra data for the project (e.g. graphic tiles)
+# OBJECTS contains .obj files for complementing partial source file set projects
 # NITRODATA contains the "virtual" file system accessed through filesystem lib
 #-------------------------------------------------------------------------------
 TARGET		:=	$(shell basename $(CURDIR))
 BUILD		:=	build
 SOURCES		:=	source
 INCLUDES	:=	include
-DATA		:=	data
+OBJECTS		:=	obj_files
 NITRODATA	:=	nitrofiles
 
 #-------------------------------------------------------------------------------
@@ -74,18 +74,14 @@ export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
 CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
 AFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.bin)))
- 
-export OFILES	:=	$(BINFILES:.bin=.o) $(CFILES:.c=.o)
-export SFILES	:=	$(AFILES:.s=.o)
+export OBJFILES	:=	$(foreach dir,$(OBJECTS),$(notdir $(wildcard $(dir)/*.obj)))
+export SOBJFILE	:=	$(foreach dir,$(OBJECTS),$(notdir $(wildcard $(dir)/*.sobj)))
 
-# GARLIC_API is the directory where the API's include and source code lives
-#			(assume a relative structure of the GARLIC project directories)
-export GARLICAPI	:=	$(CURDIR)/../GARLIC_API
+export OFILES	:=	$(addsuffix .o,$(OBJFILES)) $(CFILES:.c=.o)
+export SFILES	:=	$(addsuffix .o,$(SOBJFILE)) $(AFILES:.s=.o)
 
 export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
-					$(foreach dir,$(LIBNDS),-I$(dir)/include) \
-					-I$(GARLICAPI)
+					$(foreach dir,$(LIBNDS),-I$(dir)/include)
  
 export LIBPATHS	:=	$(foreach dir,$(LIBNDS),-L$(dir)/lib)
 
@@ -95,7 +91,7 @@ export LIBPATHS	:=	$(foreach dir,$(LIBNDS),-L$(dir)/lib)
 #---------------------------------------------------------------------------------
 export LD	:=	$(CC)
 
-export GAME_TITLE	:=	GARLIC_OS_v1
+export GAME_TITLE	:=	GARLIC_OS_v2
 export GAME_SUBTITLE1	:=	Practica de Estructura de Sistemas Operativos
 export GAME_SUBTITLE2	:=	Departamento de Ingenieria Informatica y Matematicas (URV)
 export GAME_ICON	:= 	$(DEVKITPRO)/libnds/icon.bmp
@@ -147,13 +143,24 @@ $(OUTPUT).elf	:	$(OFILES) $(SFILES)
 #---------------------------------------------------------------------------------
 %.elf:
 	@echo linking $(notdir $@)
-	$(LD)  $(LDFLAGS) $(OFILES) $(LIBPATHS) $(LIBS) $(SFILES) $(GARLICAPI)/GARLIC_API.o -o $@
+	$(LD)  $(LDFLAGS) $(OFILES) $(LIBPATHS) $(LIBS) $(SFILES) -o $@
+
 
 #---------------------------------------------------------------------------------
-%.bin.o	:	%.bin
+# rules for copying $(BUILD)/../obj_files/*.obj files into $(BUILD)/*.obj.o
 #---------------------------------------------------------------------------------
-	@echo $(notdir $<)
-	$(bin2o)
+%.obj:
+	@echo $@
+
+%.obj.o	:	%.obj
+	cp ../$(OBJECTS)/$< $@
+
+%.sobj:
+	@echo $@
+
+%.sobj.o	:	%.sobj
+	cp ../$(OBJECTS)/$< $@
+
  
 -include $(DEPSDIR)/*.d
 

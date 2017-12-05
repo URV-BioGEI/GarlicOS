@@ -18,6 +18,9 @@ _gd_pidCount:	.word 0
 	.global _gd_tickCount		@; Contador global de tics
 _gd_tickCount:	.word 0
 
+	.global _gd_sincMain		@; Sincronismos con programa principal
+_gd_sincMain:	.word 0
+
 	.global _gd_seed			@; Semilla para generación de números aleatorios
 _gd_seed:	.word 0xFFFFFFFF
 
@@ -26,6 +29,12 @@ _gd_nReady:	.word 0
 
 	.global _gd_qReady			@; Cola de READY (procesos preparados)
 _gd_qReady:	.space 16
+
+	.global _gd_nDelay			@; Número de procesos en la cola de DELAY
+_gd_nDelay:	.word 0
+
+	.global _gd_qDelay			@; Cola de DELAY (procesos retardados)
+_gd_qDelay:	.space 16 * 4
 
 	.global _gd_pcbs			@; Vector de PCBs de los procesos activos
 _gd_pcbs:	.space 16 * 6 * 4
