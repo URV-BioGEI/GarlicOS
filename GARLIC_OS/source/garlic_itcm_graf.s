@@ -5,17 +5,17 @@
 @;
 @;==============================================================================
 
-NVENT	= 4					@; número de ventanas totales
-PPART	= 2					@; número de ventanas horizontales o verticales
+NVENT	= 16					@; número de ventanas totales
+PPART	= 4					@; número de ventanas horizontales o verticales
 							@; (particiones de pantalla)
-L2_PPART = 1				@; log base 2 de PPART
+L2_PPART = 2				@; log base 2 de PPART
 
 VCOLS	= 32				@; columnas y filas de cualquier ventana
 VFILS	= 24
 PCOLS	= VCOLS * PPART		@; número de columnas totales (en pantalla)
 PFILS	= VFILS * PPART		@; número de filas totales (en pantalla)
 
-WBUFS_LEN = 36				@; longitud de cada buffer de ventana (32+4)
+WBUFS_LEN = 68				@; longitud de cada buffer de ventana (32+4)
 
 .section .itcm,"ax",%progbits
 
@@ -76,21 +76,8 @@ _gg_escribirLinea:
 	blo .Lescribir			@; Si contador<n efectuamos otra iteración
 	
 	pop {r3-r6, pc}
-
-.global _gg_escribirCar
-_gg_escribirCar:
-	push {lr}
-	pop {pc}
 	
-.global _gg_escribirMat 
-_gg_escribirMat:
-	push {lr}
-	pop {pc}
 	
-.global _gs_borrarVentana
-_gs_borrarVentana:
-	push {lr}
-	pop {pc}
 	
 	.global _gg_desplazar
 	@; Rutina para desplazar una posición hacia arriba todas las filas de la
@@ -152,6 +139,62 @@ _gg_desplazar:
 	bhi .Ldesp_final
 	
 	pop {r1-r7,pc}
+	
+	.global _gg_escribirLineaTabla
+	@; escribe los campos básicos de una linea de la tabla correspondiente al
+	@; zócalo indicado por parámetro con el color especificado; los campos
+	@; son: número de zócalo, PID, keyName y dirección inicial
+	@;Parámetros:
+	@;	R0 (z)		->	número de zócalo
+	@;	R1 (color)	->	número de color (de 0 a 3)
+_gg_escribirLineaTabla:
+	push {lr}
+
+
+	pop {pc}
+	
+	.global _gg_escribirCar
+	@; escribe un carácter (baldosa) en la posición de la ventana indicada,
+	@; con un color concreto;
+	@;Parámetros:
+	@;	R0 (vx)		->	coordenada x de ventana (0..31)
+	@;	R1 (vy)		->	coordenada y de ventana (0..23)
+	@;	R2 (car)	->	código del caràcter, como número de baldosa (0..127)
+	@;	R3 (color)	->	número de color del texto (de 0 a 3)
+	@; pila (vent)	->	número de ventana (de 0 a 15)
+_gg_escribirCar:
+	push {lr}
+
+
+	pop {pc}
+
+
+	.global _gg_escribirMat
+	@; escribe una matriz de 8x8 carácteres a partir de una posición de la
+	@; ventana indicada, con un color concreto;
+	@;Parámetros:
+	@;	R0 (vx)		->	coordenada x inicial de ventana (0..31)
+	@;	R1 (vy)		->	coordenada y inicial de ventana (0..23)
+	@;	R2 (m)		->	puntero a matriz 8x8 de códigos ASCII (dirección)
+	@;	R3 (color)	->	número de color del texto (de 0 a 3)
+	@; pila	(vent)	->	número de ventana (de 0 a 15)
+_gg_escribirMat:
+	push {lr}
+
+
+	pop {pc}
+
+
+
+	.global _gg_rsiTIMER2
+	@; Rutina de Servicio de Interrupción (RSI) para actualizar la representa-
+	@; ción del PC actual.
+_gg_rsiTIMER2:
+	push {lr}
+
+
+	pop {pc}
+
 
 
 .end

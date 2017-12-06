@@ -11,8 +11,8 @@
 #include <garlic_font.h>	// definición gráfica de caracteres
 
 /*definiciones*/
-#define NVENT	 4					// número de ventanas totales
-#define PPART	 2					// número de ventanas horizontales o verticales (particiones de pantalla)
+#define NVENT	 16					// número de ventanas totales
+#define PPART	 4					// número de ventanas horizontales o verticales (particiones de pantalla)
 
 #define L2_PPART 1				// log base 2 de PPART
 
@@ -23,6 +23,7 @@
 
 int bg2, bg3, bg2map;
 
+const unsigned int char_colors[] = {240, 96, 64};	// amarillo, verde, rojo
 
 /* _gg_generarMarco: dibuja el marco de la ventana que se indica por parámetro*/
 void _gg_generarMarco(int v, int color)
@@ -77,27 +78,33 @@ void _gg_iniGrafA()
 	videoSetMode(MODE_5_2D);
 	vramSetBankA(VRAM_A_MAIN_BG_0x06000000);
 	lcdMainOnTop();
+	
 	//inicialització del fons gràfics 2 i 3: S'ha de tenir en compte el tamany que ocupará cada mapa
-	//tamany mapa=nº posicions*nºbytes/posició=64*64posicions * 2bytes/posició =8192bytes= 8K (separació de 4 mapbase)
-	bg2=bgInit(2, BgType_ExRotation,BgSize_ER_512x512,0,3);
-	bg3=bgInit(3, BgType_ExRotation,BgSize_ER_512x512,4,3);
-	bg2map=(int)bgGetMapPtr(bg2);
+	//tamany mapa=nº posicions*nºbytes/posició=128*128posicions * 2bytes/posició =327682bytes= 32K (separació de 4 mapbase)
+	bg2 = bgInit(2, BgType_ExRotation,BgSize_ER_1024x1024,0,4);
+	bg3 = bgInit(3, BgType_ExRotation,BgSize_ER_1024x1024,16,4);
+	bg2map = (int) bgGetMapPtr(bg2);
+	
 	//Prioritat fons 3>fons 2
 	bgSetPriority(bg3,0);
 	bgSetPriority(bg2,1);
+	
 	//void decompress(const void * data, void * dst, DecompressType type)
 	decompress(garlic_fontTiles, bgGetGfxPtr(bg3), LZ77Vram);
 	
 	dmaCopy(garlic_fontPal, BG_PALETTE, sizeof(garlic_fontPal));
 	
 	//generar los marcos de las ventanas de texto en el fondo 3
-	for (int i=0;i<NVENT;i++){
+	for (int i=0 ; i<NVENT ; i++)
+	{
 		_gg_generarMarco(i, 0); // afegit argument per a la compilacio del commit inicial fase 2
 	}
+	
 	//escalar los fondos 2 y 3 para que se ajusten exactamente a las dimensiones de una pantalla de la nds
 	//zoom al 50%
-	bgSetScale(bg3,512, 512);
-	bgSetScale(bg2, 512, 512);
+	bgSetScale(bg3,1024, 1024);
+	bgSetScale(bg2, 1024, 1024);
+	
 	bgUpdate();
 }
 

@@ -1,15 +1,16 @@
 @;==============================================================================
 @;
-@;	"garlic_itcm_api.s":	código de las rutinas del API de GARLIC 1.0
+@;	"garlic_itcm_api.s":	código de las rutinas del API de GARLIC 2.0
 @;							(ver "GARLIC_API.h" para descripción de las
 @;							 funciones correspondientes)
-@; SUBSTITUIDES TOTES LES FUNCIONS EXCEPTE GETSTRING
+@;
 @;==============================================================================
 
 .section .itcm,"ax",%progbits
 
 	.arm
 	.align 2
+
 
 	.global _ga_pid
 	@;Resultado:
@@ -93,12 +94,12 @@ _ga_divmod:
 	@; R1: unsigned int val1 (opcional),
 	@; R2: unsigned int val2 (opcional)
 _ga_printf:
-	push {r4, lr}
+	push {r3-r4, lr}
 	ldr r4, =_gd_pidz		@; R4 = dirección _gd_pidz
 	ldr r3, [r4]
 	and r3, #0xF			@; R3 = ventana de salida (zócalo actual MOD 16)
 	bl _gg_escribir
-	pop {r4, pc}
+	pop {r3-r4, pc}
 
 
 	.global _ga_printchar
@@ -152,7 +153,7 @@ _ga_delay:
 	bls .Ldelay2
 	mov r0, #600			@; limitar el número de segundos a 600 (10 minutos)
 .Ldelay2:
-	bl _gp_retardarProc
+	@;bl _gp_retardarProc
 .Ldelay3:
 	pop {r2-r3, pc}
 
@@ -167,19 +168,6 @@ _ga_clear:
 	bl _gs_borrarVentana
 	pop {r0-r1, pc}
 
-	.global _ga_getstring
-	@; Parámetros
-	@; R0: string -> dirección base del vector de caracteres (bytes)
-	@; R1: max_char -> número máximo de caracteres del vector
-	@; R2: PIDZ -> PIDZ del proceso invocador
-	@;Resultado
-	@; R0: 0 si no hay problema, !=0 
-_ga_getstring:
-	push {r2-r3, lr}
-	ldr r3, =_gd_pidz		@; R4 = direcció _gd_pidz, que conté PID (28 b) + Sòcol (4 b) d'esquerra a dreta
-	ldr r2, [r3]			@; Carreguem contingut de pidz a r2 (passada de parámetre)
-	and r2, #0x7			@; Fem clean dels bits de PID i obtenim Sòcol (MOD 4)
-	bl _gt_getstring		@; Cridem a la rutina per a obtenir string
-	pop {r2-r3, pc}
+
 .end
 
