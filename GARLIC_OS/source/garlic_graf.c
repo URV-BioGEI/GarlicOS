@@ -131,7 +131,7 @@ void _gg_iniGrafA()
 	//generar los marcos de las ventanas de texto en el fondo 3
 	for (int i=0 ; i< NVENT ; i++)
 	{
-		_gg_generarMarco(i, 2); // afegit argument per a la compilacio del commit inicial fase 2
+		_gg_generarMarco(i, 3); // afegit argument per a la compilacio del commit inicial fase 2
 	}
 	
 	//escalar los fondos 2 y 3 para que se ajusten exactamente a las dimensiones de una pantalla de la nds

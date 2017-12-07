@@ -36,7 +36,9 @@ _gg_escribirLinea:
 	@; Cálculo desplazamiento ventana V: calculo desplazamiento columnas + cálculo desplazamiento filas
 	@; Cálculo desplazamiento de columnas: VCOLS*(v%PPART)
 	
-	and r3, r0, #L2_PPART	@; r3= v%PPART
+	mov r5, #PPART
+	sub r5, r5, #1
+	and r3, r0, r5	@; r3= v%PPART
 	mov r5, #VCOLS
 	mul r4, r5, r3			@; r4= VCOLS*(v%PPART)
 	
@@ -91,16 +93,18 @@ _gg_desplazar:
 	@; Cálculo desplazamiento ventana V: calculo desplazamiento columnas + cálculo desplazamiento filas
 	@; Cálculo desplazamiento de columnas: VCOLS*(v%PPART)
 	
-	and r1, r0, #L2_PPART	@; r3= v%PPART
-	mov r3, #VCOLS
-	mul r2, r3, r1			@; r4= VCOLS*(v%PPART)
+	mov r5, #PPART
+	sub r5, r5, #1
+	and r1, r0, r5	@; r1= v%PPART
+	mov r5, #VCOLS
+	mul r2, r5, r1			@; r2= VCOLS*(v%PPART) 
 	
 	@; Cálculo desplazamiento de filas: (v/PPART)*VFILS*PCOLS
 	mov r3, #VFILS
-	lsr r4, r0, #L2_PPART	@; r6= v/PPART : shift a la derecha de V
-	mul r1, r4, r3			@; r3= (v/PPART)*VFILS
+	lsr r4, r0, #L2_PPART	@; r4= v/PPART : shift a la derecha de V
+	mul r1, r4, r3			@; r1= (v/PPART)*VFILS
 	mov r4, #PCOLS
-	mla r3, r1, r4, r2		@; Desplazamiento ventana v: r5= (v/PPART)*VFILS*PCOLS + VCOLS*(v%PPART)
+	mla r3, r1, r4, r2		@; Desplazamiento ventana v: r3= (v/PPART)*VFILS*PCOLS + VCOLS*(v%PPART)
 	
 	@; Sumar desplazamiento a la dirección del mapa de bg2
 	ldr r1, =bg2map			@; Apuntamos a la variable que contiene la dirección del mapa de bg2
@@ -165,10 +169,42 @@ _gg_escribirLineaTabla:
 	@;	R3 (color)	->	número de color del texto (de 0 a 3)
 	@; pila (vent)	->	número de ventana (de 0 a 15)
 _gg_escribirCar:
-	push {lr}
+	push {r4-r7,lr}
+	@; Cálculo desplazamiento ventana V: calculo desplazamiento columnas + cálculo desplazamiento filas
+	@; Cálculo desplazamiento de columnas: VCOLS*(v%PPART)
+	
+	ldr r4, [sp, #20]	@; Cargamos número de ventana: stack_pointer[4*(4 registros apilados + lr)]
+	
+	mov r5, #PPART
+	sub r5, r5, #1
+	and r6, r4, r5		@; r6= v%PPART
+	mov r5, #VCOLS
+	mul r7, r5, r6		@; r7= VCOLS*(v%PPART)
+	
+	@; Cálculo desplazamiento de filas: (v/PPART)*VFILS*PCOLS
+	mov r5, #VFILS
+	lsr r6, r4, #L2_PPART	@; r6= v/PPART : shift a la derecha de V
+	mul r4, r5, r6			@; r3= (v/PPART)*VFILS
+	mov r6, #PCOLS
+	mla r5, r4, r6, r7		@; Desplazamiento ventana v: r5= (v/PPART)*VFILS*PCOLS + VCOLS*(v%PPART)
+	
+	@; Cáclulo posición coordenada
+	mov r6, #PCOLS
+	mla r4, r1, r6, r5
+	add r4, r4, r0
+	
+	@; Sumar desplazamiento a la dirección del mapa de bg2
+	ldr r5, =bg2map			@; Apuntamos a la variable que contiene la dirección del mapa de bg2
+	ldr r5, [r5]			@; Cargamos la dirección del mapa de bg2
+	lsl r4, #1				@; Adaptación del número de baldosas al número de bytes: cada indice de baldosa ocupa 2 bytes (halfword)
+	add r4, r5				@; Dirección del mapa de bg + desplazamiento total
+	
+	@; Guardar baldosa en la posición del mapa calculada
+	mov r5, r3, lsl #7		@; Cálculo desplazamiento color: color * 128
+	add r5, r2				@; Baldosa a escribir = baldosa + desplazamiento color
+	strh r5, [r4]			@; Guardamos la baldosa en la posición calculada
 
-
-	pop {pc}
+	pop {r4-r7,pc}
 
 
 	.global _gg_escribirMat
