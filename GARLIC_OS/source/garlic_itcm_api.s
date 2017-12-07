@@ -94,13 +94,12 @@ _ga_divmod:
 	@; R1: unsigned int val1 (opcional),
 	@; R2: unsigned int val2 (opcional)
 _ga_printf:
-	push {r3-r4, lr}
+	push {r4, lr}
 	ldr r4, =_gd_pidz		@; R4 = dirección _gd_pidz
 	ldr r3, [r4]
 	and r3, #0xF			@; R3 = ventana de salida (zócalo actual MOD 16)
 	bl _gg_escribir
-	pop {r3-r4, pc}
-
+	pop {r4, pc}
 
 	.global _ga_printchar
 	@;Parámetros

@@ -174,11 +174,11 @@ int main(int argc, char **argv) {
 
 	inicializarSistema();
 	
-	_gg_escribir("%1********************************", 0, 0, 0);
+	_gg_escribir("%3********************************", 0, 0, 0);
 	_gg_escribir("%1*                              *", 0, 0, 0);
-	_gg_escribir("%1* Sistema Operativo GARLIC 2.0 *", 0, 0, 0);
+	_gg_escribir("%2* Sistema%1 Operativo%3 GARLIC 2.0 *", 0, 0, 0);
 	_gg_escribir("%1*                              *", 0, 0, 0);
-	_gg_escribir("%1********************************", 0, 0, 0);
+	_gg_escribir("%0********************************", 0, 0, 0);
 	_gg_escribir("%1*** Inicio fase 2_G\n", 0, 0, 0);
 
 	while (1)						// bucle infinito

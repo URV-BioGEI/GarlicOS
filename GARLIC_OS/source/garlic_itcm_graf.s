@@ -64,15 +64,17 @@ _gg_escribirLinea:
 	add r4, r6				@; Nos situamos en la posición inicial de pChars de nuestra ventana
 	add r4, #4				@; Desplazamiento para situarnos a pChars (pControl ocupa 4 bytes)
 	
+	mov r2, r2, lsl #1
 	mov r5, #0				@; Contador de chars añadidos a 0
 	@;Bucle para guardar una baldosa en la dirección del mapa indicada
+	@; Se tiene que tener en cuenta que ahora se guardan halfwords en vez de bytes en el buffer de carácteres
 .Lescribir:		
-	ldrb r6, [r4, r5]		@; Cargamos codigo ASCII: r6=_gd_wbfs[v].pChars[r5]
+	ldrh r6, [r4, r5]		@; Cargamos codigo ASCII: r6=_gd_wbfs[v].pChars[r5]
 	sub r6, #32				@; Pasamos de codigo ASCII a codigo de baldosa
 	strh r6, [r3]			@; Guardar codigo de baldosa en la dirección del mapa calculada previamente
-	add r5, #1				@; Aumentamos el contador
+	add r5, #2				@; Aumentamos el contador
 	add r3, #2				@; Siguiente posición del mapa
-	cmp r5, r2				
+	cmp r5, r2			
 	blo .Lescribir			@; Si contador<n efectuamos otra iteración
 	
 	pop {r3-r6, pc}
