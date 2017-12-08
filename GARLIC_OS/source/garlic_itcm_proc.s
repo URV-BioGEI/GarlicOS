@@ -10,10 +10,6 @@
 	.arm
 	.align 2
 	
-	.global _gp_retardarProc
-_gp_retardarProc:
-	push {lr}
-	pop {pc}
 	
 	.global _gp_WaitForVBlank
 	@; rutina para pausar el procesador mientras no se produzca una interrupción
@@ -249,19 +245,6 @@ _gp_restaurarProc:
 	msr CPSR, r10			@; Canvem el mode
 	pop {r8-r11, pc}
 
-	@;===============
-	.global _gp_numProc
-	@;Resultado
-	@; R0: número de procesos total
-@;_gp_numProc:
-	@;push {r1-r2, lr}
-	@;mov r0, #1				@; contar siempre 1 proceso en RUN
-	@;ldr r1, =_gd_nReady
-	@;ldr r2, [r1]			@; R2 = número de procesos en cola de READY
-	@;add r0, r2				@; añadir procesos en READY
-	@;pop {r1-r2, pc}
-	
-	@;=================
 	
 	.global _gp_numProc
 	@;Resultado
@@ -350,28 +333,41 @@ _gp_crearProc:
 .Lfi_crear_proc:
 	pop {r4-r7, pc}
 
-@;================
-	@; Rutina para terminar un proceso de usuario:
-	@; pone a 0 el campo PID del PCB del zócalo actual, para indicar que esa
-	@; entrada del vector _gd_pcbs está libre; también pone a 0 el PID de la
-	@; variable _gd_pidz (sin modificar el número de zócalo), para que el código
-	@; de multiplexación de procesos no salve el estado del proceso terminado.
-@;_gp_terminarProc:
-	@;ldr r0, =_gd_pidz
-	@;ldr r1, [r0]			@; R1 = valor actual de PID + zócalo
-	@;and r1, r1, #0xf		@; R1 = zócalo del proceso desbancado
-	@;str r1, [r0]			@; guardar zócalo con PID = 0, para no salvar estado			
-	@;ldr r2, =_gd_pcbs
-	@;mov r10, #24
-	@;mul r11, r1, r10
-	@;add r2, r11				@; R2 = dirección base _gd_pcbs[zocalo]
-	@;mov r3, #0
-	@;str r3, [r2]			@; pone a 0 el campo PID del PCB del proceso
-@;;.LterminarProc_inf:
-	@;bl _gp_WaitForVBlank	@; pausar procesador
-	@;b .LterminarProc_inf	@; hasta asegurar el cambio de contexto
+
+	.global _gp_retardarProc
+	@; retarda la ejecución de un proceso durante cierto número de
+	@; segundos, colocándolo en la cola de DELAY
+	@;Parámetros
+	@; R0: int nsec
+_gp_retardarProc:
+	push {r0, lr}
 	
-@;===================
+	pop {r0, pc}
+
+
+	@; Rutina para actualizar la cola de procesos retardados,
+	@; poniendo en cola de READY aquellos cuyo número de tics
+	@; de retardo sea 0
+_gp_actualizarDelay:
+	push {lr}
+
+	pop {pc}
+
+
+	.global _gp_matarProc
+	@; Rutina para destruir un proceso de usuario:
+	@; borra el PID del PCB del zócalo referenciado por parámetro,
+	@; para indicar que esa entrada del vector _gd_pcbs[] está libre;
+	@; elimina el índice de zócalo de la cola de READY o de la cola
+	@; de DELAY, esté donde esté;
+	@; Parámetros:
+	@; R0: zócalo del proceso a matar (entre 1 y 15).
+_gp_matarProc:
+	push {lr}
+
+	pop {pc}
+	
+
 
 	@; Rutina para terminar un proceso de usuario:
 	@; pone a 0 el campo PID del PCB del zócalo actual, para indicar que esa
