@@ -159,6 +159,7 @@ _gg_escribirLineaTabla:
 
 	pop {pc}
 	
+	
 	.global _gg_escribirCar
 	@; escribe un carácter (baldosa) en la posición de la ventana indicada,
 	@; con un color concreto;
@@ -217,10 +218,68 @@ _gg_escribirCar:
 	@;	R3 (color)	->	número de color del texto (de 0 a 3)
 	@; pila	(vent)	->	número de ventana (de 0 a 15)
 _gg_escribirMat:
-	push {lr}
-
-
-	pop {pc}
+	push {r4-r8,lr}
+	
+	ldr r4, [sp, #24]	@; Cargamos número de ventana: stack_pointer[4*(5 registros apilados + lr)]
+	
+	mov r5, #PPART
+	sub r5, r5, #1
+	and r6, r4, r5		@; r6= v%PPART
+	mov r5, #VCOLS
+	mul r7, r5, r6		@; r7= VCOLS*(v%PPART)
+	
+	@; Cálculo desplazamiento de filas: (v/PPART)*VFILS*PCOLS
+	mov r5, #VFILS
+	lsr r6, r4, #L2_PPART	@; r6= v/PPART : shift a la derecha de V
+	mul r4, r5, r6			@; r3= (v/PPART)*VFILS
+	mov r6, #PCOLS
+	mla r5, r4, r6, r7		@; Desplazamiento ventana v: r5= (v/PPART)*VFILS*PCOLS + VCOLS*(v%PPART)
+	
+	@; Cáclulo posición coordenada
+	mov r6, #PCOLS			
+	mla r4, r1, r6, r5		@; r4 = PCOLS * vy + desplazamiento ventana: Nos situamos a la fila correspondiente
+	add r4, r4, r0			@; r4 = Desplazamiento fila + vx : Nos situamos a la columna correspondiente 
+	
+	@; Sumar desplazamiento a la dirección del mapa de bg2
+	ldr r5, =bg2map			@; Apuntamos a la variable que contiene la dirección del mapa de bg2
+	ldr r5, [r5]			@; Cargamos la dirección del mapa de bg2
+	lsl r4, #1				@; Adaptación del número de baldosas al número de bytes: cada indice de baldosa ocupa 2 bytes (halfword)
+	add r4, r5				@; Dirección del mapa de bg + desplazamiento total
+	
+	@; Guardar baldosa en la posición del mapa calculada
+	mov r5, r3, lsl #7		@; Cálculo desplazamiento color: color * 128
+	
+	@; Escribir matriz
+	
+	mov r6, #8				@; Elementos fila
+	mov r7, #0				@; Elementos totales
+	b .LescribirCaract
+	
+.LinicioFila:
+	@; Acualizamos la posición del mapa y inicializamos el índice de fila de nuevo
+	add r4, #240			@; siguiente posición del mapa= pos actual+ (PCOLS-baldosas añadidas)*2bytes/baldosa
+	mov r6, #8  			@; Primer elemento fila de la matriz
+	
+.LescribirCaract:
+	ldrb r8, [r2, r7]		@; Cargamos el char
+	cmp r8, #0				@; Comparamos con zero (centinela)
+	beq .Lavanzar			@; Si es zero pasamos al siguiente char
+	
+	sub r8, #32				@; Pasamos de código ASCII a código de baldosa
+	add r8, r5				@; Añadimos el color a la baldosa
+	strh r8, [r4]			@; Guardamos el índice de baldosa a la posición del mapa necesaria
+	
+.Lavanzar:
+	add r7, #1				@; Aumentamos los índices de elementos fila y elementos totales
+	sub r6, #1
+	add r4, #2				@; Accedemos a la siguiente posicíon del mapa
+	cmp r6, #0				@; Si no se ha llegado al final de la fila seguimos escribiendo
+	bhi .LescribirCaract
+	
+	cmp r7, #64				@; Si no se llega al final de la matriz se vuelve a escribir una fila
+	blo .LinicioFila
+	
+	pop {r4-r8,pc}
 
 
 
