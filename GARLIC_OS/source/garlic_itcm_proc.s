@@ -124,17 +124,19 @@ _gp_actualizarDelay:
 	lsr r4, r4, #16
 	cmp r4, #0				@; mirem si ja han acabat els tics
 	bne .L_actualizarDelay_noFiTics
+	
 	@; Si han acabat els tics, fiquem el procés en la cua de Ready
 	lsr r4, r3, #24			@; obtenim el zocalo
 	ldr r7, [r10]			@; obtenim el nombre de processos en Ready
 	strb r4, [r9, r7]		@; guardem el zócalo en la última posició de la cua de Ready
 	add r7, #1
 	str r7, [r10]			@; augmentem en 1 el nombre de processos en Ready
+	
 	@; actualitzem la cua de Delay
 	sub r1, #1				@; decrementem el nombre de processos en Delay
 	str r1, [r0]
 	mov r4, r2				@; punter del segon bucle
-	add r8, r6, #4			@; posició del seguen valor en la cua
+	add r8, r6, #4			@; posició del següent valor en la cua
 	cmp r1, r4				@; mirem si ja s'han tractat tots els processos en la cua de retardats
 	bls .L_actualitzarDelay_salt
 .L_actualizarDelay_bucle2:
@@ -406,7 +408,7 @@ _gp_retardarProc:
 	push {r0-r5, lr}
 	@; calculem el nombre de tics en funció dels segons (1 segon = 60 tics)
 	mov r1, #60					@; r1=60
-	mul r0, r1					@; r0= nombre de tics a esperar
+	mul r3, r0, r1				@; r3= nombre de tics a esperar
 	@; construir un word amb el zocalo i el número de tics a retardar
 	ldr r4, =_gd_pidz			@; obtim la variable _gd_pidz on hi ha (Identificador de proceso + zócalo actual)
 	ldr r5, [r4]				@; obtenim l'identificador + zócalo del procés
@@ -414,14 +416,12 @@ _gp_retardarProc:
 	beq .LfinalRetardarProc		@; si ho és acabem
 	and r2, r5, #0xF			@; r2=zócalo del procés (4 bits de menys pes del pidz)
 	lsl r2, r2, #24				@; desplacem el zócalo als 8 bits de més pes, la sesta a 0s
-	lsl r0, #16					@; fiquem a 0 tots els bits de 16 amunt
-	lsr r0, #16
-	orr r0, r2					@; construïm el word
+	orr r0, r2, r3				@; construïm el word
 	@; ho guardem en la cua de processos retardats
 	ldr r1, =_gd_qDelay			@; r1 = cua de processos retardats
 	ldr r2, =_gd_nDelay			@; carreguem en r3 el nombre de processos en la cua de retardats
 	ldr r3, [r2]
-	str r0, [r1, r3]			@; guardem el word (zocalo + tics restants) en la cua de retardats
+	str r0, [r1, r3, lsl #2]	@; guardem el word (zocalo + tics restants) en la cua de retardats
 	@; incrementem el nombre de processos en cua de retardats
 	add r3, #1					@; incrementem el nombre de processos en la cua e retardats
 	str r3, [r2]				@; guardem el valor en la variabl global
@@ -443,9 +443,86 @@ _gp_retardarProc:
 	@; Parámetros:
 	@; R0: zócalo del proceso a matar (entre 1 y 15).
 _gp_matarProc:
-	push {lr}
-
-	pop {pc}
+	push {r1-r6, lr}
+	@; posem a 0 el camp PID del _gd_pcbs[z]
+	mov r3, #24
+	ldr r1, =_gd_pcbs		@; r1 = direcció de l'array de PCBs
+	mla r2, r0, r3, r1		@; desplaçament per arrivar al PCB del zócalo actual: num de zócalo * 24 + direcció _gd_pcbs, on 24 es la mida de cada PCB (6 ints, 6 * 4 bytes per int)
+	mov r3, #0				@; r3 = 0
+	str r3, [r2]			@; PID del procés = 0
+	
+	@; busquem el valor de z en la cua de READY i si està l'eliminem
+	ldr r1, =_gd_qReady		@; r1 = cua de processos en Ready
+	ldr r2, =_gd_nReady		@; r2 = variable amb el nombre de processos en Ready
+	ldr r3, [r2]			@; r3 = processos en Ready
+	mov r4, #0				@; r4 punter
+	cmp r4, r3				@; si no hi ha més processos en la cua de Ready busquem en la de Delay
+	bhs .L_fi_matarProc_bucle1
+.L_matarProc_bucle1:
+	ldrb r5, [r1, r4]		@; carreguem zócalo de procés en la cua de Ready
+	cmp r5, r0				@; si no coincideixen passem al següent
+	bne .L_següent_matarProc_bucle1
+	
+	@; tractament si hi ha coincidència
+	mov r6, r4				@; r6 punter
+.L_matarProc_bucle_reorder:
+	cmp r6, r3				@; si no queden més elements que ordenar acabem
+	beq .L_fi_matarProc_bucle_reorder
+	ldrb r5, [r1, #1]		
+	strb r5, [r1]			@; desplacem el valor a la posició anterior del vector
+	add r1, #1				@; obtenim la posició del següent valor del vector
+	add r6, #1				@; incrementem el punter
+	b .L_matarProc_bucle_reorder	@; tornem a l'inici del bucle
+.L_fi_matarProc_bucle_reorder:
+	@; disminuir processos en ready	
+	sub r3, #1				@; disminuim el nombre de processos en Ready
+	str r3, [r2]
+	b .L_fi_matarProc		@; acaba la funció
+	
+	@; tractament si no hi ha coincidència
+.L_següent_matarProc_bucle1:
+	add r4, #1				@; augmentem en 1 el punter
+	cmp r4, r3				@; si hi ha més processos en la cua tornem a l'inici del bucle
+	blo .L_matarProc_bucle1
+.L_fi_matarProc_bucle1:
+	
+	@; DELAY
+	@; busquem el valor de z en la cua de DELAY i si està l'eliminem
+	ldr r1, =_gd_qDelay		@; r1 = cua de processos en Delay
+	ldr r2, =_gd_nDelay		@; r2 = variable amb el nombre de processos en Delay
+	ldr r3, [r2]			@; r3 = processos en Delay
+	mov r4, #0				@; r4 punter
+	cmp r4, r3				@; si no hi ha més processos en la cua de Delay acabem
+.L_matarProc_bucle2:
+	ldr r5, [r1, r4, lsl #2]	@;carreguem el zócalo + tics de procés en la cua de Delay
+	lsr r5, #24				@; obtenim el zócalo del procés
+	cmp r5, r0				@; si no coincideixen passem al següent
+	bne .L_següent_matarProc_bucle2
+	
+	@; tractament si hi ha concidència
+	mov r6, r4				@; r6 punter
+.L_matarProc_bucle2_reorder:
+	cmp r6, r3				@; si no queden més elements que ordenar acabem
+	beq .L_fi_matarProc_bucle2_reorder
+	ldr r5, [r1, #4]		@; desplacem el valor a la posició anterior del vector
+	str r5, [r1]
+	add r1, #1				@; obtenim la posició del següent valor del vector
+	add r6, #1				@; incrementem el punter
+	b .L_matarProc_bucle2_reorder	@; tornem a l'inici del bucle
+.L_fi_matarProc_bucle2_reorder:
+	@; disminuir processos en delay	
+	sub r3, #1				@; disminuim el nombre de processos en Delay
+	str r3, [r2]
+	b .L_fi_matarProc		@; acaba la funció
+	
+	@; tractament si no hi ha concidència
+.L_següent_matarProc_bucle2:
+	add r4, #1				@; augmentem en 1 el punter
+	cmp r4, r3				@; si hi ha més processos en la cua tornem a l'inici del bucle
+	blo .L_matarProc_bucle2
+	
+.L_fi_matarProc:
+	pop {r1-r6, pc}
 	
 
 
