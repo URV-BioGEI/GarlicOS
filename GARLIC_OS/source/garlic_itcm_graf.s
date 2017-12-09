@@ -17,6 +17,7 @@ PFILS	= VFILS * PPART		@; número de filas totales (en pantalla)
 
 WBUFS_LEN = 68				@; longitud de cada buffer de ventana (32+4)
 
+
 .section .itcm,"ax",%progbits
 
 	.arm
@@ -154,10 +155,77 @@ _gg_desplazar:
 	@;	R0 (z)		->	número de zócalo
 	@;	R1 (color)	->	número de color (de 0 a 3)
 _gg_escribirLineaTabla:
-	push {lr}
+	push {r0-r6,lr}
+	
+	mov r4, r0 		
+	mov r5, r1		@; Creamos copia de zócalo y color para utilizar registro como parámetro de funciones
+	
+	ldr r0, =_gd_pcbs			@; Cargamos vector de PCB
+	mov r2, #24 				@; Tamaño PCB = 4Bytes (word) * 6 atributos
+	mul r1, r2, r4				@; Desplazamiento en _gd_pcbs correspondiente al zócalo actual
+	add r6, r0, r1
+	
+	ldr r2, [r6, #0]			@; Cargamos PID proceso (word)
+	cmp r2, #0					@; Comparamo
+	bne .LescribirProceso		@; Si no es zero escribimos el PID en el espacio del zocalo
+	cmp r4, #0					@; comparamos número de zócalo con el zócalo del SO (ZÓCALO 0)
+	beq .LescribirProceso		@; Si es el zócalo del SO entonces escribimos 0 en el campo de PID y el keyname GARL
+	
+	@; Borrado de campos
+	
+	ldr r0, =espacios			@; Cargamos espacios en blanco en r0
+	add r1, r4, #4				@; r1= fila de la ventana indicada
+	mov r2, #4					@; r2= columna del PID
+	mov r3, r5					@; r3= color
+	bl _gs_escribirStringSub	@; _gs_escribirStringSub(espacios en blanco, fila zócalo, columna PID, color);
+	
+	mov r2, #9					@; r2= columna del keyname
+	bl _gs_escribirStringSub 	@; _gs_escribirStringSub(espacios en blanco, fila zócalo, columna keyname, color)
+	b .LescribirZocalo			@; Pasamos a escribir el número de zócalo con el color indicado
 
-
-	pop {pc}
+.LescribirProceso:	
+	@; Escritura del PID
+	
+	sub sp, #4					@; crea espacio en la pila para el string
+	mov r0, sp					@; a generar con _ga_num2str()
+	mov r1, #4					@; tamaño del número (dígitos)
+	bl _gs_num2str_dec			@; _gs_num2str_dec(puntero a string, 3, PID(int));
+	mov r0, sp					@;	ldr r0, = PID en string
+	add r1, r4, #4				@; Nos situamos en la fila del zócalo indicada
+	mov r2, #5					@; Nos situamos en la columna del PID
+	mov r3, r5					@; r3= color
+	bl _gs_escribirStringSub	@; _gs_escribirStringSub(_gs_numZoc, fila zócalo, columna PID, color);
+	add sp, #4
+	
+	@;Escritura keyname
+	
+	sub sp, #4					@; Creamos espacio en la pila para el string
+	mov r0, sp					
+	ldr r1, [r6, #16]			@; Cargamos keyname 
+	str r1, [r0]				@; Guardamos keyname en r0
+	add r1, r4, #4				@; Nos colocamos en la fila de la ventana indicada
+	mov r2, #9					@; Nos colocamos en la columna del keyname
+	bl _gs_escribirStringSub
+	add sp, #4					@; Volvemos al estado inicial de la pila
+	
+.LescribirZocalo:	
+	@; Escritura del número de zócalo
+	
+	sub sp, #4					@; crea espacio en la pila para el string
+	mov r0, sp					@; a generar con _ga_num2str()
+	mov r1, #3					@; Tamaño número máx. (16, dos dígitos más centinela)
+	mov r2, r4
+	bl _gs_num2str_dec			@; _gs_num2str_dec(_gs_numZoc, 3, i);
+	mov r0, sp					@;	ldr r0, =_gs_numZoc
+	add r1, r4, #4				@; Nos colocamos en la fila de la ventana indicada
+	mov r2, #1
+	mov r3, r5
+	bl _gs_escribirStringSub	@; _gs_escribirStringSub(_gs_numZoc, i, 1, 3);
+	add sp, #4
+	
+	
+	
+	pop {r0-r6,pc}
 	
 	
 	.global _gg_escribirCar

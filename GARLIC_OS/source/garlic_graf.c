@@ -24,6 +24,7 @@
 int bg2, bg3, bg2map;
 
 const unsigned int char_colors[] = {240, 96, 64};	// amarillo, verde, rojo
+const char espacios[]="    ";
 
 /* _gg_generarMarco: dibuja el marco de la ventana que se indica por parámetro*/
 void _gg_generarMarco(int v, int color)
