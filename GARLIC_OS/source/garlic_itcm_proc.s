@@ -97,7 +97,64 @@ _gp_rsiVBL:
 	ldr r6, =_gd_pidz		@; r6= direcció de _gd_pidz
 	bl _gp_restaurarProc	@;cridem la funció salvar context amb els paràmetres en els registres que toca
 .Lfi_rsiVBL:
+	bl _gp_actualizarDelay	@; cirdem nova funció per actualitzar els processos retardats
 	pop {r4-r7, pc}
+
+
+	@; Rutina para actualizar la cola de procesos retardados,
+	@; poniendo en cola de READY aquellos cuyo número de tics
+	@; de retardo sea 0
+_gp_actualizarDelay:
+	push {r0-r11, lr}
+	ldr r9, =_gd_qReady		@; carreguem en r9 la direccio de la cua de Ready
+	ldr r10, =_gd_nReady	@; carreguem a r10 el nombre de processos en Ready
+	ldr r0, =_gd_nDelay
+	ldr r1, [r0]			@; r1 = num. de processos retardats
+	ldr r11, =_gd_qDelay	@; r11 = cua de processos retardats
+	mov r2, #0				@; punter del bucle a 0
+	mov r5, #4				@; r5=4
+	cmp r1, r2				@; mirem si ja s'han tractat tots els processos en la cua de retardats
+	bls .L_fi_actualizarDelay_bucle1
+.L_actualizarDelay_bucle1:
+	@; Augmentem el nombre de tics del porcés
+	mul r6, r2, r5			@; calculem posició del vector
+	ldr r3, [r11, r6]		@; r3 = zocalo + tics
+	sub r3, #1				@; restem 1, d'aquesta forma resetem 1 al nombre de tics
+	lsl r4, r3, #16			@; obtenim els tics
+	lsr r4, r4, #16
+	cmp r4, #0				@; mirem si ja han acabat els tics
+	bne .L_actualizarDelay_noFiTics
+	@; Si han acabat els tics, fiquem el procés en la cua de Ready
+	lsr r4, r3, #24			@; obtenim el zocalo
+	ldr r7, [r10]			@; obtenim el nombre de processos en Ready
+	strb r4, [r9, r7]		@; guardem el zócalo en la última posició de la cua de Ready
+	add r7, #1
+	str r7, [r10]			@; augmentem en 1 el nombre de processos en Ready
+	@; actualitzem la cua de Delay
+	sub r1, #1				@; decrementem el nombre de processos en Delay
+	str r1, [r0]
+	mov r4, r2				@; punter del segon bucle
+	add r8, r6, #4			@; posició del seguen valor en la cua
+	cmp r1, r4				@; mirem si ja s'han tractat tots els processos en la cua de retardats
+	bls .L_actualitzarDelay_salt
+.L_actualizarDelay_bucle2:
+	ldr r7, [r11, r8]		@; carreguem valor (zocalo + tics) de la següent posició
+	sub r8, #4
+	str r7, [r11, r8]		@; guardem valor (zocalo + tics) de la següent posició
+	add r8, #8				@; saltem a la següent posició
+	add r4, #1				@; Incrementem punter
+	cmp r4, r1				@; mirem si ja s'han tractat tots els processos en la cua de retardats
+	blo .L_actualizarDelay_bucle2
+	b .L_actualitzarDelay_salt
+.L_actualizarDelay_noFiTics:
+	str r3, [r11, r6]		@; actualitzem zócalo + tics del procés
+	add r2, #1				@; incrementem punter
+.L_actualitzarDelay_salt:
+	cmp r2, r1				@; mirem si ja s'han tractat tots els processos en la cua de retardats
+	blo .L_actualizarDelay_bucle1
+.L_fi_actualizarDelay_bucle1:
+	pop {r0-r11, pc}
+
 
 
 	@; Rutina para salvar el estado del proceso interrumpido en la entrada
@@ -113,8 +170,14 @@ _gp_salvarProc:
 	ldr r8, [r6]  			@; obteim el PID més zócalo
 	and r8, r8, #15			@; r8= num de zócalo, ens quedem amb els 4 bits de menys pes del pidz
 	ldr r9, =_gd_qReady		@; carreguem en r9 la direccio de la cua de Ready
+	@; noves instruccions pel cas d'un procés retardat
+	lsr r10, #31			@; carreguem el bit de més pes
+	cmp r10, #1
+	beq .L_salvarProc_Delay	@; si el procés s'ha de retardar, es salva el seu estat pero no es fica en la cua de Ready
+	@; ...
 	strb r8, [r9, r5]		@; guardem el nombre de zocalo del procés en l'última posició de la cua de Ready
 	add r5, #1				@; incrementem el nombre de processos en la cua de Ready
+.L_salvarProc_Delay:
 	ldr r9, =_gd_pcbs		@; direcció del array de PCBs
 	mov r10, #24
 	mla r9, r10, r8, r9		@; desplaçament per arrivar al PCB del zócalo actual: num de zócalo * 24 + direcció _gd_pcbs, on 24 es la mida de cada PCB (6 ints, 6 * 4 bytes per int)
@@ -340,18 +403,35 @@ _gp_crearProc:
 	@;Parámetros
 	@; R0: int nsec
 _gp_retardarProc:
-	push {r0, lr}
-	
-	pop {r0, pc}
-
-
-	@; Rutina para actualizar la cola de procesos retardados,
-	@; poniendo en cola de READY aquellos cuyo número de tics
-	@; de retardo sea 0
-_gp_actualizarDelay:
-	push {lr}
-
-	pop {pc}
+	push {r0-r5, lr}
+	@; calculem el nombre de tics en funció dels segons (1 segon = 60 tics)
+	mov r1, #60					@; r1=60
+	mul r0, r1					@; r0= nombre de tics a esperar
+	@; construir un word amb el zocalo i el número de tics a retardar
+	ldr r4, =_gd_pidz			@; obtim la variable _gd_pidz on hi ha (Identificador de proceso + zócalo actual)
+	ldr r5, [r4]				@; obtenim l'identificador + zócalo del procés
+	cmp r5, #0					@; mirem si el procés en execució és el SO
+	beq .LfinalRetardarProc		@; si ho és acabem
+	and r2, r5, #0xF			@; r2=zócalo del procés (4 bits de menys pes del pidz)
+	lsl r2, r2, #24				@; desplacem el zócalo als 8 bits de més pes, la sesta a 0s
+	lsl r0, #16					@; fiquem a 0 tots els bits de 16 amunt
+	lsr r0, #16
+	orr r0, r2					@; construïm el word
+	@; ho guardem en la cua de processos retardats
+	ldr r1, =_gd_qDelay			@; r1 = cua de processos retardats
+	ldr r2, =_gd_nDelay			@; carreguem en r3 el nombre de processos en la cua de retardats
+	ldr r3, [r2]
+	str r0, [r1, r3]			@; guardem el word (zocalo + tics restants) en la cua de retardats
+	@; incrementem el nombre de processos en cua de retardats
+	add r3, #1					@; incrementem el nombre de processos en la cua e retardats
+	str r3, [r2]				@; guardem el valor en la variabl global
+	@; fiquem a 1 el bit de més pes de _gd_pidz
+	orr r5, #0x80000000			@; fiquem a 1 el bit de més pes del pidz
+	str r5, [r4]				@; guardem el valor en la variabl global
+	@; forzar cesión de la CPU invocando a la función _gp_WaitForVBlank()
+	bl _gp_WaitForVBlank		@; invoquem la funció WaitForVBlank
+.LfinalRetardarProc:
+	pop {r0-r5, pc}
 
 
 	.global _gp_matarProc
