@@ -223,8 +223,6 @@ _gg_escribirLineaTabla:
 	bl _gs_escribirStringSub	@; _gs_escribirStringSub(_gs_numZoc, i, 1, 3);
 	add sp, #4
 	
-	
-	
 	pop {r0-r6,pc}
 	
 	
@@ -355,10 +353,51 @@ _gg_escribirMat:
 	@; Rutina de Servicio de Interrupción (RSI) para actualizar la representa-
 	@; ción del PC actual.
 _gg_rsiTIMER2:
-	push {lr}
+	push {r0-r5,lr}
+	
+	@; Buscamos los zócalos con PID diferente de 0 (SO se actualizará)
+	ldr r4, =_gd_pcbs			@; Cargamos vector de PCB
+	mov r5, #0					@; Zócalo actual
+	
+.LleerZocalo:	
+	ldr r2, [r4, #0]			@; Cargamos PID proceso (word)
+	cmp r2, #0					@; Comparamo
+	bne .LescribirPc			@; Si no es zero escribimos el PID en el espacio del zocalo
+	cmp r5, #0					@; comparamos número de zócalo con el zócalo del SO (ZÓCALO 0)
+	beq .LescribirPc			@; Si es el zócalo del SO entonces escribimos 0 en el campo de PID y el keyname GARL
+	
+	@; Borrado de campos
+	
+	ldr r0, =espaciosPC			@; Cargamos espacios en blanco en r0
+	add r1, r5, #4				@; r1= fila de la ventana indicada
+	mov r2, #14					@; r2= columna del PC
+	mov r3, #0					@; r3= color
+	bl _gs_escribirStringSub	@; _gs_escribirStringSub(espacios en blanco, fila zócalo, columna PID, color);
+	b .LsiguienteZocalo
+	
+.LescribirPc:
+	@; Escritura del PC
+	
+	sub sp, #4					@; crea espacio en la pila para el string
+	mov r0, sp					@; a generar con _ga_num2str_hex()
+	mov r1, #9					@; tamaño del número hexadecimal a obtener (dígitos)
+	ldr r2, [r4, #4]
+	bl _gs_num2str_hex			@; _gs_num2str_hex(puntero a string, 3, PC(int));
+	mov r0, sp					@;	ldr r0, = PC en string
+	add r1, r5, #4				@; Nos situamos en la fila del zócalo indicada
+	mov r2, #14					@; Nos situamos en la columna del PC
+	mov r3, #0					@; r3= blanco
+	bl _gs_escribirStringSub	@; _gs_escribirStringSub(_gs_numZoc, fila zócalo, columna PC, blanco);
+	add sp, #4
 
+.LsiguienteZocalo:
+	
+	add r4, #24					@; Accedemos al PCB del siguiente zócalo (6 atributos * 4 bytes)
+	add r5, #1					@; Siguiente zócalo
+	cmp r5, #16					@; Si no hemos actualizado el PC de todos los zócalos
+	blo .LleerZocalo			@; leemos el siguiente zócalo y actualizamos su PC
 
-	pop {pc}
+	pop {r0-r5,pc}
 
 
 
