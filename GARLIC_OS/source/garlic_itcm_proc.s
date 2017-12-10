@@ -65,6 +65,85 @@ _gp_IntrMain:
 	mov	pc,lr				@; retornar al gestor de la excepción IRQ de la BIOS
 
 
+	.global _gp_rsiTIMER0
+	@; Manegador de interrupcions del timer 0 de Garlic:
+	@; se enacrrega de generar el percentatge d'ús de la CPU.
+_gp_rsiTIMER0:
+	push {r0-r10, lr}
+	ldr r9, =_gd_pcbs		@; r9 = direcció del array de PCBs
+	mov r10, #24			@; r10 = desplaçament necessàri per saltar del pcb d'un procés a un altre
+	ldr r1, [r9, #20]		@; r1 = workTics del SO
+	and r1, r1, #0x00FFFFFF	@; r1 = sera el total de tics de tots els processos
+	mov r5, #1				@; r5 = zòcalo, recorrem tots els processos actius
+.L_bucle_rsiT0_contarTics:
+	mla r4, r5, r10, r9		@; desplaçament per arrivar al PCB del zócalo actual: num de zócalo * 24 + direcció _gd_pcbs, on 24 es la mida de cada PCB (6 ints, 6 * 4 bytes per int)
+	ldr r6, [r4]			@; carreguem el pid del procés actual
+	cmp r6, #0				@; si no hi ha cap procés executant-se en aquest zócalo passem al següent
+	beq .L_bucle_rsiT0_contarTics_seguent	@; passem al següent PCB
+	ldr r6, [r4, #20]		@; carreguem el valor de workTicks
+	and r6, r6, #0x00FFFFFF	@; obtenim els workTicks
+	add r1, r6				@; sumem els workTicks del procés als globals
+.L_bucle_rsiT0_contarTics_seguent:
+	add r5, #1				@; passem al següent zócalo
+	cmp r5, #15				@; mirem que no els haguem comprovat tots
+	ble .L_bucle_rsiT0_contarTics	@; si no els hem mirat tots, continua el bucle
+	
+	@; posem a 0 els tics de cada procés i guardem el percentatge de cpu en els 8 bits alts
+	@; suposem que a r4 tinc el percentatge de CPU
+	mov r5, #100			@; r5 = 100
+	add r2, r9, #20			@; r2 = posició de la variable workTics
+	ldr r0, [r2]			@; workTics + % del SO
+	and r0, r0, #0x00FFFFFF	@; r0 = workTics del SO
+	mul r0, r5				@; r0 = tics * 100
+	ldr r3, =_gd_res		@; r3 = variable on guardem el residu
+	bl _ga_divmod			@; guardarà en el cap worktics dl pcb del procés
+	mov r8, #0				@; punter al zócalo actual
+	b .L_rsiT0_escriurePercentatge
+	
+.L_rsiT0_escriurePercentatge_bucle:
+	mla r4, r8, r10, r9		@; desplaçament per arrivar al PCB del zócalo actual: num de zócalo * 24 + direcció _gd_pcbs, on 24 es la mida de cada PCB (6 ints, 6 * 4 bytes per int)
+	ldr r6, [r4]			@; carreguem el pid del procés actual
+	cmp r6, #0				@; si no hi ha cap procés executant-se en aquest zócalo passem al següent
+	beq .L_rsiT0_escriurePercentatge_seguent	@; passem al següent PCB
+	add r2, r4, #20			@; r2 = posició de la variable workTics
+	ldr r0, [r2]			@; workTics + % del procés
+	and r0, r0, #0x00FFFFFF	@; r0 = workTics
+	mul r0, r5				@; r0 = tics * 100
+	ldr r3, =_gd_res		@; r3 = variable on guardem el residu
+	bl _ga_divmod			@; guardarà en el cap worktics dl pcb del procés
+	
+	@; escriure el percentatge de CPU en la pantalla inferior de la NDS
+.L_rsiT0_escriurePercentatge:
+	mov r7, r1				@; guardem a r7 els tics totals
+	ldr r3, [r2]			@; r3 = carreguem el %
+	lsl r4, r3, #24			@; desplacem el % als 8 bits alts
+	str r4, [r2]			@; guardem el % en la posició correcta en la variable workTics
+	ldr r0, =_gd_percentatge	@; r0 = string on guardarem el % del CPU
+	mov r1, #4				@; r1 = longitud de l'String
+	mov r2, r3				@; r2 = %
+	bl _gs_num2str_dec		@; convertim el percentatge a String
+	add r1, r8, #4			@; r1 = fila
+	mov r2, #28				@; r2 = columna
+	mov r3, #0				@; r3 = color
+	bl _gs_escribirStringSub	@; escribim el % en la taula
+	mov r1, r7				@; recuperem a r1 els worktics totals
+.L_rsiT0_escriurePercentatge_seguent:
+	add r8, #1
+	cmp r8, #15
+	ble .L_rsiT0_escriurePercentatge_bucle
+	
+	@; posem a 1 el bit 0 de la variable global _gd_sincMain
+	ldr r0, =_gd_sincMain
+	ldr r1, [r0]
+	orr r1, #1
+	str r1, [r0]
+	
+	pop {r0-r10, pc}
+	
+	
+	
+	
+
 	.global _gp_rsiVBL
 	@; Manejador de interrupciones VBL (Vertical BLank) de Garlic:
 	@; se encarga de actualizar los tics, intercambiar procesos, etc.
@@ -74,6 +153,9 @@ _gp_rsiVBL:
 	ldr r5,[r4]				@; obtenim el nombre de tics en r5
 	add r5, r5, #1			@; incrementem el nombre de tics en 1
 	str r5, [r4]			@; actualitzem la variable _tickCount
+	@; cridem funció per disminuir els tics dels processos retardats
+	bl _gp_actualizarDelay	@; cirdem nova funció per actualitzar els processos retardats
+	
 	ldr r4, =_gd_nReady		@; obtenim la posició de la variable _gd_nReady
 	ldr r5, [r4]			@; r1= processos en la cola de ready
 	cmp r5, #0				@; mirem si hi ha processos en la cua
@@ -95,9 +177,19 @@ _gp_rsiVBL:
 	ldr r4, =_gd_nReady		@; r4= direcció de _gd_nready
 	ldr r5, [r4]			@; r5= núm de processos en Ready
 	ldr r6, =_gd_pidz		@; r6= direcció de _gd_pidz
-	bl _gp_restaurarProc	@;cridem la funció salvar context amb els paràmetres en els registres que toca
+	bl _gp_restaurarProc	@;cridem la funció restaurar context amb els paràmetres en els registres que toca
+	
+	@;_gd_pcbs[z].workTicks del proceso que entra en ejecución.
+	ldr r4, [r6]			@; r4 = pidz
+	and r4, r4, #15			@; obtenim el zócalo del procés
+	mov r5, #24				@; desplaçament necessàri per saltar del pcb d'un procés a un altre
+	ldr r6, =_gd_pcbs		@; obtenim l'adreça del vector de pcbs
+	mla r6, r4, r5, r6		@; desplaçament per arrivar al PCB del zócalo actual: num de zócalo * 24 + direcció _gd_pcbs, on 24 es la mida de cada PCB (6 ints, 6 * 4 bytes per int)
+	ldr r5, [r6, #20]		@; carreguem el valor de workTicks
+	add r5, #1				@; augmentem en 1 els workTicks
+	str r5, [r6, #20]		@; guardem el nou valor de workticks
+	
 .Lfi_rsiVBL:
-	bl _gp_actualizarDelay	@; cirdem nova funció per actualitzar els processos retardats
 	pop {r4-r7, pc}
 
 
@@ -106,19 +198,17 @@ _gp_rsiVBL:
 	@; de retardo sea 0
 _gp_actualizarDelay:
 	push {r0-r11, lr}
-	ldr r9, =_gd_qReady		@; carreguem en r9 la direccio de la cua de Ready
-	ldr r10, =_gd_nReady	@; carreguem a r10 el nombre de processos en Ready
-	ldr r0, =_gd_nDelay
+	ldr r0, =_gd_nDelay		@; r0 = direcció de la variable amb el nombre de proc. retardats
 	ldr r1, [r0]			@; r1 = num. de processos retardats
-	ldr r11, =_gd_qDelay	@; r11 = cua de processos retardats
 	mov r2, #0				@; punter del bucle a 0
-	mov r5, #4				@; r5=4
 	cmp r1, r2				@; mirem si ja s'han tractat tots els processos en la cua de retardats
 	bls .L_fi_actualizarDelay_bucle1
+	ldr r9, =_gd_qReady		@; carreguem en r9 la direccio de la cua de Ready
+	ldr r10, =_gd_nReady	@; carreguem a r10 el nombre de processos en Ready
+	ldr r11, =_gd_qDelay	@; r11 = cua de processos retardats
 .L_actualizarDelay_bucle1:
 	@; Augmentem el nombre de tics del porcés
-	mul r6, r2, r5			@; calculem posició del vector
-	ldr r3, [r11, r6]		@; r3 = zocalo + tics
+	ldr r3, [r11, r2, lsl #2]	@; r3 = zocalo + tics
 	sub r3, #1				@; restem 1, d'aquesta forma resetem 1 al nombre de tics
 	lsl r4, r3, #16			@; obtenim els tics
 	lsr r4, r4, #16
@@ -136,20 +226,19 @@ _gp_actualizarDelay:
 	sub r1, #1				@; decrementem el nombre de processos en Delay
 	str r1, [r0]
 	mov r4, r2				@; punter del segon bucle
-	add r8, r6, #4			@; posició del següent valor en la cua
 	cmp r1, r4				@; mirem si ja s'han tractat tots els processos en la cua de retardats
 	bls .L_actualitzarDelay_salt
 .L_actualizarDelay_bucle2:
-	ldr r7, [r11, r8]		@; carreguem valor (zocalo + tics) de la següent posició
-	sub r8, #4
-	str r7, [r11, r8]		@; guardem valor (zocalo + tics) de la següent posició
-	add r8, #8				@; saltem a la següent posició
+	add r8, r4, #1
+	ldr r7, [r11, r8, lsl #2]		@; carreguem valor (zocalo + tics) de la següent posició
+	str r7, [r11, r4, lsl #2]		@; guardem valor (zocalo + tics) de la següent posició
 	add r4, #1				@; Incrementem punter
 	cmp r4, r1				@; mirem si ja s'han tractat tots els processos en la cua de retardats
 	blo .L_actualizarDelay_bucle2
 	b .L_actualitzarDelay_salt
+
 .L_actualizarDelay_noFiTics:
-	str r3, [r11, r6]		@; actualitzem zócalo + tics del procés
+	str r3, [r11, r2, lsl #2]
 	add r2, #1				@; incrementem punter
 .L_actualitzarDelay_salt:
 	cmp r2, r1				@; mirem si ja s'han tractat tots els processos en la cua de retardats
@@ -170,10 +259,10 @@ _gp_actualizarDelay:
 _gp_salvarProc:
 	push {r8-r11, lr}
 	ldr r8, [r6]  			@; obteim el PID més zócalo
+	lsr r10, r8, #31		@; carreguem el bit de més pes del id + zócalo
 	and r8, r8, #15			@; r8= num de zócalo, ens quedem amb els 4 bits de menys pes del pidz
 	ldr r9, =_gd_qReady		@; carreguem en r9 la direccio de la cua de Ready
 	@; noves instruccions pel cas d'un procés retardat
-	lsr r10, #31			@; carreguem el bit de més pes
 	cmp r10, #1
 	beq .L_salvarProc_Delay	@; si el procés s'ha de retardar, es salva el seu estat pero no es fica en la cua de Ready
 	@; ...
@@ -493,6 +582,7 @@ _gp_matarProc:
 	ldr r3, [r2]			@; r3 = processos en Delay
 	mov r4, #0				@; r4 punter
 	cmp r4, r3				@; si no hi ha més processos en la cua de Delay acabem
+	bhs .L_fi_matarProc
 .L_matarProc_bucle2:
 	ldr r5, [r1, r4, lsl #2]	@;carreguem el zócalo + tics de procés en la cua de Delay
 	lsr r5, #24				@; obtenim el zócalo del procés
@@ -500,13 +590,13 @@ _gp_matarProc:
 	bne .L_següent_matarProc_bucle2
 	
 	@; tractament si hi ha concidència
-	mov r6, r4				@; r6 punter
+	add r6, r4, #1				@; r6 punter 2
 .L_matarProc_bucle2_reorder:
-	cmp r6, r3				@; si no queden més elements que ordenar acabem
+	cmp r4, r3				@; si no queden més elements que ordenar acabem
 	beq .L_fi_matarProc_bucle2_reorder
-	ldr r5, [r1, #4]		@; desplacem el valor a la posició anterior del vector
-	str r5, [r1]
-	add r1, #1				@; obtenim la posició del següent valor del vector
+	ldr r5, [r1, r6, lsl #2]		@; desplacem el valor a la posició anterior del vector
+	str r5, [r1, r4, lsl #2]
+	add r4, #4				@; obtenim la posició del següent valor del vector
 	add r6, #1				@; incrementem el punter
 	b .L_matarProc_bucle2_reorder	@; tornem a l'inici del bucle
 .L_fi_matarProc_bucle2_reorder:
