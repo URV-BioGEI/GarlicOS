@@ -39,7 +39,7 @@ _gg_escribirLinea:
 	
 	mov r5, #PPART
 	sub r5, r5, #1
-	and r3, r0, r5	@; r3= v%PPART
+	and r3, r0, r5			@; r3= v%PPART
 	mov r5, #VCOLS
 	mul r4, r5, r3			@; r4= VCOLS*(v%PPART)
 	
