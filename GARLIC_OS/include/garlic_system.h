@@ -1,13 +1,13 @@
 /*------------------------------------------------------------------------------
 
 	"garlic_system.h" : definiciones de las variables globales, funciones y
-						rutinas del sistema operativo GARLIC (versión 1.0)
+						rutinas del sistema operativo GARLIC (versión 2.0)
 
 	Analista-programador: santiago.romani@urv.cat
 	Programador P: cristofol.dauden@estudiants.urv.cat
-	Programador M: manuel.ruiz@estudiants.urv.cat
+	Programador M: yyy.yyy@estudiants.urv.cat
 	Programador G: oscar.albert@estudiants.urv.cat
-	Programador T: aleix.marine@estudiants.urv.cat
+	Programador T: uuu.uuu@estudiants.urv.cat
 
 ------------------------------------------------------------------------------*/
 #ifndef _GARLIC_SYSTEM_h_
@@ -27,12 +27,13 @@ extern int _gd_pidCount;	// Contador de PIDs: se incrementa cada vez que
 
 extern int _gd_tickCount;	// Contador de tics: se incrementa cada IRQ_VBL, y
 							// permite contabilizar el paso del tiempo
+
 extern int _gd_sincMain;	// Sincronismos con programa principal:
 							// bit 0 = 1 indica si se ha acabado de calcular el
 							// 				el uso de la CPU,
 							// bits 1-15 = 1 indica si el proceso del zócalo
 							//				correspondiente ha terminado.
-							
+
 extern int _gd_seed;		// Semilla para generación de números aleatorios
 							// (tiene que ser diferente de cero)
 
@@ -51,7 +52,7 @@ extern int _gd_qDelay[16];	// Cola de DELAY (procesos retardados) : vector
 							// identificadores de los zócalos (8 bits altos)
 							// más el número de tics restantes (16 bits bajos)
 							// para desbloquear el proceso
-							
+
 
 typedef struct				// Estructura del bloque de control de un proceso
 {							// (PCB: Process Control Block)
@@ -70,13 +71,15 @@ extern garlicPCB _gd_pcbs[16];	// vector con los PCBs de los procesos activos
 typedef struct				// Estructura del buffer de una ventana
 {							// (WBUF: Window BUFfer)
 	int pControl;			//	control de escritura en ventana
-							//		16 bits altos: número de línea (0-23)
+							//		4 bits altos: código de color actual (0-3)
+							//		12 bits medios: número de línea (0-23)
 							//		16 bits bajos: caracteres pendientes (0-32)
-	char pChars[32];		//	vector de 32 caracteres pendientes de escritura
-							//		indicando el código ASCII de cada posición
+	short pChars[32];		//	vector de 32 caracteres pendientes de escritura
+							//		16 bits por entrada, indicando número de
+							//		baldosa correspondiente al caracter+color
 } PACKED garlicWBUF;
 
-extern garlicWBUF _gd_wbfs[4];	// vector con los buffers de 4 ventanas
+extern garlicWBUF _gd_wbfs[16];	// vector con los buffers de 16 ventanas
 
 
 extern int _gd_stacks[15*128];	// vector con las pilas de los procesos activos
@@ -133,6 +136,7 @@ extern int quo;
 extern int res;
 
 
+
 //------------------------------------------------------------------------------
 //	Rutinas de gestión de procesos (garlic_itcm_proc.s)
 //------------------------------------------------------------------------------
@@ -154,7 +158,8 @@ extern void _gp_rsiVBL();
 
 
 /* _gp_numProc:	devuelve el número de procesos cargados en el sistema,
-				incluyendo el proceso en RUN y los procesos en READY */
+				incluyendo el proceso en RUN, los procesos en READY y
+				los procesos bloqueados */
 extern int _gp_numProc();
 
 
@@ -168,6 +173,8 @@ extern int _gp_numProc();
 	Resultado:	0 si no hay problema, >0 si no se puede crear el proceso
 */
 extern int _gp_crearProc(intFunc funcion, int zocalo, char *nombre, int arg);
+
+
 
 /* _gp_retardarProc:	retarda la ejecución del proceso actual durante el
 				número de segundos que se especifica por parámetro,
@@ -202,6 +209,8 @@ extern int _gp_matarProc(int zocalo);
 				procesos relativa al tanto por ciento de uso de la CPU */
 extern void _gp_rsiTIMER0();
 
+
+
 //------------------------------------------------------------------------------
 //	Funciones de gestión de memoria (garlic_mem.c)
 //------------------------------------------------------------------------------
@@ -210,6 +219,7 @@ extern void _gp_rsiTIMER0();
 					para indiciar si dicha inicialización ha tenido éxito;
 */
 extern int _gm_initFS();
+
 
 /* _gm_listaProgs: devuelve una lista con los nombres en clave de todos
 				los programas que se encuentran en el directorio "Programas".
@@ -223,11 +233,11 @@ extern int _gm_listaProgs(char* progs[]);
 
 
 /* _gm_cargarPrograma: busca un fichero de nombre "(keyName).elf" dentro del
-					directorio "/Programas/" del sistema de ficheros, y
-					carga los segmentos de programa a partir de una posición de
-					memoria libre, efectuando la reubicación de las referencias
-					a los símbolos del programa, según el desplazamiento del
-					código en la memoria destino;
+				directorio "/Programas/" del sistema de ficheros, y
+				carga los segmentos de programa a partir de una posición de
+				memoria libre, efectuando la reubicación de las referencias
+				a los símbolos del programa, según el desplazamiento del
+				código en la memoria destino;
 	Parámetros:
 		keyName ->	vector de 4 caracteres con el nombre en clave del programa
 	Resultado:
@@ -242,11 +252,11 @@ extern intFunc _gm_cargarPrograma(char *keyName);
 //------------------------------------------------------------------------------
 
 /* _gm_reubicar: rutina de soporte a _gm_cargarPrograma(), que interpreta los
-					'relocs' de un fichero ELF, contenido en un buffer *fileBuf,
-					y ajustar las direcciones de memoria correspondientes a las
-					referencias de tipo R_ARM_ABS32, restando la dirección de
-					inicio de segmento (pAddr) y sumando la dirección de destino
-					en la memoria (*dest) */
+				'relocs' de un fichero ELF, contenido en un buffer *fileBuf,
+				y ajustar las direcciones de memoria correspondientes a las
+				referencias de tipo R_ARM_ABS32, restando la dirección de
+				inicio de segmento (pAddr) y sumando la dirección de destino
+				en la memoria (*dest) */
 extern void _gm_reubicar(char *fileBuf, unsigned int pAddr, unsigned int *dest);
 
 
@@ -285,11 +295,12 @@ extern void _gm_pintarFranjas(unsigned char zocalo, unsigned short index_ini,
 extern void _gm_rsiTIMER1();
 
 
+
 //------------------------------------------------------------------------------
 //	Funciones de gestión de gráficos (garlic_graf.c)
 //------------------------------------------------------------------------------
 
-/* _gg_iniGraf: inicializa el procesador gráfico A para GARLIC 1.0 */
+/* _gg_iniGraf: inicializa el procesador gráfico A para GARLIC 2.0 */
 extern void _gg_iniGrafA();
 
 
@@ -303,10 +314,11 @@ extern void _gg_generarMarco(int v, int color);
 		formato	->	cadena de formato, terminada con centinela '\0';
 					admite '\n' (salto de línea), '\t' (tabulador, 4 espacios)
 					y códigos entre 32 y 159 (los 32 últimos son caracteres
-					gráficos), además de códigos de formato %c, %d, %x y %s
-					(max. 2 códigos por cadena)
-		val1	->	valor a sustituir en primer código de formato, si existe
-		val2	->	valor a sustituir en segundo código de formato, si existe
+					gráficos), además de marcas de format %c, %d, %h y %s (max.
+					2 marcas por cadena) y de las marcas de cambio de color 
+					actual %0 (blanco), %1 (amarillo), %2 (verde) y %3 (rojo)
+		val1	->	valor a sustituir en la primera marca de formato, si existe
+		val2	->	valor a sustituir en la segunda marca de formato, si existe
 					- los valores pueden ser un código ASCII (%c), un valor
 					  natural de 32 bits (%d, %x) o un puntero a string (%s)
 		ventana	->	número de ventana (de 0 a 3)
@@ -331,6 +343,7 @@ extern void _gg_escribirLinea(int v, int f, int n);
 					contenido de la última fila.
 */
 extern void _gg_desplazar(int v);
+
 
 /* _gg_escribirCar: escribe un carácter (baldosa) en la posición de la ventana
 				indicada, con un color concreto;
@@ -368,6 +381,8 @@ extern void _gg_escribirLineaTabla(int z, int color);
 				que refrescará periódicamente la información de la tabla de
 				procesos relativa a la dirección actual de ejecución */
 extern void _gg_rsiTIMER2();
+
+
 
 //------------------------------------------------------------------------------
 //	Rutinas de soporte al sistema (garlic_itcm_sys.s)
@@ -462,6 +477,7 @@ extern void _gi_redibujarZocalo(int seleccionar);
 extern void _gi_controlInterfaz(int key);
 
 
+
 //------------------------------------------------------------------------------
 //	Rutinas de teclado (garlic_tecl.c)
 //------------------------------------------------------------------------------
@@ -503,5 +519,6 @@ extern void _gt_putchar(char pos, char caracter);
 
 /* _gt_writePIDZ: Escribe el zócalo y PID del proceso que recibe E por teclado en la interfaz */
 extern void _gt_writePIDZ(char zoc);
+
 
 #endif // _GARLIC_SYSTEM_h_

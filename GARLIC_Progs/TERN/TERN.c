@@ -1,6 +1,6 @@
 /*------------------------------------------------------------------------------
 
-	"TERNS.c"
+	"TERN.c"
 	
 	Imprime las ternas pitagóricas por una ventana de GARLIC que
 	cumplan c<(arg+1)*2000
@@ -25,23 +25,24 @@ int _start(int arg)
 {
 	unsigned int maxim=(arg+1)*2000;
 	unsigned int a, b,c =0, comptador=0;
-	GARLIC_printf("-- Programa TERNS --\n");
+	int trobat =0;
+	GARLIC_printf("%0-- %1Programa TERNS%0 --\n");
 	
 	int n, m=2;
 	
-	while (c<maxim){
+	while (c<maxim && !trobat){
 		for(n=1;n<m;n++){
 			a=m*m-n*n;
 			b=2*m*n;
 			c=m*m+n*n;
 			
 			if(c>maxim)
-				break;
+				trobat=1;
 			//Si es una terna primitiva
-			if(mcd(mcd(a,b),c)){
+			if(mcd(mcd(a,b),c)==1){
 				comptador++;
-				GARLIC_printf("TERNA %d : ( %d,",comptador,a);
-				GARLIC_printf(" %d, %d )\n",b,c);
+				GARLIC_printf("%0TERNA %d: (%1 %d%0,",comptador,a);
+				GARLIC_printf("%2 %d%0,%3 %d %0)\n",b,c);
 			}
 		}
 		m++;

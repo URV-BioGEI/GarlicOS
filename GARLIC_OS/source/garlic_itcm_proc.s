@@ -629,6 +629,8 @@ _gp_matarProc:
 	
 .L_fi_matarProc:
 	bl _gp_desinhibirIRQs	@; habilitem les interrupcions
+	mov r1, r0
+	bl _gp_blancoPorcentage
 	pop {r1-r6, pc}
 	
 	
@@ -656,6 +658,16 @@ _gp_desinhibirIRQs:
 	str r1, [r0]				@; guardem el nou REG_IME
 	pop {r0-r1, pc}
 	
+	@; r1 zócalo del procés
+_gp_blancoPorcentage:
+	push {r0-r3, lr}
+	ldr r0, =espaisBlanc		@; Cargamos espacios en blanco en r0
+	add r1, r1, #4				@; r1 = fila, zócalo +4
+	mov r2, #28					@; r2 = columna
+	mov r3, #0					@; r3= color
+	bl _gs_escribirStringSub	@; _gs_escribirStringSub(espacios en blanco, fila zócalo, columna PID, color);
+	pop {r0-r3, pc}
+
 
 	@; Rutina para terminar un proceso de usuario:
 	@; pone a 0 el campo PID del PCB del zócalo actual, para indicar que esa
@@ -683,6 +695,7 @@ _gp_terminarProc:
 	str r2, [r0]			@; actualizar variable de sincronismo
 	bl _gp_desinhibirIRQs
 .LterminarProc_inf:
+	bl _gp_blancoPorcentage
 	bl _gp_WaitForVBlank	@; pausar procesador
 	b .LterminarProc_inf	@; hasta asegurar el cambio de contexto
 	

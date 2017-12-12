@@ -3,7 +3,7 @@
 	"GARLIC_API.h" : cabeceras de funciones del API (Application Program
 					Interface) del sistema operativo GARLIC 2.0 (código fuente
 					disponible en "GARLIC_API.s")
- 
+
 ------------------------------------------------------------------------------*/
 #ifndef _GARLIC_API_h_
 #define _GARLIC_API_h_
