@@ -133,6 +133,10 @@ _start:
 	ldr	r3, [sp, #32]
 	add	r3, r3, #1
 	str	r3, [sp, #32]
+	ldr	r3, [sp, #4]
+	rsb	r3, r3, #3
+	mov	r0, r3
+	bl	GARLIC_delay
 	ldr	r2, [sp, #12]
 	ldr	r1, [sp, #32]
 	ldr	r0, .L14+4

@@ -65,8 +65,8 @@ int _start(int arg)
 	//Limpiem la finestra
 	GARLIC_clear();
 
-	GARLIC_printf("-- Programa DETM  -  PID (%d) --\n", GARLIC_pid());
-	//GARLIC_printf("%1-- Programa DETM  -  PID %2(%d) %1--\n", GARLIC_pid());
+	//GARLIC_printf("-- Programa DETM  -  PID (%d) --\n", GARLIC_pid());
+	GARLIC_printf("%1-- Programa DETM  -  PID %2(%d) %1--\n", GARLIC_pid());
 	
 	for(i=0;i<n;i++){ 
 		for(j=0;j<n;j++){
@@ -78,8 +78,8 @@ int _start(int arg)
 	for(i=0;i<n;i++){ 
 		for(j=0;j<n;j++){
 			GARLIC_delay(4-arg);
-			GARLIC_printf("(%d)\tElement: %d\n",GARLIC_pid(),a[i][j]);
-			//GARLIC_printf("%1(%d)\t%2Element: %3%d\n",GARLIC_pid(),a[i][j]);
+			//GARLIC_printf("(%d)\tElement: %d\n",GARLIC_pid(),a[i][j]);
+			GARLIC_printf("%1(%d)\t%2Element: %3%d\n",GARLIC_pid(),a[i][j]);
 			
 		}
 	}
@@ -97,14 +97,10 @@ int _start(int arg)
 		}
 	}
 	
-	//Visualtzació per quan fusioni amb el progG
-	/**if(n==5) GARLIC_printf("%1(%d)\t%2ERROR MEMORIA EN MATRIU 5X5\n",GARLIC_pid());
-	else if(det>=0) GARLIC_printf("%1(%d)\t%2DETERMINANT = %3%d\n",GARLIC_pid(),det);
-	else GARLIC_printf("%1(%d)\t%2DETERMINANT = %3-%d\n",GARLIC_pid(),det*-1);**/
-	
-	if(det>=0) GARLIC_printf("(%d)\tDETERMINANT = %d\n",GARLIC_pid(),det);
-	else GARLIC_printf("(%d)\tDETERMINANT = -%d\n",GARLIC_pid(),det*-1);
-	
+	/*if(det>=0) GARLIC_printf("(%d)\tDETERMINANT = %d\n",GARLIC_pid(),det);
+	else GARLIC_printf("(%d)\tDETERMINANT = -%d\n",GARLIC_pid(),det*-1);*/
+	if(det>=0) GARLIC_printf("%1(%d)\t%2DETERMINANT = %3%d\n",GARLIC_pid(),det);
+	else GARLIC_printf("%1(%d)\t%2DETERMINANT = %3-%d\n",GARLIC_pid(),det*-1);
 
 	return 0;
 }

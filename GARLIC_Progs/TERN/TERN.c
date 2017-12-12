@@ -41,6 +41,7 @@ int _start(int arg)
 			//Si es una terna primitiva
 			if(mcd(mcd(a,b),c)==1){
 				comptador++;
+				GARLIC_delay(3-arg);
 				GARLIC_printf("%0TERNA %d: (%1 %d%0,",comptador,a);
 				GARLIC_printf("%2 %d%0,%3 %d %0)\n",b,c);
 			}

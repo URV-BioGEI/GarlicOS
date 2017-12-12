@@ -469,16 +469,16 @@ det5:
 	.section	.rodata
 	.align	2
 .LC0:
-	.ascii	"-- Programa DETM  -  PID (%d) --\012\000"
+	.ascii	"%1-- Programa DETM  -  PID %2(%d) %1--\012\000"
 	.align	2
 .LC1:
-	.ascii	"(%d)\011Element: %d\012\000"
+	.ascii	"%1(%d)\011%2Element: %3%d\012\000"
 	.align	2
 .LC2:
-	.ascii	"(%d)\011DETERMINANT = %d\012\000"
+	.ascii	"%1(%d)\011%2DETERMINANT = %3%d\012\000"
 	.align	2
 .LC3:
-	.ascii	"(%d)\011DETERMINANT = -%d\012\000"
+	.ascii	"%1(%d)\011%2DETERMINANT = %3-%d\012\000"
 	.text
 	.align	2
 	.global	_start
