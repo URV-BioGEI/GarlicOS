@@ -150,7 +150,34 @@ int main(int argc, char **argv) {
 		
 	} else
 		_gg_escribir("*** Programa NO cargado\n", 0, 0, 0);
-
+	
+	
+	_gg_escribir("*** Carga de programa DETM.elf\n", 0, 0, 0);
+	start = _gm_cargarPrograma("DETM");
+	if (start)
+	{
+		for (v = 1; v < 4; v++)	// inicializar buffers de ventanas 1, 2 y 3
+			_gd_wbfs[v].pControl = 0;
+		
+		_gp_crearProc(start, 1, "DETM", 1);
+		_gp_crearProc(start, 2, "DETM", 2);
+		_gp_crearProc(start, 3, "DETM", 3);
+	} else
+		_gg_escribir("*** Programa NO cargado\n", 0, 0, 0);
+	
+	v=_gp_numProc();
+	while (_gp_numProc() > 1)			// esperar a que proceso 2 acabe
+		{
+			_gp_WaitForVBlank();
+			porcentajeUso();
+			if (_gp_numProc() < v){
+				_gs_dibujarTabla();
+				v--;
+			}
+		}
+	_gg_escribir("Procesos 1, 2 i 3 terminados\n", 0, 0, 0);
+	
+	
 	_gg_escribir("*** Final fase 2_P\n", 0, 0, 0);
 	_gs_dibujarTabla();
 

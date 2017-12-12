@@ -11,15 +11,15 @@
 
 #include <GARLIC_API.h>			/* definición de las funciones API de GARLIC */
 
-int det3(int a[][3]){
+int det3(char a[][3]){
 	return (a[0][0]*a[1][1]*a[2][2]+a[0][1]*a[1][2]*a[2][0]+a[1][0]*a[2][1]*a[0][2]-a[0][2]*a[1][1]*a[2][0]-a[0][1]*a[1][0]*a[2][2]-a[1][2]*a[2][1]*a[0][0]);
 }
 
-int det4(int a[][4]){
+int det4(char a[][4]){
 	int factor=1;
 	int n=4;
 	int det=0;
-	int a2[n-1][n-1];
+	char a2[n-1][n-1];
 	int i,j,k;
 	for(i=0; i<n; i++){
 		for(j=0; j<n; j++){
@@ -34,11 +34,11 @@ int det4(int a[][4]){
 	return det;
 }
 
-int det5(int a[][5]){
+int det5(char a[][5]){
 	int factor=1;
 	int n=5;
 	int det=0;
-	int a2[n-1][n-1];
+	char a2[n-1][n-1];
 	int i,j,k;
 	for(i=0; i<n; i++){
 		for(j=0; j<n; j++){
@@ -60,8 +60,11 @@ int _start(int arg)
 	else if (arg > 3) arg = 3;		// valor mínimo del argumento
 	//ordre =2+arguments de entrada
 	n=2+arg;
-	int a[n][n];
+	char a[n][n];
 	
+	//Limpiem la finestra
+	GARLIC_clear();
+
 	GARLIC_printf("-- Programa DETM  -  PID (%d) --\n", GARLIC_pid());
 	//GARLIC_printf("%1-- Programa DETM  -  PID %2(%d) %1--\n", GARLIC_pid());
 	
@@ -74,7 +77,7 @@ int _start(int arg)
 /* Llegim elements matriu */ 
 	for(i=0;i<n;i++){ 
 		for(j=0;j<n;j++){
-			if (arg == 1) GARLIC_delay(1000000);
+			GARLIC_delay(4-arg);
 			GARLIC_printf("(%d)\tElement: %d\n",GARLIC_pid(),a[i][j]);
 			//GARLIC_printf("%1(%d)\t%2Element: %3%d\n",GARLIC_pid(),a[i][j]);
 			
@@ -89,8 +92,7 @@ int _start(int arg)
 		else{
 			if(n==4) det=det4(a);
 			else{
-				//det=det5(a);
-				det=-1;
+				det=det5(a);
 			}
 		}
 	}
@@ -100,9 +102,9 @@ int _start(int arg)
 	else if(det>=0) GARLIC_printf("%1(%d)\t%2DETERMINANT = %3%d\n",GARLIC_pid(),det);
 	else GARLIC_printf("%1(%d)\t%2DETERMINANT = %3-%d\n",GARLIC_pid(),det*-1);**/
 	
-	if(n==5) GARLIC_printf("(%d)\tERROR MEMORIA EN MATRIU 5X5\n",GARLIC_pid());
-	else if(det>=0) GARLIC_printf("(%d)\tDETERMINANT = %d\n",GARLIC_pid(),det);
+	if(det>=0) GARLIC_printf("(%d)\tDETERMINANT = %d\n",GARLIC_pid(),det);
 	else GARLIC_printf("(%d)\tDETERMINANT = -%d\n",GARLIC_pid(),det*-1);
 	
+
 	return 0;
 }
