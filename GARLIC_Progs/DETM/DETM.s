@@ -475,6 +475,9 @@ det5:
 	.align	2
 .LC3:
 	.ascii	"(%d)\011DETERMINANT = %d\012\000"
+	.align	2
+.LC4:
+	.ascii	"(%d)\011DETERMINANT = -%d\012\000"
 	.text
 	.align	2
 	.global	_start
@@ -574,7 +577,7 @@ _start:
 	bl	GARLIC_pid
 	mov	r3, r0
 	mov	r1, r3
-	ldr	r0, .L41
+	ldr	r0, .L43
 	bl	GARLIC_printf
 	mov	r3, #0
 	str	r3, [fp, #-36]
@@ -587,7 +590,7 @@ _start:
 	bl	GARLIC_random
 	mov	r1, r0
 	lsr	lr, r6, #2
-	ldr	ip, .L41+4
+	ldr	ip, .L43+4
 	smull	r2, r3, r1, ip
 	asr	r2, r3, #2
 	asr	r3, r1, #31
@@ -622,10 +625,16 @@ _start:
 	mov	r3, #0
 	str	r3, [fp, #-36]
 	b	.L30
-.L33:
+.L34:
 	mov	r3, #0
 	str	r3, [fp, #-32]
 	b	.L31
+.L33:
+	ldr	r3, [fp, #-64]
+	cmp	r3, #1
+	bne	.L32
+	ldr	r0, .L43+8
+	bl	GARLIC_delay
 .L32:
 	bl	GARLIC_pid
 	lsr	r2, r6, #2
@@ -637,7 +646,7 @@ _start:
 	ldr	r3, [r3, r2, lsl #2]
 	mov	r2, r3
 	mov	r1, r0
-	ldr	r0, .L41+8
+	ldr	r0, .L43+12
 	bl	GARLIC_printf
 	ldr	r3, [fp, #-32]
 	add	r3, r3, #1
@@ -646,7 +655,7 @@ _start:
 	ldr	r2, [fp, #-32]
 	ldr	r3, [fp, #-44]
 	cmp	r2, r3
-	blt	.L32
+	blt	.L33
 	ldr	r3, [fp, #-36]
 	add	r3, r3, #1
 	str	r3, [fp, #-36]
@@ -654,12 +663,12 @@ _start:
 	ldr	r2, [fp, #-36]
 	ldr	r3, [fp, #-44]
 	cmp	r2, r3
-	blt	.L33
+	blt	.L34
 	mvn	r3, #9
 	str	r3, [fp, #-40]
 	ldr	r3, [fp, #-44]
 	cmp	r3, #2
-	bne	.L34
+	bne	.L35
 	ldr	r3, [fp, #-56]
 	ldr	r3, [r3]
 	lsr	r1, r6, #2
@@ -675,59 +684,73 @@ _start:
 	mul	r3, r1, ip
 	sub	r3, r2, r3
 	str	r3, [fp, #-40]
-	b	.L35
-.L34:
+	b	.L36
+.L35:
 	ldr	r3, [fp, #-44]
 	cmp	r3, #3
-	bne	.L36
+	bne	.L37
 	ldr	r3, [fp, #-56]
 	mov	r0, r3
 	bl	det3
 	str	r0, [fp, #-40]
-	b	.L35
-.L36:
+	b	.L36
+.L37:
 	ldr	r3, [fp, #-44]
 	cmp	r3, #4
-	bne	.L37
+	bne	.L38
 	ldr	r3, [fp, #-56]
 	mov	r0, r3
 	bl	det4
 	str	r0, [fp, #-40]
-	b	.L35
-.L37:
+	b	.L36
+.L38:
 	mvn	r3, #0
 	str	r3, [fp, #-40]
-.L35:
+.L36:
 	ldr	r3, [fp, #-44]
 	cmp	r3, #5
-	bne	.L38
+	bne	.L39
 	bl	GARLIC_pid
 	mov	r3, r0
 	mov	r1, r3
-	ldr	r0, .L41+12
+	ldr	r0, .L43+16
 	bl	GARLIC_printf
-	b	.L39
-.L38:
+	b	.L40
+.L39:
+	ldr	r3, [fp, #-40]
+	cmp	r3, #0
+	blt	.L41
 	bl	GARLIC_pid
 	mov	r3, r0
 	ldr	r2, [fp, #-40]
 	mov	r1, r3
-	ldr	r0, .L41+16
+	ldr	r0, .L43+20
 	bl	GARLIC_printf
-.L39:
+	b	.L40
+.L41:
+	bl	GARLIC_pid
+	mov	r1, r0
+	ldr	r3, [fp, #-40]
+	rsb	r3, r3, #0
+	mov	r2, r3
+	ldr	r0, .L43+24
+	bl	GARLIC_printf
+.L40:
 	mov	r3, #0
 	mov	sp, r8
 	mov	r0, r3
 	sub	sp, fp, #24
 	@ sp needed
 	pop	{r4, r5, r6, r7, r8, fp, pc}
-.L42:
+.L44:
 	.align	2
-.L41:
+.L43:
 	.word	.LC0
 	.word	1717986919
+	.word	1000000
 	.word	.LC1
 	.word	.LC2
 	.word	.LC3
+	.word	.LC4
 	.size	_start, .-_start
 	.ident	"GCC: (devkitARM release 47) 7.1.0"

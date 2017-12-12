@@ -66,6 +66,13 @@ _gp_IntrMain:
 
 
 	.global _gp_rsiTIMER0
+	@; Rutina de Servicio de Interrupción (RSI) para contabilizar los tics
+	@; de trabajo de cada proceso: suma los tics de todos los procesos y calcula
+	@; el porcentaje de uso de la CPU, que se guarda en los 8 bits altos de la
+	@; entrada _gd_pcbs[z].workTicks de cada proceso (z) y, si el procesador
+	@; gráfico secundario está correctamente configurado, se imprime en la
+	@; columna correspondiente de la tabla de procesos.
+	@; ...
 	@; Manegador de interrupcions del timer 0 de Garlic:
 	@; se enacrrega de generar el percentatge d'ús de la CPU.
 _gp_rsiTIMER0:
@@ -122,7 +129,8 @@ _gp_rsiTIMER0:
 	mov r1, #4				@; r1 = longitud de l'String
 	mov r2, r3				@; r2 = %
 	bl _gs_num2str_dec		@; convertim el percentatge a String
-	add r1, r8, #4			@; r1 = fila
+	ldr r0, =_gd_percentatge	@; r0 = string on guardarem el % del CPU, ja que _gs_num2str_dec maxaca r0
+	add r1, r8, #4			@; r1 = fila, zócalo +4
 	mov r2, #28				@; r2 = columna
 	mov r3, #0				@; r3 = color
 	bl _gs_escribirStringSub	@; escribim el % en la taula
@@ -141,9 +149,6 @@ _gp_rsiTIMER0:
 	pop {r0-r10, pc}
 	
 	
-	
-	
-
 	.global _gp_rsiVBL
 	@; Manejador de interrupciones VBL (Vertical BLank) de Garlic:
 	@; se encarga de actualizar los tics, intercambiar procesos, etc.
@@ -179,7 +184,9 @@ _gp_rsiVBL:
 	ldr r6, =_gd_pidz		@; r6= direcció de _gd_pidz
 	bl _gp_restaurarProc	@;cridem la funció restaurar context amb els paràmetres en els registres que toca
 	
-	@;_gd_pcbs[z].workTicks del proceso que entra en ejecución.
+.Lfi_rsiVBL:
+	@;incrementem el _gd_pcbs[z].workTicks del proceso que entra en ejecución.
+	ldr r6, =_gd_pidz		@; r6= direcció de _gd_pidz
 	ldr r4, [r6]			@; r4 = pidz
 	and r4, r4, #15			@; obtenim el zócalo del procés
 	mov r5, #24				@; desplaçament necessàri per saltar del pcb d'un procés a un altre
@@ -189,7 +196,6 @@ _gp_rsiVBL:
 	add r5, #1				@; augmentem en 1 els workTicks
 	str r5, [r6, #20]		@; guardem el nou valor de workticks
 	
-.Lfi_rsiVBL:
 	pop {r4-r7, pc}
 
 
@@ -475,12 +481,19 @@ _gp_crearProc:
 	str r4, [r6, #20]		@; camp workTocks del PCB a 0
 	@; guardem el num de zócalo en la última pos. de la cua de Ready i augmentem el num de proc en nReady
 	ldr r5, =_gd_nReady		@; carreguem en r5 la direcció de nReady
-	ldr r6, [r5]			@; r6=num de proc. en la cua de Ready
 	ldr r4, =_gd_qReady		@; carreguem en r4 la direccio de la cua de Ready
+	
+	@;secció crítica
+	bl _gp_inhibirIRQs		@; inhibim les interrupcions
+	
+	ldr r6, [r5]			@; r6=num de proc. en la cua de Ready
 	strb r1, [r4, r6]		@; guardem el nombre de zocalo del procés en l'última posició de la cua de Ready
 	add r6, #1				@; incrementem el nombre de processos en la cua de Ready
 	str r6, [r5]			@; actualitzem el nombre de proc. en la cua de REady
 	mov r0, #0				@; retornem 0 ja que s'ha creat el procés correctament
+	
+	bl _gp_desinhibirIRQs	@; habilitem les interrupcions
+	
 	b .Lfi_crear_proc		@; saltem al final de la funció
 .Lcrear_proc_err:
 	mov r0, #1				@; no s'ha pogut crear el procés
@@ -515,7 +528,7 @@ _gp_retardarProc:
 	add r3, #1					@; incrementem el nombre de processos en la cua e retardats
 	str r3, [r2]				@; guardem el valor en la variabl global
 	@; fiquem a 1 el bit de més pes de _gd_pidz
-	orr r5, #0x80000000			@; fiquem a 1 el bit de més pes del pidz
+	orr r5, r5, #0x80000000		@; fiquem a 1 el bit de més pes del pidz
 	str r5, [r4]				@; guardem el valor en la variabl global
 	@; forzar cesión de la CPU invocando a la función _gp_WaitForVBlank()
 	bl _gp_WaitForVBlank		@; invoquem la funció WaitForVBlank
@@ -533,13 +546,15 @@ _gp_retardarProc:
 	@; R0: zócalo del proceso a matar (entre 1 y 15).
 _gp_matarProc:
 	push {r1-r6, lr}
+	@; secció crítica
+	bl _gp_inhibirIRQs		@; inhibim les interrupcions
 	@; posem a 0 el camp PID del _gd_pcbs[z]
 	mov r3, #24
 	ldr r1, =_gd_pcbs		@; r1 = direcció de l'array de PCBs
 	mla r2, r0, r3, r1		@; desplaçament per arrivar al PCB del zócalo actual: num de zócalo * 24 + direcció _gd_pcbs, on 24 es la mida de cada PCB (6 ints, 6 * 4 bytes per int)
 	mov r3, #0				@; r3 = 0
 	str r3, [r2]			@; PID del procés = 0
-	
+	str r3, [r2,#20]		@; WorkTics del procés a 0, sinó surt imprés en la pantalla del SO
 	@; busquem el valor de z en la cua de READY i si està l'eliminem
 	ldr r1, =_gd_qReady		@; r1 = cua de processos en Ready
 	ldr r2, =_gd_nReady		@; r2 = variable amb el nombre de processos en Ready
@@ -553,13 +568,13 @@ _gp_matarProc:
 	bne .L_següent_matarProc_bucle1
 	
 	@; tractament si hi ha coincidència
-	mov r6, r4				@; r6 punter
+	add r6, r4, #1				@; r6 punter
 .L_matarProc_bucle_reorder:
 	cmp r6, r3				@; si no queden més elements que ordenar acabem
 	beq .L_fi_matarProc_bucle_reorder
-	ldrb r5, [r1, #1]		
-	strb r5, [r1]			@; desplacem el valor a la posició anterior del vector
-	add r1, #1				@; obtenim la posició del següent valor del vector
+	ldrb r5, [r1, r6]		
+	strb r5, [r1, r4]			@; desplacem el valor a la posició anterior del vector
+	add r4, #1				@; obtenim la posició del següent valor del vector
 	add r6, #1				@; incrementem el punter
 	b .L_matarProc_bucle_reorder	@; tornem a l'inici del bucle
 .L_fi_matarProc_bucle_reorder:
@@ -585,6 +600,7 @@ _gp_matarProc:
 	bhs .L_fi_matarProc
 .L_matarProc_bucle2:
 	ldr r5, [r1, r4, lsl #2]	@;carreguem el zócalo + tics de procés en la cua de Delay
+	@;ldr r5, [r1, r4]	@;carreguem el zócalo + tics de procés en la cua de Delay
 	lsr r5, #24				@; obtenim el zócalo del procés
 	cmp r5, r0				@; si no coincideixen passem al següent
 	bne .L_següent_matarProc_bucle2
@@ -592,7 +608,7 @@ _gp_matarProc:
 	@; tractament si hi ha concidència
 	add r6, r4, #1				@; r6 punter 2
 .L_matarProc_bucle2_reorder:
-	cmp r4, r3				@; si no queden més elements que ordenar acabem
+	cmp r6, r3				@; si no queden més elements que ordenar acabem
 	beq .L_fi_matarProc_bucle2_reorder
 	ldr r5, [r1, r6, lsl #2]		@; desplacem el valor a la posició anterior del vector
 	str r5, [r1, r4, lsl #2]
@@ -612,9 +628,34 @@ _gp_matarProc:
 	blo .L_matarProc_bucle2
 	
 .L_fi_matarProc:
+	bl _gp_desinhibirIRQs	@; habilitem les interrupcions
 	pop {r1-r6, pc}
 	
+	
+	
+	.global _gp_inihibirIRQs
+	@; pone el bit IME (Interrupt Master Enable) a 0, para inhibir todas
+	@; las IRQs y evitar así posibles problemas debidos al cambio de contexto
+_gp_inhibirIRQs:
+	push {r0-r1, lr}
+	ldr r0, =0x4000208			@; carreguem la posició de l variable REG_IME
+	ldr r1, [r0]				@; carreguem el REG_IME
+	bic r1, #1					@; fiquem el primer bit a 0
+	str r1, [r0]				@; guardem el nou REG_IME
+	pop {r0-r1, pc}
 
+
+	.global _gp_desinihibirIRQs
+	@; pone el bit IME (Interrupt Master Enable) a 1, para desinhibir todas
+	@; las IRQs
+_gp_desinhibirIRQs:
+	push {r0-r1, lr}
+	ldr r0, =0x4000208			@; carreguem la posició de l variable REG_IME
+	ldr r1, [r0]				@; carreguem el REG_IME
+	orr r1, #1					@; fiquem el primer bit a 1
+	str r1, [r0]				@; guardem el nou REG_IME
+	pop {r0-r1, pc}
+	
 
 	@; Rutina para terminar un proceso de usuario:
 	@; pone a 0 el campo PID del PCB del zócalo actual, para indicar que esa
@@ -625,6 +666,7 @@ _gp_terminarProc:
 	ldr r0, =_gd_pidz
 	ldr r1, [r0]			@; R1 = valor actual de PID + zócalo
 	and r1, r1, #0xf		@; R1 = zócalo del proceso desbancado
+	bl _gp_inhibirIRQs
 	str r1, [r0]			@; guardar zócalo con PID = 0, para no salvar estado			
 	ldr r2, =_gd_pcbs
 	mov r10, #24
@@ -639,8 +681,11 @@ _gp_terminarProc:
 	mov r3, r3, lsl r1		@; R3 = máscara con bit correspondiente al zócalo
 	orr r2, r3
 	str r2, [r0]			@; actualizar variable de sincronismo
+	bl _gp_desinhibirIRQs
 .LterminarProc_inf:
 	bl _gp_WaitForVBlank	@; pausar procesador
 	b .LterminarProc_inf	@; hasta asegurar el cambio de contexto
+	
+	
 .end
 
