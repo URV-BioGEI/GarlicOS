@@ -81,6 +81,9 @@ extern garlicWBUF _gd_wbfs[4];	// vector con los buffers de 4 ventanas
 
 extern int _gd_stacks[15*128];	// vector con las pilas de los procesos activos
 
+extern int _gd_res;				// resultat del residu
+
+extern char _gd_percentatge[4];	// string amb el percentatge d'ús de CPU
 
 //------------------------------------------------------------------------------
 //	Rutinas de gestión de teclado (garlic_dtcm)

@@ -45,6 +45,12 @@ _gd_wbfs:	.space 4 * (4 + 32)
 	.global _gd_stacks			@; Vector de pilas de los procesos activos
 _gd_stacks:	.space 15 * 128 * 4
 
+	.global _gd_res
+_gd_res:	.word 0				@; resultat del residu
+
+	.global _gd_percentatge
+_gd_percentatge:	.space 4	@; string amb el percentatge d'ús de CPU
+
 
 @; progM
 	.global quo

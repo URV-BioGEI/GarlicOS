@@ -1,13 +1,12 @@
 /*------------------------------------------------------------------------------
 
 	"GARLIC_API.h" : cabeceras de funciones del API (Application Program
-					Interface) del sistema operativo GARLIC 1.0 (código fuente
+					Interface) del sistema operativo GARLIC 2.0 (código fuente
 					disponible en "GARLIC_API.s")
-
+ 
 ------------------------------------------------------------------------------*/
 #ifndef _GARLIC_API_h_
 #define _GARLIC_API_h_
-
 
 
 	/* GARLIC_pid: devuelve el identificador del proceso actual */
@@ -82,9 +81,5 @@ extern void GARLIC_delay(unsigned int nsec);
 		empezará a escribir a partir de la primera fila de la ventana. */
 extern void GARLIC_clear();
 
-	/* GARLIC_getstring: recibe la dirección de memoria donde guardar el string
-		introducido por teclado así como el máximo número de carácteres que 
-		puede contener el vector sin contar al centinela (/0). Devuelve el número
-		máximo de carácteres leídos finalmente sin contar al centinela. */
-extern int GARLIC_getstring(char * string, int max_char);
+
 #endif // _GARLIC_API_h_

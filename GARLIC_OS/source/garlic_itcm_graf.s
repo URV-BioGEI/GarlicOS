@@ -84,13 +84,13 @@ _gg_escribirCar:
 	
 .global _gg_escribirMat
 _gg_escribirMat:
-	push {lr}
+	push {lr} 
 	pop {pc}
 	
-.global _gs_borrarVentana
-_gs_borrarVentana:
-	push {lr}
-	pop {pc}
+@;.global _gs_borrarVentana
+@;_gs_borrarVentana:
+	@;push {lr}
+	@;pop {pc}
 	
 	.global _gg_desplazar
 	@; Rutina para desplazar una posición hacia arriba todas las filas de la
