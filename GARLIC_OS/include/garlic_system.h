@@ -231,7 +231,7 @@ extern int _gm_listaProgs(char* progs[]);
 		!= 0	->	dirección de inicio del programa (intFunc)
 		== 0	->	no se ha podido cargar el programa
 */
-extern intFunc _gm_cargarPrograma(char *keyName);
+extern intFunc _gm_cargarPrograma(int zocalo, char *keyName);
 
 
 //------------------------------------------------------------------------------
@@ -244,7 +244,7 @@ extern intFunc _gm_cargarPrograma(char *keyName);
 					referencias de tipo R_ARM_ABS32, restando la dirección de
 					inicio de segmento (pAddr) y sumando la dirección de destino
 					en la memoria (*dest) */
-extern void _gm_reubicar(char *fileBuf, unsigned int pAddr, unsigned int *dest);
+extern void _gm_reubicar(char *fileBuf, unsigned int pAddr_code, unsigned int *dest_code, unsigned int pAddr_data, unsigned int *dest_data);
 
 
 /* _gm_reservarMem: rutina para reservar un conjunto de franjas de memoria 

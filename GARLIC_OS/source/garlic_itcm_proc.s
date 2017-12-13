@@ -1,6 +1,6 @@
 @;==============================================================================
 @;
-@;	"garlic_itcm_proc.s":	código de las funciones de control de procesos (1.0)
+@;	"garlic_itcm_proc.s":	código de las rutinas de control de procesos (2.0)
 @;						(ver "garlic_system.h" para descripción de funciones)
 @;
 @;==============================================================================
@@ -9,11 +9,6 @@
 
 	.arm
 	.align 2
-	
-	.global _gp_retardarProc
-_gp_retardarProc:
-	push {lr}
-	pop {pc}
 	
 	.global _gp_WaitForVBlank
 	@; rutina para pausar el procesador mientras no se produzca una interrupción

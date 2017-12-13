@@ -227,7 +227,7 @@ int _start(int arg)				/* función de inicio : no se usa 'main' */
 	if (arg < 0) arg = 0;			// limitar valor mínimo del argumento 
 	if (arg > 3) arg = 3;			// limitar valor máximo del argumento
 
-	GARLIC_clear();
+	//GARLIC_clear();
 									// esccribir mensaje inicial
 	GARLIC_printf("-- Programa DESC  -  PID %2(%d) %0--\n", GARLIC_pid());
 

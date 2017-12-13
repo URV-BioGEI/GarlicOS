@@ -1,15 +1,16 @@
 /*------------------------------------------------------------------------------
 
-	"garlic_mem.c" : fase 1 / programador M manuel.ruiz@estudiants.urv.cat
+	"garlic_mem.c" : fase 2 / programador M
 
-	Funciones de carga de un fichero ejecutable en formato ELF, para GARLIC 1.0
+	Funciones de carga de un fichero ejecutable en formato ELF, para GARLIC 2.0
 
 ------------------------------------------------------------------------------*/
 #include <nds.h>
 #include <filesystem.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <dirent.h>			// para struct dirent, etc.
+#include <stdio.h>			// para fopen(), fread(), etc.
+#include <stdlib.h>			// para malloc(), etc.
+#include <string.h>			// para strcat(), memcpy(), etc.
 
 #include <garlic_system.h>	// definición de funciones y variables de sistema
 
@@ -79,7 +80,7 @@ int _gm_initFS()
 		!= 0	->	dirección de inicio del programa (intFunc)
 		== 0	->	no se ha podido cargar el programa
 */
-intFunc _gm_cargarPrograma(char *keyName)
+intFunc _gm_cargarPrograma(int zocalo, char *keyName)
 {
 	//variables iniciales relacionadas con el cargar el vector en memoria dinámica
 	long lSize;
@@ -124,7 +125,7 @@ intFunc _gm_cargarPrograma(char *keyName)
 	//buscamos la cabecera de fichero ELF
 	fread(&head,1,sizeof(Elf32_Ehdr), pFile);
 	
-	//guardamos offset, bytes de los headers de programa, y numero de headers de programa.
+	//guardamos offset, bytes de los segmentos de programa, y numero de segmentos de programa.
 	offset= head.e_phoff;
 	size_st= head.e_phentsize;
 	num_st= head.e_phnum;
@@ -136,23 +137,28 @@ intFunc _gm_cargarPrograma(char *keyName)
 		fseek(pFile, offset, SEEK_SET);
 		fread(&segments_table,1,sizeof(Elf32_Phdr), pFile); // lee la tabla de segmentos
 	}
-	
+
 	//dirección enviada como result
 	int dirprog=0; //setteada a 0 por si no hubieran segmentos = error.
 	//bucle que accede a la tabla de segmentos
 	int i;
-	for(i=0;((i<num_st) /*&& (trobat == 0)*/);i++){
+	Elf32_Off desp_prog2;
+	Elf32_Addr dir_ref2;
+	Elf32_Word size_prog2;
+	Elf32_Off desp_prog;
+	Elf32_Addr dir_ref;
+	Elf32_Word size_prog;
+	unsigned int prim_pos2=0;
+	unsigned int prim_pos=0;
+	
+	for(i=0;i<num_st;i++){
 		
 		//selecciona el tipo de segmento
 		Elf32_Word segment_type;
 		segment_type = segments_table.p_type;
 		
 		//comprueba que sea del tipo PT_LOAD
-		if(segment_type == 1){
-			//trobat = 1;
-			Elf32_Off desp_prog;
-			Elf32_Addr dir_ref;
-			Elf32_Word size_prog;
+		if(segment_type == 1 && i == 0){
 			
 			if (_gm_first_mem_pos > END_MEM) 
 			{
@@ -165,23 +171,51 @@ intFunc _gm_cargarPrograma(char *keyName)
 			dir_ref = segments_table.p_paddr;
 			size_prog = segments_table.p_memsz;
 			//copia direcciones en memoria
-			_gs_copiaMem((const void *) &buffer[desp_prog],  (void *) _gm_first_mem_pos, size_prog);
 			
-			//hace las reubicaciones
-			_gm_reubicar( buffer, dir_ref, (unsigned int *) _gm_first_mem_pos);
 			
-			//para que en el siguiente programa, el gm_first_mem_pos sea multiplo de 4
-			int valor = size_prog%4;
-			if(valor!=0){
-				size_prog = size_prog + (4-valor);
+			prim_pos = (int) _gm_reservarMem( zocalo, size_prog, (unsigned char) i); //se queda aquí.
+			
+			_gs_copiaMem((const void *) &buffer[desp_prog],  (void *) prim_pos, size_prog);
+			
+			if(num_st == 1)
+			{
+				_gm_reubicar( buffer, dir_ref, (unsigned int *) prim_pos, 0XFFFFFFFF, (unsigned int*) 0);
 			}
 			//damos valor a la dirección inicial de donde se encuentra el programa en memoria
-			dirprog = (int) _gm_first_mem_pos+entry-dir_ref;
-			_gm_first_mem_pos = _gm_first_mem_pos + size_prog; //actualizamos para el siguiente progrma
+			dirprog = (int) prim_pos+entry-dir_ref;
+			
+			
 			
 		}
-		
-		if(i+1<num_st){
+		//comprueba que sea del tipo PT_LOAD y hace el segmento de datos en caso de que exista
+		else if(segment_type == 1 && i == 1){
+			
+			
+			if (_gm_first_mem_pos > END_MEM) 
+			{
+				fclose(pFile);
+				free(buffer);
+				return ((intFunc)0);
+			}
+			//obtencion dirección inicial del segmento a cargar y desplazamiento y size programa
+			desp_prog2 = segments_table.p_offset;
+			dir_ref2 = segments_table.p_paddr;
+			size_prog2 = segments_table.p_memsz;
+			//copia direcciones en memoria
+			
+			
+			prim_pos2 = (int) _gm_reservarMem( zocalo, size_prog2, (unsigned char) i);
+			
+			_gs_copiaMem((const void *) &buffer[desp_prog2],  (void *) prim_pos2, size_prog2);
+			
+
+			if(num_st ==2) 
+			{
+				_gm_reubicar(buffer, dir_ref, (unsigned int *) prim_pos, dir_ref2, (unsigned int *) prim_pos2);
+				//_gm_first_mem_pos = _gm_first_mem_pos+size_prog2+size_prog;
+			}
+		}
+		if(i==0 && num_st!=1){
 			//actualizar offset
 			offset=offset+size_st;
 			
@@ -191,6 +225,12 @@ intFunc _gm_cargarPrograma(char *keyName)
 		}
 	}
 	
+	
+	
+	
+	
+	
+	
 	//cierra fichero y buffer de memoria
 	fclose(pFile);
 	free(buffer);
@@ -198,4 +238,34 @@ intFunc _gm_cargarPrograma(char *keyName)
 	return ((intFunc) dirprog);	//devuelve la dirección del programa en que se encuentra en el segmento
 	
 }
+
+/* _gm_listaProgs: devuelve una lista con los nombres en clave de todos
+			los programas que se encuentran en el directorio "Programas".
+			 Se considera que un fichero es un programa si su nombre tiene
+			8 caracteres y termina con ".elf"; se devuelven sólo los
+			4 primeros caracteres de los programas (nombre en clave).
+			 El resultado es un vector de strings (paso por referencia) y
+			el número de programas detectados */
+int _gm_listaProgs(char* progs[])
+{
+	DIR* pdir = opendir("Programas/");
+	int i=0;
+	while(true) 
+			{
+				struct dirent* pent = readdir(pdir);
+				if(pent == NULL) break;
+				
+				//char *dnbuf = (char *)malloc(strlen(pent->d_name));
+				if(strlen(pent->d_name)==8)
+				{
+					char *buffer;
+					buffer = (char*) malloc (sizeof(char)*4);
+					strncpy(buffer, pent->d_name, 4);
+					progs[i]=buffer;
+					i++;
+				}
+			}
+	return i;
+}
+
 
