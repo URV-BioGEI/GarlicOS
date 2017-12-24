@@ -82,7 +82,14 @@ GARLIC_getstring:
 	push {r4, lr}
 	mov r4, #0				@; Inicializamos r4
 	mov lr, pc				@; Guardamos dirección de retorno de la función del API
-	ldr pc, [r4, #16]		@; llamada indirecta a rutina 0x04 del vector de direcciones
+	ldr pc, [r4, #32]		@; llamada indirecta a rutina 0x08 del vector de direcciones
 	pop {r4, pc}			
 
+	.global GARLIC_getXYbuttons
+GARLIC_getXYbuttons:
+	push {r4, lr}
+	mov r4, #0				@; Inicializamos r4
+	mov lr, pc				@; Guardamos dirección de retorno de la función del API
+	ldr pc, [r4, #36]		@; llamada indirecta a rutina 0x09 del vector de direcciones
+	pop {r4, pc}	
 .end

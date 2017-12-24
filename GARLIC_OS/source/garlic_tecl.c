@@ -12,14 +12,20 @@
 #include <garlic_system.h>	// definición de funciones y variables de sistema
 #include <garlic_font.h>	// definición gráfica de caracteres
 
-/* definicion de variables globales */
-
 void _gt_initKB()
 {
 	//lcdMainOnTop();
 
 	int i;
-	/* Instalem la IRQ del teclat de la NDS  */
+	
+	/* Instalem la IRQ del sistema FIFO*/
+	
+	//INT_instalarRSIPrincipal((u32 *)0x0B003FFC, rsi_principal, IRQ_VBLANK | IRQ_TIMER0 | IRQ_FIFO_NOT_EMPTY);
+	//REG_IPC_FIFO_CR = IPC_FIFO_ENABLE | IPC_FIFO_RECV_IRQ;
+	
+	/* Instalem la IRQ FIFO de la NDS:
+	Això indica al controlador general d'interrupcions que quan es produeixi la interrupció IRQ_FIFO_NOT_EMPTY
+	ha d'executar la funció rsi que nosaltres li indiquem per a gestionar la interrupcio */
 	irqSet(IRQ_KEYS, _gt_rsiKB);
 	
 	/* Activamos RSIs de las teclas A, B, SELECT, START, los cursores derecho e izquierdo 
