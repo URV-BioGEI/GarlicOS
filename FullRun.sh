@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /d/ESO_grup_H/GARLIC_API # direccion de inicio debe ser ruta/.../GARLIC_API
+cd /d/GitHub/ESO_grup_H/GARLIC_API # direccion de inicio debe ser ruta/.../GARLIC_API
 make clean
 make
 cd ..

@@ -7,7 +7,7 @@
 	Programador P: cristofol.dauden@estudiants.urv.cat
 	Programador M: yyy.yyy@estudiants.urv.cat
 	Programador G: oscar.albert@estudiants.urv.cat
-	Programador T: uuu.uuu@estudiants.urv.cat
+	Programador T: aleix.marine@estudiants.urv.cat
 
 ------------------------------------------------------------------------------*/
 #ifndef _GARLIC_SYSTEM_h_
@@ -110,8 +110,8 @@ extern bool _gt_kbvisible;
 extern char _gd_kbsignal;
 
 // Array de procesos esperando para entrada por teclado con su índice correspondiente
-extern char _gd_kbwait[16];
-extern char _gd_kbwait_num;
+extern char _gd_Keyboard[16];
+extern char _gd_nKeyboard;
 
 // Contiene el número de caracteres que ha introducido el usuario
 extern char _gt_inputl;			
@@ -127,6 +127,9 @@ extern char _gt_PIDZ_tmp[6];
 
 // Variable per a normalitzar la velocitat de reacció dels botons per part de la rsi de teclat
 extern char _gt_button_tics;
+
+// Variable que conté l'estat dels botons X i Y (bit 0 = 1; X apretat, sino soltat, bit 1 = 1; Y apretat, sino soltat)
+extern char _gt_XYbuttons;
 
 //ProgM
 // Variable para indicar la primera posicion de memoria del programa
@@ -494,8 +497,8 @@ extern void _gt_cursorini();
 /* _gt_hideKB: Desactiva la interfaz de teclado */
 extern void _gt_hideKB();
 
-/* _gt_rsiKB: rutina rsi para manejar los botones del teclado*/
-extern void _gt_rsiKB();
+/* _gt_rsi_IPC_SYNC: rutina rsi para usar el IPC_SYNC y recibir el estado de los botones X e Y*/
+extern void _gt_rsi_IPC_SYNC();
 
 /* _gt_resetKB: reinicia la configuración necesaria para atender otra E/S por teclado */
 extern void _gt_resetKB();

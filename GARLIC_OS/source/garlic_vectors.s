@@ -16,6 +16,7 @@ APIVector:						@; Vector de direcciones de rutinas del API
 	.word	_ga_printmat
 	.word	_ga_delay
 	.word	_ga_clear
-	@;.word	_gt_getstring		@;funció per al teclat d'aleix
+	.word	_ga_getstring
+	.word	_ga_getxybuttons
 
 .end

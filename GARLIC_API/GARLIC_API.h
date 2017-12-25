@@ -81,5 +81,14 @@ extern void GARLIC_delay(unsigned int nsec);
 		empezará a escribir a partir de la primera fila de la ventana. */
 extern void GARLIC_clear();
 
+	/* GARLIC_getstring: recibe la dirección de memoria donde guardar el string
+		introducido por teclado así como el máximo número de carácteres que 
+		puede contener el vector sin contar al centinela (/0). Devuelve el número
+		máximo de carácteres leídos finalmente sin contar al centinela. */
+extern int GARLIC_getstring(char * string, int max_char);
 
+	/* GARLIC_getXYbuttons: Devuelve un Byte con el estado de los botones X e Y
+		bit 0 = 1 -> Boton X pulsado, sino soltado
+		bit 1 = 1 -> Boton Y pulsado, sino soltado*/
+extern char GARLIC_getXYbuttons(); 
 #endif // _GARLIC_API_h_

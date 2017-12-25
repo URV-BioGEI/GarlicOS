@@ -92,7 +92,7 @@ int escogerOpcion(char *opciones[], int num_opciones)
 void seleccionarPrograma()
 {
 	intFunc start;
-	int ind_prog, argumento, i;
+	int ind_prog, argumento;
 
 	/*for (i = 1; i < 16; i++)		// buscar si hay otro proceso en marcha
 		if (_gd_pcbs[i].PID != 0)
@@ -158,7 +158,6 @@ void gestionSincronismos()
 //------------------------------------------------------------------------------
 void inicializarSistema() {
 //------------------------------------------------------------------------------
-	int v;
 
 	_gg_iniGrafA();			// inicializar procesadores gráficos
 	_gs_iniGrafB();

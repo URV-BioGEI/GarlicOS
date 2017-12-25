@@ -265,13 +265,18 @@ _gp_actualizarDelay:
 _gp_salvarProc:
 	push {r8-r11, lr}
 	ldr r8, [r6]  			@; obteim el PID més zócalo
-	lsr r10, r8, #31		@; carreguem el bit de més pes del id + zócalo
+	lsr r10, r8, #30		@; carreguem els DOS bits de més pes del id + zócalo. Modificat per progT
 	and r8, r8, #15			@; r8= num de zócalo, ens quedem amb els 4 bits de menys pes del pidz
 	ldr r9, =_gd_qReady		@; carreguem en r9 la direccio de la cua de Ready
 	@; noves instruccions pel cas d'un procés retardat
-	cmp r10, #1
+	cmp r10, #2 @; Modificat per progT
+	@; tst r10, #2
+	@; bne .L_salvarProc_Delay
 	beq .L_salvarProc_Delay	@; si el procés s'ha de retardar, es salva el seu estat pero no es fica en la cua de Ready
 	@; ...
+	cmp r10, #1				@; progT: Si el proces esta esperant entrada per teclat
+	beq .L_salvarProc_Delay	@; progT: es salva el seu estat pero no es fica en la cua de Ready
+
 	strb r8, [r9, r5]		@; guardem el nombre de zocalo del procés en l'última posició de la cua de Ready
 	add r5, #1				@; incrementem el nombre de processos en la cua de Ready
 .L_salvarProc_Delay:
@@ -418,6 +423,9 @@ _gp_numProc:
 	ldr r1, =_gd_nDelay
 	ldr r2, [r1]			@; R2 = número de procesos en cola de DELAY
 	add r0, r2				@; añadir procesos retardados
+	ldr r1, =_gd_nKeyboard
+	ldr r2, [r1]			@; R2 = número de procesos en cola de KEYBOARD
+	add r0, r2				@; añadir procesos esperando entrada de texto
 	pop {r1-r2, pc}
 
 
@@ -540,8 +548,8 @@ _gp_retardarProc:
 	@; Rutina para destruir un proceso de usuario:
 	@; borra el PID del PCB del zócalo referenciado por parámetro,
 	@; para indicar que esa entrada del vector _gd_pcbs[] está libre;
-	@; elimina el índice de zócalo de la cola de READY o de la cola
-	@; de DELAY, esté donde esté;
+	@; elimina el índice de zócalo de la cola de READY, de la cola
+	@; de DELAY o de la cola de TECLADO;
 	@; Parámetros:
 	@; R0: zócalo del proceso a matar (entre 1 y 15).
 _gp_matarProc:
@@ -551,7 +559,7 @@ _gp_matarProc:
 	@; posem a 0 el camp PID del _gd_pcbs[z]
 	mov r3, #24
 	ldr r1, =_gd_pcbs		@; r1 = direcció de l'array de PCBs
-	mla r2, r0, r3, r1		@; desplaçament per arrivar al PCB del zócalo actual: num de zócalo * 24 + direcció _gd_pcbs, on 24 es la mida de cada PCB (6 ints, 6 * 4 bytes per int)
+	mla r2, r0, r3, r1		@; desplaçament per arribar al PCB del zócalo actual: num de zócalo * 24 + direcció _gd_pcbs, on 24 es la mida de cada PCB (6 ints, 6 * 4 bytes per int)
 	mov r3, #0				@; r3 = 0
 	str r3, [r2]			@; PID del procés = 0
 	str r3, [r2,#20]		@; WorkTics del procés a 0, sinó surt imprés en la pantalla del SO
@@ -596,8 +604,8 @@ _gp_matarProc:
 	ldr r2, =_gd_nDelay		@; r2 = variable amb el nombre de processos en Delay
 	ldr r3, [r2]			@; r3 = processos en Delay
 	mov r4, #0				@; r4 punter
-	cmp r4, r3				@; si no hi ha més processos en la cua de Delay acabem
-	bhs .L_fi_matarProc
+	cmp r4, r3				@; progT si no hi ha més processos en la cua de Delay busquem a la de teclat
+	bhs .L_Keyboard
 .L_matarProc_bucle2:
 	ldr r5, [r1, r4, lsl #2]	@;carreguem el zócalo + tics de procés en la cua de Delay
 	@;ldr r5, [r1, r4]	@;carreguem el zócalo + tics de procés en la cua de Delay
@@ -625,8 +633,37 @@ _gp_matarProc:
 .L_següent_matarProc_bucle2:
 	add r4, #1				@; augmentem en 1 el punter
 	cmp r4, r3				@; si hi ha més processos en la cua tornem a l'inici del bucle
-	blo .L_matarProc_bucle2
+	blo .L_matarProc_bucle2 @; progT: Si no queden mes processos passem als de teclat
 	
+
+	@; progT: Elimina el proces rebut per parametre de la cua de teclat i compacta el vector d'espera a teclat
+	@; KEYBOARD
+	
+	@; PRE= Hi ha un proces esperant a ser matat a la cua de teclat
+.L_Keyboard:
+	ldr r1, =_gd_nKeyboard		@; r1 = @_gd_nKeyboard
+	ldrb r2, [r1]				@; r2 = _gd_nKeyboard
+	sub r2, #1					@; disminuim en un el nombre de processos
+	strb r2, [r1]				@; actualitzem el nombre de processos
+	mov r3, #0					@; r3 = 0 // comptador
+	ldr r1, =_gd_Keyboard		@; r1 = @_gd_Keyboard
+.L_Keyboard_search:
+	ldrb r4, [r1, r3]			@; carreguem a r4 el socol del proces a _gd_Keyboard[i]
+	cmp r0, r4					@; Mirem si el socol del proces a eliminar es al que apuntem actualment
+	beq .L_Keyboard_reorder		@; Si ho es l'eliminem matxacant memoria
+	add r3, #1					@; Sino sumem 1
+	cmp r2, r3					@; Si l'index es igual al nombre de processos -1 vol dir que el que s'ha de matar es l'ultim
+	beq .L_fi_matarProc			@; Per tant sortim perque l'ultim proces ja no es tindra en compte
+	bne .L_Keyboard_search		@; Sino seguim iterant
+.L_Keyboard_reorder:	@; Cal matar al proces apuntat per r3 a la cua de teclat
+	add r4, r3, #1				@; r4 = i+1
+	ldrb r5, [r1, r4]
+	strb r5, [r1, r3]			@; el proces a i+1 matxaca al proces a la posicio i
+	add r3, #1					@; r3 = r3 + 1 // i++
+	cmp r4, r2					@; si la posicio i+1 es respecte a numproc-1
+	bne .L_Keyboard_reorder		@; Diferent: tornem a iterar per a seguir compactant 
+	@; Igual: Acabem la funcio
+
 .L_fi_matarProc:
 	bl _gp_desinhibirIRQs	@; habilitem les interrupcions
 	mov r1, r0

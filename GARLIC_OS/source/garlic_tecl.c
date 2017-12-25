@@ -12,22 +12,35 @@
 #include <garlic_system.h>	// definición de funciones y variables de sistema
 #include <garlic_font.h>	// definición gráfica de caracteres
 
-/* definicion de variables globales */
-
 void _gt_initKB()
 {
 	//lcdMainOnTop();
 
 	int i;
-	/* Instalem la IRQ del teclat de la NDS  */
-	irqSet(IRQ_KEYS, _gt_rsiKB);
 	
-	/* Activamos RSIs de las teclas A, B, SELECT, START, los cursores derecho e izquierdo 
-	y activamos el interruptor general de IRQ por teclado */
-	REG_KEYCNT = KEY_A | KEY_B | KEY_SELECT | KEY_START | KEY_RIGHT | KEY_LEFT | (1<<14);
+	/* Instalem la IRQ IPC SYNC de la NDS:
+	Això indica al controlador general d'interrupcions que quan es produeixi la interrupció IRQ_IPC_SYNC
+	ha d'executar la funció rsi que nosaltres li indiquem per a gestionar la interrupcio */
+	irqSet(IRQ_IPC_SYNC, _gt_rsi_IPC_SYNC);
 	
-	/* Activación IRQ en el registro principal del controlador de interrupciones */
+	/*Habilitem al registre de control REG_IPC_SYNC el bit 13 amb la máscara IPC_SYNC_IRQ_ENABLE
+	que permet rebre interrupcions IPC_SYNC de l'altre processador. En aquest cas ARM7 podra interrompre
+	al ARM9. Caldra habilitar el bit complementari (bit 14) del mateix registre pero DE L'ALTRE PROCESSADOR
+	per a que es pugui generar la interrupcio. */
+	REG_IPC_SYNC = IPC_SYNC_IRQ_ENABLE;
+	
+	
+	/* Instalem la IRQ del sistema FIFO*/
+	REG_IPC_FIFO_CR = IPC_FIFO_ENABLE | IPC_FIFO_RECV_IRQ;
+	
+	/* Indiquem al registre IE (interrupt enable) que les interrupcions següents estan actives:
+		- IRQ_IPC_SYNC: per a rebre l'estat dels botons X i Y
+		*/
+	irqEnable(IRQ_IPC_SYNC);	
+
+	/* Activación de todas las IRQ (interrupt master enable)  */
 	REG_IME=IME_ENABLE;
+	
 	/* Inicializamos procesador gráfico en el modo 0 (los 4 fondos en modo texto) */
 	videoSetModeSub(MODE_0_2D);
 	/* Asignamos el banco de memoria B como fondo principal*/
@@ -64,7 +77,7 @@ void _gt_initKB()
 	dmaCopy(garlic_fontPal, BG_PALETTE_SUB, garlic_fontPalLen);
 	
 	/* Inicialitzem comptador de processos */
-	_gd_kbwait_num = 0; 
+	_gd_nKeyboard = 0; 
 	
 	/* Posem la visibilitat del teclat a fals */
 	_gt_kbvisible = false;

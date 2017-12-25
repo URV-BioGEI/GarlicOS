@@ -1,16 +1,15 @@
 @;==============================================================================
 @;
-@;	"garlic_itcm_api.s":	código de las rutinas del API de GARLIC 2.0
+@;	"garlic_itcm_api.s":	código de las rutinas del API de GARLIC 1.0
 @;							(ver "GARLIC_API.h" para descripción de las
 @;							 funciones correspondientes)
-@;
+@; 
 @;==============================================================================
 
 .section .itcm,"ax",%progbits
 
 	.arm
 	.align 2
-
 
 	.global _ga_pid
 	@;Resultado:
@@ -97,9 +96,10 @@ _ga_printf:
 	push {r4, lr}
 	ldr r4, =_gd_pidz		@; R4 = dirección _gd_pidz
 	ldr r3, [r4]
-	and r3, #0xF			@; R3 = ventana de salida (zócalo actual MOD 4)
+	and r3, #0xF			@; R3 = ventana de salida (zócalo actual MOD 16)
 	bl _gg_escribir
 	pop {r4, pc}
+
 
 	.global _ga_printchar
 	@;Parámetros
@@ -117,10 +117,7 @@ _ga_printchar:
 	add sp, #4				@; eliminar 4º parámetro de la pila
 	pop {r4-r5, pc}
 
-_gi_message:
-	.asciz "print char (%d, %d) :  \n"
-	.align 2
-	
+
 	.global _ga_printmat
 	@;Parámetros
 	@; R0: int vx
@@ -170,6 +167,38 @@ _ga_clear:
 	bl _gs_borrarVentana
 	pop {r0-r1, pc}
 
-
+	.global _ga_getstring
+	@; Parámetros
+	@; R0: string -> dirección base del vector de caracteres (bytes)
+	@; R1: max_char -> número máximo de caracteres del vector
+	@; R2: PIDZ -> PIDZ del proceso invocador
+	@;Resultado
+	@; R0: 0 si no hay problema, !=0 
+_ga_getstring:
+	push {r2-r3, lr}
+	ldr r3, =_gd_pidz		@; R4 = direcció _gd_pidz, que conté PID (28 b) + Sòcol (4 b) d'esquerra a dreta
+	ldr r2, [r3]			@; Carreguem contingut de pidz a r2 (passada de parámetre)
+	and r2, #0xF			@; Fem clean dels bits de PID i obtenim Sòcol (MOD 4)
+	bl _gt_getstring		@; Cridem a la rutina per a obtenir string
+	pop {r2-r3, pc}
+	
+		.global _ga_getxybuttons
+	@; Resultado
+	@; Si el proceso que llama a la funcion no esta en el foco devuelve 0, sino devuelve el estado de los botones
+	@; R0: bit 0 = 1 boton X pulsado, bit 1 = 1 boton Y pulsado
+_ga_getxybuttons:
+	push {r2-r3, lr}
+	ldr r2, =_gd_pidz		@; R4 = direcció _gd_pidz, que conté PID (28 b) + Sòcol (4 b) d'esquerra a dreta
+	ldr r1, [r2]			@; Carreguem contingut de pidz a r2 (passada de parámetre)
+	and r1, #0xF			@; Fem clean dels bits de PID i obtenim Sòcol (MOD 4)
+	ldr r0, =_gi_za			@; R1 = @_gi_za
+	ldr r0, [r1]			@; R1 = _gi_za
+	cmp r0, r2				@; Comprovem que r1 i r2 siguin iguals, es a dir, que els proces que s'esta executant estigui en focus
+	movne r0, #0			@; Si no es aixi carreguem 0 a r0
+	bne .LXYbuttonend		@; I sortim per a retornar
+	ldr r0, =_gt_XYbuttons	@; Sino... r0 = @_gt_XYbuttons
+	ldrb r0, [r0]			@; r0 = _gt_XYbuttons
+.LXYbuttonend:
+	pop {r2-r3, pc}
 .end
 

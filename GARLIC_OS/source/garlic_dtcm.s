@@ -86,11 +86,11 @@ _gt_mapbasecursor: .space 4
 	.global _gt_kbvisible		@; Indica la visibilitat del teclat
 _gt_kbvisible: .space 1
 
-	.global _gd_kbwait			@; Cua de processos que esperen la entrada pel teclat
-_gd_kbwait: .space 16*1
+	.global _gd_Keyboard			@; Cua de processos que esperen la entrada pel teclat
+_gd_Keyboard: .space 16*1
 	
-	.global _gd_kbwait_num		@; Índex de l'array de processos esperant per teclat
-_gd_kbwait_num: .space 1
+	.global _gd_nKeyboard		@; Índex de l'array de processos esperant per teclat
+_gd_nKeyboard: .space 1
 
 	.global _gd_kbsignal		@; La funció _gt_getstring espera a que el bit corresponent al proces d'aquesta variable es posi a 1 
 _gd_kbsignal: .space 2
@@ -109,6 +109,8 @@ _gt_PIDZ_tmp: .space 6
 
 	.global _gt_button_tics		@; Variable per a normalitzar la velocitat de reacció dels botons per part de la rsi de teclat
 _gt_button_tics: .space 1
-
+	
+	.global _gt_XYbuttons		@; Variable que conté l'estat dels botons X i Y (bit 0 = 1; X apretat, sino soltat, bit 1 = 1; Y apretat, sino soltat)
+_gt_XYbuttons: .space 1
 .end
 
