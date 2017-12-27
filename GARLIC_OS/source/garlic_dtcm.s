@@ -112,5 +112,17 @@ _gt_button_tics: .space 1
 	
 	.global _gt_XYbuttons		@; Variable que conté l'estat dels botons X i Y (bit 0 = 1; X apretat, sino soltat, bit 1 = 1; Y apretat, sino soltat)
 _gt_XYbuttons: .space 1
+
+	.global _gt_CAPS_lock		@; Variable booleana que indica si el bloc majúscules es troba activat (true) o n (false)
+_gt_CAPS_lock: .space 1		
+
+	@;.global _gt_set				@; Variable que conte els jocs de caracters (4 arrays de caracters (1 byte) de 30 posicions en dos sets diferents de caracters)
+@;_gt_set: .space 30*4*2*1
+	.global _gt_charsetmin			@; Sets de caracters per a CAPS_lock = false
+_gt_charsetmin: .space 30*4
+
+	.global _gt_charsetmaj			@; Sets de caracters per a CAPS_lock = true
+_gt_charsetmaj: .space 30*4
+
 .end
 

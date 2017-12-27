@@ -199,6 +199,8 @@ void inicializarSistema() {
 	irqEnable(IRQ_VCOUNT);			// de VCOUNT
 	
 	REG_IME = IME_ENABLE;			// activar las interrupciones en general
+	
+	_gt_initKB(); 					// progT: Activem interficie de teclat
 }
 
 
@@ -210,7 +212,10 @@ int main(int argc, char **argv) {
 	int key;
 
 	inicializarSistema();
+	_gt_showKB(0);
 	
+	//while (1) _gp_WaitForVBlank();		// retardo del proceso de sistema
+
 	_gg_escribir("%3********************************", 0, 0, 0);
 	_gg_escribir("%1*                              *", 0, 0, 0);
 	_gg_escribir("%2* Sistema%1 Operativo%3 GARLIC 2.0 *", 0, 0, 0);

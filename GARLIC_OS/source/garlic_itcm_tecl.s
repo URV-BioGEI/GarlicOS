@@ -36,9 +36,9 @@ _gt_getstring:
 
 	@; Ahora registraremos el proceso en la cola de espera del KB
 	
-	ldr r3, =_gd_nKeyboard			@; Cargamos la @ el numero de procesos esperando 
+	ldr r3, =_gd_nKeyboard			@; Cargamos la @ de la varible que tiene el numero de procesos esperando 
 	ldrsb r4, [r3]					@; r4 = num procesos
-	cmp r4, #16						@; Si el nombre de processos es igual a la mda maxima de la cua
+	cmp r4, #16						@; Si el nombre de processos es igual a la mida maxima de la cua
 	moveq r0, #-1					@; Carreguem un -1 a r0
 	beq .L_getstring_error			@; I sortim de la rutina
 	ldr r5, =_gd_Keyboard			@; cargamos @base de la cola de espera del KB (vector de char)
@@ -46,34 +46,27 @@ _gt_getstring:
 	add r4, #1						@; sumamos 1 al índice
 	strb r4, [r3]					@; actualizamos el índice
 	
-	@; Ara posarem el segon bit de mes pes de la variable _gd_pidz per indicar que es tracta dun proces que espera KB
+	@; Mirem que la interficie estigui mostrada
+	
+	ldr r4, =_gt_kbvisible			@; Cargamos @ de _gt_visible
+	ldrb r3, [r4]					@; r3 = _gt_visible
+	cmp r3, #1						@; Si esta mostrada, vol dir que algu l'esta utilitzant
+	beq .Lgtgetstr_pidzcode			@; Per tant passem aquest pas. Sino...
+	mov r5, r0						@; r5 = @ string. Salvamos la dirección del string en r5
+	mov r0, r2						@; Passada de parametres a _gt_showKB (espera el número de zócalo por r0)
+	push {r0-r5}
+	bl _gt_showKB 					@; mostramos la interficie para el proceso que llama a getstring
+	pop {r0-r5}
+	mov r0, r5						@; Recuperamos en r0 @ string
+ 
+	@; Ara posarem a 1 el segon bit de mes pes de la variable _gd_pidz per indicar que es tracta dun proces que espera KB
+.Lgtgetstr_pidzcode:
 	ldr r3, = _gd_pidz				@; r3 = @_gd_pidz
 	ldr r4, [r3]					@; r4 = _gd_pidz
 	orr r4, r4, #0x40000000			@; fiquem a 1 el segon bit de més pes del pidz
 	bl _gp_rsiVBL					@; Cridem a _gp_rsiVL per a forçar que es salvi el context del proces
 	
 	@; aqui continuara el proces que hagi sigut tret de la cua d'espera
-	
-	mov r5, r0						@; r5 = @ string. Salvamos la dirección del string en r5
-	mov r0, r2						@; Passada de parametres a _gt_showKB (espera el número de zócalo por r0)
-	push {r0-r5}
-	bl _gt_showKB 					@; mostramos
-	pop {r0-r5}
-	mov r0, r5						@; Recuperamos en r0 @ string 
-
-	@;Bucle de espera a _gd_kbsignal
-
-	ldr r3, =_gd_kbsignal		@; Cargamos @ de la variable _gd_kbsignal (señal de rsi)
-	mov r4, #1					@; Cargamos un 1 en r4
-	lsl r4, r2					@; Lo desplazamos tantas posiciones como número de zócalo del proceso invocaador
-.Lgtgetstr_waitforsignal:		@; bucle d'espera del bit a _gd_kbsignal
-	bl _gp_WaitForVBlank		@; Esperamos un retroceso vertical para no sobrecargar CPU
-	ldrh r5, [r3]				@; Volvemos a traer de memoria el contenido de la variable
-	tst r5, r4					@; Comprovamos que el bit este a uno
-	beq .Lgtgetstr_waitforsignal@; Si no hay coincidencia de bits volvemos al principio del bucle de espera
-	mvn r4, r4					@; NOT de todos los bits 1 a 1, por tanto seran todos los bits a 1 excepto el del proceso que tratamos
-	and r4, r5					@; Hacemos una and, por lo que el bit del proceso tratado se pondra a 0 i el valor de todos los demas procesos tendra el valor que ya tenia.
-	strh r4, [r3]				@; Actualizamos la variable _gd_kbsignal con el bit del proceso actual a 0
 
 	@; copiar el string leído sobre el vector que se ha pasado por parámetro, filtrando el número de caracteres leido 
 	@;total de caracteres y añadiendo el centinela, y devolviendo
@@ -104,6 +97,15 @@ _gt_getstring:
 	bl _gt_resetKB				@; resetegem per al següent us
 	bl _gt_hideKB				@; Amaguem interficie de teclat
 	pop {r0-r5}
+	
+	@; Ara mostrarem la interficie per al següent proces que utilitzara el teclat. Per a fer-ho cal que primer eliminem 
+	@; el primer proces que espera teclat (aixo ho fara la rsi) per a que al carregar _gd_Keybard[0] obtinguem el socol 
+	@; del seguent proces
+	ldr r0, =_gd_Keyboard		
+	ldrb r0, [r0]
+	push {r0-r5}
+	bl _gt_showKB 					@; mostramos la interficie para el proceso en la posicion 0 de la cola
+	pop {r0-r5}
 
 	mov r0, r2					@; Retorn de parametres
 .L_getstring_error:
@@ -118,8 +120,8 @@ _gt_cursorini:
 	push {r0-r1, lr}
 	ldr r0, =_gt_mapbasecursor	@; r0 = @@ del mapa de rajoletes del cursor
 	ldr r0, [r0] 				@; r0 = @ el mapa del rajoletes
-	add r0, #260				@; Anem a la següent linia de la capsa de text en el mapa del cursor 			
-	mov r1, #99					@; carreguem a r1 la rajoleta de cursor (ratlla per la part de dalt)
+	add r0, #132				@; Anem a la següent linia de la capsa de text en el mapa del cursor 			
+	mov r1, #97					@; carreguem a r1 la rajoleta de cursor (ratlla per la part de dalt)
 	strh r1, [r0] 				@; carrega el cursor a la posicio inicial
 	pop {r0-r1, pc}
 
@@ -128,67 +130,7 @@ _gt_cursorini:
 
 
 
-		.global _gt_writePIDZ
-	@; Recibe un char con el número de zócalo y muestra el PID del proceso correspondiente en la interfície de teclado 
-	@; usando el fondo info
-	@; Parámetros
-	@; R0: char zocalo
-_gt_writePIDZ:
-	push {r1-r6,lr}
-	
-	@; ZÓCALO
-	
-	mov r5, r0					@; r5 = socol (copia de seguretat)
-	mov r2, r0					@; r2 = socol		
-	ldr r0, =_gt_PIDZ_tmp		@; r0 = @ _gd_PIDZ_tmp
-	mov r1, #3					@; r1 = 3 (nombre de caracters)
-	bl _gs_num2str_dec			@; converteix el zocalo passat per parametre a string R0: char * numstr, R1: int length, R2: int num. return r0 = 0 si toot va be
-	ldr r0, =_gt_PIDZ_tmp		@; r0 = @ _gd_PIDZ_tmp
-	ldr r2, =_gt_mapbaseinfo	@; r2 = @@ _gt_mapbaseinfo
-	ldr r2, [r2]				@; r2 = @ _gt_mapbaseinfo
-	mov r6, r2					@; Salvem aquesta direccio de memoria
-	add r2, #88					@; Anem a on comença el text aquell de z00
-	
-	mov r1, #0					@; Inicialitzem comptador
-.Lgtesc_V1:
-	ldrb r4, [r0, r1]			@; carreguem el digit del nombre de socol
-	cmp r4, #32					@; comparem amb 32
-	subne r4, #32				@; Si es tracta d'un número normal (0-9) restem 32 per a passar a rajoletes
-	subeq r4, #16				@; Si es tracta d'un espai (32) restem 16 per a obtenir un 0 en coddificacio de rajoletes
-	mov r3, r1, lsl #1			@; Ens desplacem en el mapa de rajoletes (halfwords)
-	strh r4, [r2, r3]			@; guardem a la posicio de zocalo
-	add r1, #1					@; incrementem el comptador
-	cmp r1, #3					@; si hem fet ja 3 repeticions sortim ja
-	bne .Lgtesc_V1 				@; iteracio
 
-	@; PID
-
-	mov r4, #24					@; carrega 24 a r4 (la mida de cada PCB)
-	mul r3, r5, r4				@; multipliquem aquest 24 amb el zocalo per a saber el desplaçament 
-	ldr r2, =_gd_pcbs			@; carreguem direcció base del vector de PCBs
-	ldr r2, [r2, r3] 			@; r2 = PIDZ del proces
-	
-	ldr r0, =_gt_PIDZ_tmp		@; r0 = @_gd_PIDZ_tmp
-	mov r1, #6					@; r1 = 6 (caracters maxims)
-	bl _gs_num2str_dec			@; converteix el PIDZ a string
-	ldr r0, =_gt_PIDZ_tmp		@; r0 = @_gd_PIDZ_tmp
-
-	mov r2, r6					@; restaurem r2 = @ _gt_mapbaseinfo
-	add r2, #104				@; accedim a on comença el PID:00000
-	
-	mov r1, #0					@; Inicialitzem comptador
-.Lgtesc_V:
-	ldrb r4, [r0, r1]			@; procedim igual que abans
-	cmp r4, #32
-	subne r4, #32
-	subeq r4, #16
-	mov r3, r1, lsl #1
-	strh r4, [r2, r3]
-	add r1, #1
-	cmp r1, #5					@; pero amb limit 5
-	blo .Lgtesc_V 				@; segueix iterant
-
-	pop {r1-r6, pc}
 	
 	
 	

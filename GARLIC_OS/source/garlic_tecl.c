@@ -12,6 +12,19 @@
 #include <garlic_system.h>	// definición de funciones y variables de sistema
 #include <garlic_font.h>	// definición gráfica de caracteres
 
+char _gt_minset[4][30] = {{' ', '\\', ' ', '1', ' ', '2', ' ', '3', ' ', '4', ' ', '5', ' ', '6', ' ', '7', ' ', '8', ' ', '9', ' ', '0', ' ', '\'', ' ', '{', ' ', '~', ' ', ' '},
+						{'@', ' ' , '<', ' ', 'q', ' ', 'w', ' ', 'e', ' ', 'r', ' ', 't', ' ', 'y', ' ', 'u', ' ', 'i', ' ', 'o' , ' ', 'p', ' ', '[', ' ', ' ', 'D', 'E', 'L'},
+						{'C', 'A' , 'P', 'S', ' ', 'a', ' ', 's', ' ', 'd', ' ',  'f', ' ','g', ' ', 'h', ' ', 'j', ' ', 'k', ' ' , 'l', ' ', '-', ' ', 'I', 'N', 'T', 'R', 'O'},
+						{'S', 'P' , 'A', 'C', 'E', ' ', 'z', ' ', 'x', ' ', 'c', ' ', 'v', ' ', 'b', ' ', 'n', ' ', 'm', ' ', ',' , ' ', '.', ' ', ' ', '<', '=', ' ', '=', '>'}};
+
+char _gt_majset[4][30] = {{' ', '+', ' ', '!', ' ', '"', ' ', '#', ' ', '$', ' ', '%', ' ', '&', ' ', '/', ' ', '(', ' ', ')', ' ', '=', ' ', '?', ' ', '}', ' ', '|', ' ', ' '},
+						{'*', ' ', '>', ' ', 'Q', ' ', 'W', ' ', 'E', ' ', 'R', ' ', 'T', ' ', 'Y', ' ', 'U', ' ', 'I', ' ', 'O', ' ', 'P', ' ', ']', ' ', ' ', 'D', 'E', 'L'},
+						{'C', 'A', 'P', 'S', ' ', 'A', ' ', 'S', ' ', 'D', ' ', 'F',' ' , 'G', ' ', 'H', ' ', 'J', ' ', 'K', ' ', 'L', ' ', '_', ' ', 'I', 'N', 'T', 'R', 'O'},
+						{'S', 'P', 'A', 'C', 'E', ' ', 'Z', ' ', 'X', ' ', 'C', ' ', 'V', ' ', 'B', ' ', 'N', ' ', 'M', ' ', ';', ' ', ':', ' ', ' ', '<', '=', ' ', '=', '>'}};
+
+
+//_gt_set[0].set = _gt_minset;
+	//_gt_set[1].set = _gt_minset;
 void _gt_initKB()
 {
 	//lcdMainOnTop();
@@ -30,7 +43,7 @@ void _gt_initKB()
 	REG_IPC_SYNC = IPC_SYNC_IRQ_ENABLE;
 	
 	
-	/* Instalem la IRQ del sistema FIFO*/
+	/* Instalem la IRQ del sistema FIFO. Indiquem que es poden pro*/
 	REG_IPC_FIFO_CR = IPC_FIFO_ENABLE | IPC_FIFO_RECV_IRQ;
 	
 	/* Indiquem al registre IE (interrupt enable) que les interrupcions següents estan actives:
@@ -47,17 +60,17 @@ void _gt_initKB()
 	vramSetBankC(VRAM_C_SUB_BG_0x06200000);
 	
 	/*	arg 0: Layer, capa de fondo. (0-3) siendo 0 más prioritario
-			bg0	-> cursor
-			bg1	-> linea de texto
-			bg2 -> Ventana completa de instrucciones
+			bg3	-> cursor
+			bg2	-> linea de texto
+			bg1 -> Ventana completa de instrucciones
 		arg 1: Tipo de fondo (tipo texto con 4 bits por pixel)
 		arg 2: Dimensiones de tipo texto 32x32
 		arg 3: MapBase = n -> @fondo + n*2KB; @base -> 0x0600 0000
 		arg 4: TileBase = n -> @fondo + n*16KB 
 	*/
-	_gt_bginfo = bgInitSub(BG_PRIORITY(0), BgType_Text8bpp, BgSize_T_256x256, 4, 0);
-	_gt_bgbox = bgInitSub(BG_PRIORITY(1), BgType_Text8bpp, BgSize_T_256x256, 5, 0);
-	_gt_bgcursor = bgInitSub(BG_PRIORITY(2), BgType_Text8bpp, BgSize_T_256x256, 6, 0);
+	_gt_bginfo = bgInitSub(BG_PRIORITY(2), BgType_Text8bpp, BgSize_T_256x256, 4, 1);
+	_gt_bgbox = bgInitSub(BG_PRIORITY(1), BgType_Text8bpp, BgSize_T_256x256, 5, 1);
+	_gt_bgcursor = bgInitSub(BG_PRIORITY(1), BgType_Text8bpp, BgSize_T_256x256, 6, 1);
 	
 	/* Inicializamos las variables globales de dirección del mapa de baldosas de los diferentes
 	fondos */
@@ -75,7 +88,7 @@ void _gt_initKB()
 	/* Copiamos la paleta de colores de GARLIC en la paleta de colores del procesador 
 	secundario */
 	dmaCopy(garlic_fontPal, BG_PALETTE_SUB, garlic_fontPalLen);
-	
+
 	/* Inicialitzem comptador de processos */
 	_gd_nKeyboard = 0; 
 	
@@ -83,52 +96,248 @@ void _gt_initKB()
 	_gt_kbvisible = false;
 	
 	/* Carreguem els missatges */
-				/*   I  n  p  u  t     f  o   r    z  0  0   (  P  I  D    0  0  0  0  0  )  :		*/
+				/*   I  n  p  u  t     f  o   r    z  0 0      (  P  I  D    0000         )  :		*/
 	int str1[26] = {41,78,80,85,84,0,70,79,82,0,90,16,16,0,8,48,41,36,0,16,16,16,16,16,9,26};
 	for(i=0; i<26;i++)
-		_gt_mapbaseinfo[33+i]= str1[i];
+		_gt_mapbasebox[i]= str1[i];
 	
-	/* final de quadre per l'esquerre */
-	_gt_mapbaseinfo[65]=106;
-	_gt_mapbaseinfo[97]=104;
-	_gt_mapbaseinfo[129]=107;
+	// Inicialitzem el fons color carn per a 12 files
+	for(i=0; i<(32*12); i++){
+		_gt_mapbaseinfo[i]=(128*3)+95;
+	}
 	
-	/* final de quadre per la dreta */
-	_gt_mapbaseinfo[94]=109;
-	_gt_mapbaseinfo[126]=104;
-	_gt_mapbaseinfo[158]=108; 
+	// Cursor
+	//_gt_mapbasecursor[166]=128*3+113;
+
+	// Quadre per l'esquerra
+	_gt_mapbasebox[32*2+1]=32*3+2;
 	
+	// Quadre per la dreta
+	_gt_mapbasebox[32*2+30]=32*3;
 	
-	/* Cuadre de text per dalt i per baix*/
+	// Quadre de text per dalt i per baix
 	for(i=0; i<28; i++){
-		_gt_mapbaseinfo[66+i]=105;
-		_gt_mapbaseinfo[130+i]=105;
+		_gt_mapbasebox[32+2+i]=32*3+1;
+		_gt_mapbasebox[96+2+i]=32*3+3;
+	}
+
+	// Inicialitza blanc del quadre de text
+	for(i=0; i<28; i++){
+		_gt_mapbaseinfo[66+i]=95;
+	}
+	
+	// Rajoles blaves per la primera linia
+	for(i=0; i<30; i++)
+	{
+		if(i%2!=0)
+		{
+			_gt_mapbaseinfo[32*4+1+i]=128+32*2+31;
+		}
+	}
+	
+	// Rajoles blaves per la segona linia
+	for(i=0; i<30; i++){
+		if(i%2==0&&i<25) {
+			_gt_mapbaseinfo[193+i]=128+95;
+		}
+	}
+	
+	// Rajoles blaves per la tercera linia
+	for(i=0; i<30; i++){
+		if(i%2==0&&i<19) {
+			_gt_mapbaseinfo[262+i]=128+95;
+		}
+	}
+	
+	// Rajoles blaves per la quarta linia
+	for(i=0; i<30; i++){
+		if(i%2==0&&i<17) {
+			_gt_mapbaseinfo[327+i]=128+95;
+		}
+	}
+	
+	// rajoles per intro i space
+	for(i=0; i<5; i++)
+	{
+		_gt_mapbaseinfo[282+i]=128+95; // inicialitzem rajoletes blaves intro
+		//CUARTA FILA
+		_gt_mapbaseinfo[321+i]=128+95; // inicialitzem rajoletes blaves space
+	}
+	
+	// Inicialitzem les rajoletes de les tecles del cursor
+	for(i=0; i<2; i++){
+		_gt_mapbaseinfo[346+i]=128+95;
+		_gt_mapbaseinfo[349+i]=128+95;
+	}
+	
+	// les rajoletes del DEL
+	_gt_mapbaseinfo[220]=128+95;
+	_gt_mapbaseinfo[221]=128+95;
+	_gt_mapbaseinfo[222]=128+95;
+	
+	 //Inicialitzem input 
+	for (i = 0; i < 28; i++) _gt_input[i] = -1;
+	
+	/* inicialitzem el cursor*/
+	_gt_cursorini();
+	
+	/* Amaguem el teclat */
+	_gt_hideKB();
+	
+	/* Indiquem que el bloc majúscules està desactivat */
+	_gt_CAPS_lock = 0;
+	
+	/* Inicialitzem la part grafica del teclat */
+	_gt_graf();
+}
+
+void _gt_graf()
+{
+	short int i,j;
+	char tmpset[4][30];
+	// Escollir entre majuscules o minuscules
+	if(_gt_CAPS_lock){
+		for (i = 0; i < 4; i++)
+		{
+			for (j = 0; j < 30; j++)
+			{
+				tmpset[i][j] = _gt_majset[i][j];
+			}
+		}
+	} 
+	else 
+	{
+		for (i = 0; i < 4; i++)
+		{
+			for (j = 0; j < 30; j++)
+			{
+				tmpset[i][j] = _gt_minset[i][j];
+			}
+		}
+	}
+
+	// PRIMERA FILA
+	for(i=0; i<30; i++)
+	{
+		_gt_mapbasebox[32*4+1+i]=tmpset[0][i]-32;
+	}
+	
+	// SEGONA FILA
+	for(i=0; i<30; i++)
+	{
+		_gt_mapbasebox[193+i]=tmpset[1][i]-32;
 	}
 
 	
-	/*	            '  A  /  B  ' :   c  a	r  a  c  t  e   r   '  <  /  >  ' :   p  o  s  i  c  i  o  n */
-	int str2[29] = {7,33,15,34,7,26,67,65,82,65,67,84,69,82,0,7,28,15,30,7,26,80,79,83,73,67,73,79,78};
-    for(i=0; i<29;i++)
-		_gt_mapbaseinfo[193+i]= str2[i];
-	/*              '  S  E  L  E  C  T  '  :  b  o  r  r  a    '  S  T  A  R  T  '  :  r  e  t  u  r  n */
-	int str3[29] = {7,51,37,44,37,35,52,7,26,66,79,82,82,65,0,7,51,52,33,50,52,7,26,82,69,84,85,82,78};
-  for(i=0; i<29;i++)
-		_gt_mapbaseinfo[257+i]= str3[i];
-		
-	/* Inicialitzem input */
-	for (i = 0; i < 28; i++) _gt_input[i] = -1;
-	/* inicialitzem el cursor*/
-	_gt_cursorini();
-	/* Amaguem el teclat */
-	//_gt_hideKB();
-	_gt_hideKB();
+	
+	// TERCERA FILA
+	for(i=0; i<30; i++)
+	{
+		_gt_mapbasebox[257+i]=tmpset[2][i]-32;
+	}
+	
+	// rajoles del caps, que estaran a lila o no segons l'estat de les majuscules
+	for(i=0; i<4; i++){
+		if (_gt_CAPS_lock==0){
+			_gt_mapbaseinfo[257+i]=128+95;
+		} else {
+			_gt_mapbaseinfo[257+i]=256+95;
+		}
+	}
+	
+	// CUARTA FILA
+	for(i=0; i<30; i++)
+	{
+		_gt_mapbasebox[321+i]=tmpset[3][i]-32;
+	}
 }
 
-void _gt_showKB(char zoc)
+void _gt_writePIDZ(char zoc)
 {
+	int i;
+	_gs_num2str_dec(_gt_PIDZ_tmp, 2, zoc);
 	
-	irqEnable(IRQ_KEYS);	// activem interrupcions per teclat
+	for (i = 0; i < 2; i++)
+	{
+		if (_gt_PIDZ_tmp[i] == 32) _gt_mapbasebox[11+i] = _gt_PIDZ_tmp[i]-16;
+		else _gt_mapbasebox[11+i] = _gt_PIDZ_tmp[i]-32;
+	}
 	
+	_gs_num2str_dec(_gt_PIDZ_tmp, 6, _gd_pcbs[(int)zoc].PID);
+
+	for (i = 0; i < 5; i++)
+	{
+		if (_gt_PIDZ_tmp[i] == 32) _gt_mapbasebox[19+i] = _gt_PIDZ_tmp[i]-16;
+		else _gt_mapbasebox[19+i] = _gt_PIDZ_tmp[i]-32;
+	}
+}
+/*
+
+		.global _gt_writePIDZ
+	@; Recibe un char con el número de zócalo y muestra el PID del proceso correspondiente en la interfície de teclado 
+	@; usando el fondo info
+	@; Parámetros
+	@; R0: char zocalo
+_gt_writePIDZ:
+	push {r1-r6,lr}
+	
+	@; ZÓCALO
+	
+	mov r5, r0					@; r5 = socol (copia de seguretat)
+	mov r2, r0					@; r2 = socol		
+	ldr r0, =_gt_PIDZ_tmp		@; r0 = @ _gd_PIDZ_tmp
+	mov r1, #3					@; r1 = 3 (nombre de caracters)
+	bl _gs_num2str_dec			@; converteix el zocalo passat per parametre a string R0: char * numstr, R1: int length, R2: int num. return r0 = 0 si toot va be
+	ldr r0, =_gt_PIDZ_tmp		@; r0 = @ _gd_PIDZ_tmp
+	ldr r2, =_gt_mapbaseinfo	@; r2 = @@ _gt_mapbaseinfo
+	ldr r2, [r2]				@; r2 = @ _gt_mapbaseinfo
+	mov r6, r2					@; Salvem aquesta direccio de memoria
+	add r2, #22					@; Anem a on comença el text aquell de z00
+	
+	mov r1, #0					@; Inicialitzem comptador
+.Lgtesc_V1:
+	ldrb r4, [r0, r1]			@; carreguem el digit del nombre de socol
+	cmp r4, #32					@; comparem amb 32
+	subne r4, #32				@; Si es tracta d'un número normal (0-9) restem 32 per a passar a rajoletes
+	subeq r4, #16				@; Si es tracta d'un espai (32) restem 16 per a obtenir un 0 en coddificacio de rajoletes
+	mov r3, r1, lsl #1			@; Ens desplacem en el mapa de rajoletes (halfwords)
+	strh r4, [r2, r3]			@; guardem a la posicio de zocalo
+	add r1, #1					@; incrementem el comptador
+	cmp r1, #2					@; si hem fet ja 3 repeticions sortim ja
+	bne .Lgtesc_V1 				@; iteracio
+
+	@; PID
+
+	mov r4, #24					@; carrega 24 a r4 (la mida de cada PCB)
+	mul r3, r5, r4				@; multipliquem aquest 24 amb el zocalo per a saber el desplaçament 
+	ldr r2, =_gd_pcbs			@; carreguem direcció base del vector de PCBs
+	ldr r2, [r2, r3] 			@; r2 = PIDZ del proces
+	
+	ldr r0, =_gt_PIDZ_tmp		@; r0 = @_gd_PIDZ_tmp
+	mov r1, #6					@; r1 = 6 (caracters maxims)
+	bl _gs_num2str_dec			@; converteix el PIDZ a string
+	ldr r0, =_gt_PIDZ_tmp		@; r0 = @_gd_PIDZ_tmp
+
+	mov r2, r6					@; restaurem r2 = @ _gt_mapbaseinfo
+	add r2, #38					@; accedim a on comença el PID:00000
+	
+	mov r1, #0					@; Inicialitzem comptador
+.Lgtesc_V:
+	ldrb r4, [r0, r1]			@; procedim igual que abans
+	cmp r4, #32
+	subne r4, #32
+	subeq r4, #16
+	mov r3, r1, lsl #1
+	strh r4, [r2, r3]
+	add r1, #1
+	cmp r1, #5					@; pero amb limit 5
+	blo .Lgtesc_V 				@; segueix iterant
+
+	pop {r1-r6, pc}
+	*/
+	
+void _gt_showKB(char zoc)
+{	
 	_gt_kbvisible = true;	// indiquem que teclat mostrat
 
 	bgShow(_gt_bginfo);		// activem els fons del teclat
@@ -138,9 +347,8 @@ void _gt_showKB(char zoc)
 	_gt_writePIDZ(zoc);	// escribim el pidz del procés rebut per parametre en la finestreta
 }
 
-void _gt_hideKB(){
-	irqDisable(IRQ_KEYS);	// desactivem interrupcions per teclat
-	
+void _gt_hideKB()
+{
 	
 	bgHide(_gt_bginfo);		// amaguem tots els background
 	bgHide(_gt_bgbox);

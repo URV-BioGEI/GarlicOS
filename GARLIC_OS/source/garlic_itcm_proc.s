@@ -639,29 +639,35 @@ _gp_matarProc:
 	@; progT: Elimina el proces rebut per parametre de la cua de teclat i compacta el vector d'espera a teclat
 	@; KEYBOARD
 	
-	@; PRE= Hi ha un proces esperant a ser matat a la cua de teclat
+	@; PRE= Hi ha un proces esperant a ser matat a la cua de teclat & nomes hi ha una instancia com a maxim de cada proces
 .L_Keyboard:
-	ldr r1, =_gd_nKeyboard		@; r1 = @_gd_nKeyboard
-	ldrb r2, [r1]				@; r2 = _gd_nKeyboard
-	sub r2, #1					@; disminuim en un el nombre de processos
-	strb r2, [r1]				@; actualitzem el nombre de processos
+	ldr r6, =_gd_nKeyboard		@; r6 = @_gd_nKeyboard
+	ldrb r2, [r6]				@; r2 = _gd_nKeyboard
+	@;sub r2, #1					@; disminuim en un el nombre de processos
+	@;strb r2, [r1]				@; actualitzem el nombre de processos
 	mov r3, #0					@; r3 = 0 // comptador
 	ldr r1, =_gd_Keyboard		@; r1 = @_gd_Keyboard
 .L_Keyboard_search:
+	cmp r2, r3					@; Si l'index es igual al nombre de processos vol dir que la seguent posicio es out of bounds
+	beq .L_fi_matarProc			@; Per tant ja hem acabat sense trobar el proces a matar i sortim
+	@; sino
 	ldrb r4, [r1, r3]			@; carreguem a r4 el socol del proces a _gd_Keyboard[i]
 	cmp r0, r4					@; Mirem si el socol del proces a eliminar es al que apuntem actualment
 	beq .L_Keyboard_reorder		@; Si ho es l'eliminem matxacant memoria
 	add r3, #1					@; Sino sumem 1
-	cmp r2, r3					@; Si l'index es igual al nombre de processos -1 vol dir que el que s'ha de matar es l'ultim
-	beq .L_fi_matarProc			@; Per tant sortim perque l'ultim proces ja no es tindra en compte
-	bne .L_Keyboard_search		@; Sino seguim iterant
+	bne .L_Keyboard_search		@; i seguim iterant
 .L_Keyboard_reorder:	@; Cal matar al proces apuntat per r3 a la cua de teclat
 	add r4, r3, #1				@; r4 = i+1
+	cmp r4, r2					@; si la posicio i+1 es igual a numproc, la seguent posicio es out of bounds
+	subeq r2, #1				@; Restem 1 al nombre de processos
+	streqb r2, [r6]				@; Actualitzem la variable nKeyboard
+	beq .L_fi_matarProc			@; I sortim
 	ldrb r5, [r1, r4]
 	strb r5, [r1, r3]			@; el proces a i+1 matxaca al proces a la posicio i
 	add r3, #1					@; r3 = r3 + 1 // i++
-	cmp r4, r2					@; si la posicio i+1 es respecte a numproc-1
-	bne .L_Keyboard_reorder		@; Diferent: tornem a iterar per a seguir compactant 
+	b .L_Keyboard_reorder		@; Diferent: tornem a iterar per a seguir compactant 
+
+
 	@; Igual: Acabem la funcio
 
 .L_fi_matarProc:

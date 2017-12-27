@@ -106,8 +106,8 @@ extern u16* _gt_mapbasecursor;
 // Indica si el teclado se muestra por pantalla 
 extern bool _gt_kbvisible;
 
-// Señal de RSI 
-extern char _gd_kbsignal;
+/*// Señal de RSI 
+extern char _gd_kbsignal;*/
 
 // Array de procesos esperando para entrada por teclado con su índice correspondiente
 extern char _gd_Keyboard[16];
@@ -130,6 +130,22 @@ extern char _gt_button_tics;
 
 // Variable que conté l'estat dels botons X i Y (bit 0 = 1; X apretat, sino soltat, bit 1 = 1; Y apretat, sino soltat)
 extern char _gt_XYbuttons;
+
+// Variable booleana que indica si el bloc majúscules es troba activat (true) o n (false)
+extern bool _gt_CAPS_lock;
+
+// Sets de caracters per al teclat
+extern char _gt_charsetmin[4][30];
+extern char _gt_charsetmaj[4][30];
+
+/*// Estructura de juego de caracteres 
+struct _gt_charset
+{
+ char set[4][30];
+};
+
+// array de dos posicions que contiene los dos juegos de caracteres disponible
+extern struct _gt_charset _gt_set[2];*/
 
 //ProgM
 // Variable para indicar la primera posicion de memoria del programa
@@ -506,8 +522,11 @@ extern void _gt_resetKB();
 /* _gt_getstring: Inicia la entrada por teclado para un proceso determinado */
 extern int _gt_getstring(char v[], char numchar, char zocalo);
 
-/* _ga_zocalo: recibe el zócalo del proceso actual */
+/* _ga_zocalo: devuelve el zócalo del proceso actual */
 extern char _ga_zocalo();
+
+/* _gt_graf: Activa el set de teclas del teclado segun el estado de la variable caps*/
+extern void _gt_graf();
 
 /* FUNCIONES PARA LA IMPRESIÓN Y EL MANEJO DE CARÁCTERES */
 
