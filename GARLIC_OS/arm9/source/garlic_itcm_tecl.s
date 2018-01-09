@@ -279,6 +279,12 @@ _gt_rsi_IPC_FIFO:
 	push {r0-r12, lr}
 	mov r2, #0x04100000 		@; r2 = @IPC_FIFO_RECV
 	ldr r2, [r2] 				@; r2 = IPC_FIFO_RECV
+	
+	ldr r0, =_gt_kbvisible
+	ldrb r0, [r0]
+	cmp r0, #1
+	bne .L_IPC_FIFO_end
+
 	and r3, r2, #0x3			@; r3 = IPC_FIFO_RECV & 0x3. Obtenemos tres primeros bits
 	cmp r3, #0					@; Si es tracta de un 0 ( tecla normal)
 	beq .L_IPC_FIFO_putkey
@@ -295,10 +301,6 @@ _gt_rsi_IPC_FIFO:
 	cmp r3, #6					@; Si es tracta de un 6 ( tecla =>)
 	beq .L_IPC_FIFO_KEY_RIGHT
 								@; Si es tracta de un 7 ( tecla especial)
-	push {r0-r5}
-	bl _gt_hideKB				@; Amaguem interficie
-	pop {r0-r5}
-	b .L_IPC_FIFO_paintkeys		@; Pintem caselles
 	
 .L_IPC_FIFO_KEY_RIGHT:
 	@; Per a aquesta tecla especial s'ha reutilitzat el codi per al boto KEY RIGHT de la fase 1

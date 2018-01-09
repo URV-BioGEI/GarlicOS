@@ -46,17 +46,16 @@ void _gt_initKB()
 	/* Instalem la rsi del IRQ IPC FIFO de la NDS:
 	Això indica al controlador general d'interrupcions que quan es produeixi la interrupció IRQ_IPC_FIFO
 	ha d'executar la funció rsi que nosaltres li indiquem per a gestionar la interrupcio */
-	irqSet(IPC_FIFO_RECV_IRQ, _gt_rsi_IPC_FIFO);
+	irqSet(IRQ_FIFO_NOT_EMPTY, _gt_rsi_IPC_FIFO);
 	
 	/* Indiquem que es poden produir interrupcions procedint d'aqeusts dispositiu*/
-	REG_IPC_FIFO_CR = IPC_FIFO_ENABLE | IPC_FIFO_SEND_CLEAR | IPC_FIFO_RECV_IRQ | 1 << 15 | 1 << 10;
-	
+	REG_IPC_FIFO_CR = IPC_FIFO_ENABLE | IPC_FIFO_RECV_IRQ | 1 << 15 | 1 << 10 | IPC_FIFO_SEND_CLEAR;
+
 	/* Indiquem al registre IE (interrupt enable) que les interrupcions següents estan actives:
 		- IRQ_IPC_SYNC: per a rebre l'estat dels botons X i Y
 		- IRQ_FIFO_NOT_EMPTY: Per a rebre informacio sobre iteraccio tactil amb el teclat
 		*/
-	irqEnable(IRQ_IPC_SYNC);
-	irqEnable(IRQ_FIFO_NOT_EMPTY);	
+	irqEnable(IRQ_IPC_SYNC | IRQ_FIFO_NOT_EMPTY);	
 
 	/* Activación de todas las IRQ (interrupt master enable)  */
 	REG_IME=IME_ENABLE;

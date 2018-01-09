@@ -51,34 +51,13 @@ touchPosition tempPos = {0};
    con las coordenadas (x, y) en píxeles, y la función devuelve cierto.*/ 
 bool comprobarPantallaTactil(void)
 {
-	bool lecturaCorrecta = false;
-	static bool penDown = false;
-
-	if (!touchPenDown())
+	if (!touchPenDown()) return false;	// no hay contacto del lápiz con la pantalla
+	else		// hay contacto
 	{
-		penDown = false;	// no hay contacto del lápiz con la pantalla
+		touchReadXY(&tempPos);	// leer la posición de contacto
+		if ((tempPos.rawx == 0) || (tempPos.rawy == 0)) return false;	 // si las posiciones son 0
+		else return true; // sino devuelve cierto
 	}
-	else		// hay contacto, pero hay que verificarlo
-	{
-		if (penDown)		// si anteriormente ya estaba en contacto
-		{
-			touchReadXY(&tempPos);	// leer la posición de contacto
-			
-			if ((tempPos.rawx == 0) || (tempPos.rawy == 0))
-			{						// si alguna coordenada no es correcta
-				penDown = false;	// anular indicador de contacto
-			}
-			else
-			{
-				lecturaCorrecta = true;
-			}
-		}
-		else
-		{					// si es la primera detección de contacto
-			penDown = true;		// memorizar el estado para la segunda verificación
-		}
-	}
-	return lecturaCorrecta;		
 }
 
 
@@ -88,24 +67,20 @@ int main() {
 //------------------------------------------------------------------------------
   //unsigned char mensaje;
 	short x, y;
-	int i;
+	//int i;
 	char buttons = 0, oldbuttons = 0;
 	bool dinsderang;
 	unsigned int posarrayx, posarrayy, codi, numcaselles; // per defecte el codi sera 0; // per defecte escriurem una sola casella
 	
 	readUserSettings();			// configurar parámetros lectura Touch Screen
 	irqInit();
-	REG_IPC_SYNC = 0; // inicialitzem el registre de control
-	REG_IPC_FIFO_CR = IPC_FIFO_ENABLE | IPC_FIFO_SEND_CLEAR | IPC_FIFO_RECV_IRQ | 1 << 15 | 1 << 10;
-	irqEnable(IRQ_IPC_SYNC); // activar interrupción IPCSYNC
-	irqEnable(IRQ_VBLANK | IRQ_FIFO_NOT_EMPTY);	
+	REG_IPC_FIFO_CR = IPC_FIFO_ENABLE | IPC_FIFO_SEND_CLEAR; //  | IPC_FIFO_RECV_IRQ | 1 << 15 | 1 << 10
+	irqEnable(IRQ_IPC_SYNC | IRQ_VBLANK | IRQ_FIFO_NOT_EMPTY);	
 		
-	//REG_IPC_SYNC = IPC_SYNC_IRQ_ENABLE | IPC_SYNC_IRQ_REQUEST;
-	REG_IPC_SYNC = 0;
-
+	REG_IPC_SYNC = 0; // inicialitzem el registre de control
+	REG_IPC_SYNC = IPC_SYNC_IRQ_ENABLE | IPC_SYNC_IRQ_REQUEST;
 	/* Activación de todas las IRQ (interrupt master enable)  */
 
-	
   do
   {
 	oldbuttons = buttons; // canviem els botons
@@ -119,17 +94,17 @@ int main() {
 	posarrayy = 0;
 	posarrayx = 0;
 
-
-
 	// COmprovem si s'ha apretat la pantalla tactil
 	
 	if (comprobarPantallaTactil())
 	{
 		x = tempPos.px;					// leer posición (x, y)
 		y = tempPos.py;
-
-		x=x/8;	// Obtenim coordenades en nombre de rajoles
-		y=y/8;
+		
+		x=x >> 3;	// Obtenim coordenades en nombre de rajoles
+		y=y >> 3;
+		
+		//REG_IPC_FIFO_TX = x;
 		switch (y)
 		{
 		case 5: // fila 5
@@ -203,9 +178,9 @@ int main() {
 		break;
 		}
 		posarrayx = x-1; // corregim per a que la pos de x coincideixi amb la del array
-		if (dinsderang) REG_IPC_FIFO_TX	 = (numcaselles & 0x3) << 19 | ((y * 32 + x) & 0x1FF) << 10 | ((posarrayy * 30 + posarrayx) & 0x7F) << 3 | (codi & 0x3);
+		if (dinsderang) REG_IPC_FIFO_TX	= (numcaselles & 0x3) << 19 | ((y * 32 + x) & 0x1FF) << 10 | ((posarrayy * 30 + posarrayx) & 0x7F) << 3 | (codi & 0x3);
 	}
-	else for (i = 0;i < 2; i++) swiWaitForVBlank(); // Esperem per no sobrecarregar cpu 
+	else swiWaitForVBlank(); // Esperem per no sobrecarregar cpu 
   }while (1);
 return 0;
 }
