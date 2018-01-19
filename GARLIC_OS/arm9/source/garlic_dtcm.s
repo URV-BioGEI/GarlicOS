@@ -98,8 +98,8 @@ _gd_kbsignal: .space 2
 	.global _gt_inputl			@; Contiene el número de caracteres que ha introducido el usuario
 _gt_inputl: .space 1
 
-	.global _gt_input			@; Vector de 28 caracteres introducidos. Al final he decidir fer-ho amb chars
-_gt_input: .space 28*1
+	.global _gt_input			@; Vector de 30 caracteres introducidos. Ha passat de 28 a 30 perque ara el text box es mes gran
+_gt_input: .space 30*1
 
 	.global _gt_cursor_pos	 	@; Posició del cursor
 _gt_cursor_pos: .space 1
@@ -116,13 +116,8 @@ _gt_XYbuttons: .space 1
 	.global _gt_CAPS_lock		@; Variable booleana que indica si el bloc majúscules es troba activat (true) o n (false)
 _gt_CAPS_lock: .space 1		
 
-	@;.global _gt_set				@; Variable que conte els jocs de caracters (4 arrays de caracters (1 byte) de 30 posicions en dos sets diferents de caracters)
-@;_gt_set: .space 30*4*2*1
-	.global _gt_charsetmin			@; Sets de caracters per a CAPS_lock = false
-_gt_charsetmin: .space 30*4
-
-	.global _gt_charsetmaj			@; Sets de caracters per a CAPS_lock = true
-_gt_charsetmaj: .space 30*4
+	.global _gt_inner_IF		@; ///Si la variable es 0 no shan d'atendre interrupcions d'escriptura (hold) si esta a 1 nomes s'atenen interrupcions de soltar tecla (release)
+_gt_inner_IF: .space 1		
 
 .end
 

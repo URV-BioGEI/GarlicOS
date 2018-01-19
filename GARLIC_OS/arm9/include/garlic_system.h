@@ -128,7 +128,7 @@ extern char _gt_PIDZ_tmp[6];
 // Variable per a normalitzar la velocitat de reacció dels botons per part de la rsi de teclat
 extern char _gt_button_tics;
 
-// Variable que conté l'estat dels botons X i Y (bit 0 = 1; X apretat, sino soltat, bit 1 = 1; Y apretat, sino soltat)
+// Variable que conté l'estat dels botons X i Y (bit 0 = 1;bit 1 = 1; apretats, si estan a 0 soltats)
 extern char _gt_XYbuttons;
 
 // Variable booleana que indica si el bloc majúscules es troba activat (true) o n (false)
@@ -548,5 +548,7 @@ extern void _gt_putchar(char pos, char caracter);
 /* _gt_writePIDZ: Escribe el zócalo y PID del proceso que recibe E por teclado en la interfaz */
 extern void _gt_writePIDZ(char zoc);
 
+/* _gt_movecursor: Mueve el cursor teniendo en cuenta restricciones graficos en la direccion recibida (1 derecha, otro izuiqerda)*/
+extern void _gt_movecursor(char direccion);
 
 #endif // _GARLIC_SYSTEM_h_

@@ -48,7 +48,7 @@ void _gt_initKB()
 	ha d'executar la funció rsi que nosaltres li indiquem per a gestionar la interrupcio */
 	irqSet(IRQ_FIFO_NOT_EMPTY, _gt_rsi_IPC_FIFO);
 	
-	/* Indiquem que es poden produir interrupcions procedint d'aqeusts dispositiu*/
+	/* Indiquem que es poden produir interrupcions procedint d'aqeusts dispositiu. També iniciem la cua */
 	REG_IPC_FIFO_CR = IPC_FIFO_ENABLE | IPC_FIFO_RECV_IRQ | 1 << 15 | 1 << 10 | IPC_FIFO_SEND_CLEAR;
 
 	/* Indiquem al registre IE (interrupt enable) que les interrupcions següents estan actives:
@@ -77,7 +77,7 @@ void _gt_initKB()
 	*/
 	_gt_bginfo = bgInitSub(BG_PRIORITY(2), BgType_Text8bpp, BgSize_T_256x256, 4, 1);
 	_gt_bgbox = bgInitSub(BG_PRIORITY(1), BgType_Text8bpp, BgSize_T_256x256, 5, 1);
-	_gt_bgcursor = bgInitSub(BG_PRIORITY(1), BgType_Text8bpp, BgSize_T_256x256, 6, 1);
+	_gt_bgcursor = bgInitSub(BG_PRIORITY(0), BgType_Text8bpp, BgSize_T_256x256, 6, 1);
 	
 	/* Inicializamos las variables globales de dirección del mapa de baldosas de los diferentes
 	fondos */
@@ -110,20 +110,20 @@ void _gt_initKB()
 	//_gt_mapbasecursor[166]=128*3+113;
 
 	// Quadre per l'esquerra
-	_gt_mapbasebox[32*2+1]=32*3+2;
+	_gt_mapbasebox[32*2]=32*3+2;
 	
 	// Quadre per la dreta
-	_gt_mapbasebox[32*2+30]=32*3;
+	_gt_mapbasebox[32*2+31]=32*3;
 	
 	// Quadre de text per dalt i per baix
-	for(i=0; i<28; i++){
-		_gt_mapbasebox[32+2+i]=32*3+1;
-		_gt_mapbasebox[96+2+i]=32*3+3;
+	for(i=0; i<30; i++){
+		_gt_mapbasebox[32+1+i]=32*3+1;
+		_gt_mapbasebox[32*3+1+i]=32*3+3;
 	}
 
 	// Inicialitza blanc del quadre de text
-	for(i=0; i<28; i++){
-		_gt_mapbaseinfo[66+i]=95;
+	for(i=0; i<30; i++){
+		_gt_mapbaseinfo[32*2+1+i]=95;
 	}
 	
 	// Rajoles blaves per la primera linia
@@ -195,6 +195,9 @@ void _gt_initKB()
 	
 	/* Inicialitzem la part grafica del teclat */
 	_gt_graf();
+	
+	/* Inicialitzem l'estat dels botons com si no estiguessin sent apretats*/
+	_gt_XYbuttons = 3;
 }
 
 void _gt_graf()
@@ -225,19 +228,19 @@ void _gt_graf()
 	// PRIMERA FILA
 	for(i=0; i<30; i++)
 	{
-		_gt_mapbasebox[32*4+1+i]=tmpset[0][i]-32;
+		_gt_mapbasebox[32*4+1+i] = tmpset[0][i]-32;
 	}
 	
 	// SEGONA FILA
 	for(i=0; i<30; i++)
 	{
-		_gt_mapbasebox[193+i]=tmpset[1][i]-32;
+		_gt_mapbasebox[193+i] = tmpset[1][i]-32;
 	}
 
 	// TERCERA FILA
 	for(i=0; i<30; i++)
 	{
-		_gt_mapbasebox[257+i]=tmpset[2][i]-32;
+		_gt_mapbasebox[257+i] = tmpset[2][i]-32;
 	}
 	
 	// rajoles del caps, que estaran a lila o no segons l'estat de les majuscules
@@ -275,74 +278,10 @@ void _gt_writePIDZ(char zoc)
 		else _gt_mapbasebox[19+i] = _gt_PIDZ_tmp[i]-32;
 	}
 }
-/*
-
-		.global _gt_writePIDZ
-	@; Recibe un char con el número de zócalo y muestra el PID del proceso correspondiente en la interfície de teclado 
-	@; usando el fondo info
-	@; Parámetros
-	@; R0: char zocalo
-_gt_writePIDZ:
-	push {r1-r6,lr}
-	
-	@; ZÓCALO
-	
-	mov r5, r0					@; r5 = socol (copia de seguretat)
-	mov r2, r0					@; r2 = socol		
-	ldr r0, =_gt_PIDZ_tmp		@; r0 = @ _gd_PIDZ_tmp
-	mov r1, #3					@; r1 = 3 (nombre de caracters)
-	bl _gs_num2str_dec			@; converteix el zocalo passat per parametre a string R0: char * numstr, R1: int length, R2: int num. return r0 = 0 si toot va be
-	ldr r0, =_gt_PIDZ_tmp		@; r0 = @ _gd_PIDZ_tmp
-	ldr r2, =_gt_mapbaseinfo	@; r2 = @@ _gt_mapbaseinfo
-	ldr r2, [r2]				@; r2 = @ _gt_mapbaseinfo
-	mov r6, r2					@; Salvem aquesta direccio de memoria
-	add r2, #22					@; Anem a on comença el text aquell de z00
-	
-	mov r1, #0					@; Inicialitzem comptador
-.Lgtesc_V1:
-	ldrb r4, [r0, r1]			@; carreguem el digit del nombre de socol
-	cmp r4, #32					@; comparem amb 32
-	subne r4, #32				@; Si es tracta d'un número normal (0-9) restem 32 per a passar a rajoletes
-	subeq r4, #16				@; Si es tracta d'un espai (32) restem 16 per a obtenir un 0 en coddificacio de rajoletes
-	mov r3, r1, lsl #1			@; Ens desplacem en el mapa de rajoletes (halfwords)
-	strh r4, [r2, r3]			@; guardem a la posicio de zocalo
-	add r1, #1					@; incrementem el comptador
-	cmp r1, #2					@; si hem fet ja 3 repeticions sortim ja
-	bne .Lgtesc_V1 				@; iteracio
-
-	@; PID
-
-	mov r4, #24					@; carrega 24 a r4 (la mida de cada PCB)
-	mul r3, r5, r4				@; multipliquem aquest 24 amb el zocalo per a saber el desplaçament 
-	ldr r2, =_gd_pcbs			@; carreguem direcció base del vector de PCBs
-	ldr r2, [r2, r3] 			@; r2 = PIDZ del proces
-	
-	ldr r0, =_gt_PIDZ_tmp		@; r0 = @_gd_PIDZ_tmp
-	mov r1, #6					@; r1 = 6 (caracters maxims)
-	bl _gs_num2str_dec			@; converteix el PIDZ a string
-	ldr r0, =_gt_PIDZ_tmp		@; r0 = @_gd_PIDZ_tmp
-
-	mov r2, r6					@; restaurem r2 = @ _gt_mapbaseinfo
-	add r2, #38					@; accedim a on comença el PID:00000
-	
-	mov r1, #0					@; Inicialitzem comptador
-.Lgtesc_V:
-	ldrb r4, [r0, r1]			@; procedim igual que abans
-	cmp r4, #32
-	subne r4, #32
-	subeq r4, #16
-	mov r3, r1, lsl #1
-	strh r4, [r2, r3]
-	add r1, #1
-	cmp r1, #5					@; pero amb limit 5
-	blo .Lgtesc_V 				@; segueix iterant
-
-	pop {r1-r6, pc}
-	*/
 	
 void _gt_showKB(char zoc)
 {	
-	_gt_kbvisible = true;	// indiquem que teclat mostrat
+	_gt_kbvisible = 1;	// indiquem que teclat mostrat
 
 	bgShow(_gt_bginfo);		// activem els fons del teclat
 	bgShow(_gt_bgbox);

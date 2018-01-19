@@ -210,11 +210,10 @@ int main(int argc, char **argv) {
 	//intFunc start;
 	//int mtics, v;
 	int key;
-
+	char xy;
 	inicializarSistema();
-	//_gt_showKB(0);
+	_gt_showKB(0);
 	//while (1) _gp_WaitForVBlank();		// retardo del proceso de sistema
-
 	_gg_escribir("%3********************************", 0, 0, 0);
 	_gg_escribir("%1*                              *", 0, 0, 0);
 	_gg_escribir("%2* Sistema%1 Operativo%3 GARLIC 2.0 *", 0, 0, 0);
@@ -222,10 +221,10 @@ int main(int argc, char **argv) {
 	_gg_escribir("%0********************************", 0, 0, 0);
 	_gg_escribir("%1*** Inicio fase 2_G\n", 0, 0, 0);
 	
-	
+
 	while (1)						// bucle infinito
 	{
-		_gg_escribir("%c", _ga_getxybuttons(), 0, 0);
+		//_gg_escribir("%c", _ga_getxybuttons(), 0, 0);
 		scanKeys();
 		key = keysDown();			// leer botones y controlar la interfaz
 		if (key != 0)				// de usuario

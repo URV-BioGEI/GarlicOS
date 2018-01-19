@@ -192,8 +192,8 @@ _ga_getxybuttons:
 	ldr r1, [r2]			@; Carreguem contingut de pidz a r2 (passada de parámetre)
 	and r1, #0xF			@; Fem clean dels bits de PID i obtenim Sòcol (MOD 4)
 	ldr r0, =_gi_za			@; R0 = @_gi_za
-	ldr r0, [r1]			@; R0 = _gi_za
-	cmp r0, r2				@; Comprovem que r1 i r2 siguin iguals, es a dir, que els proces que s'esta executant estigui en focus
+	ldr r0, [r0]			@; R0 = _gi_za
+	cmp r0, r1				@; Comprovem que r0 i r2 siguin iguals, es a dir, que els proces que s'esta executant estigui en focus
 	movne r0, #0			@; Si no es aixi carreguem 0 a r0
 	bne .LXYbuttonend		@; I sortim per a retornar
 	ldr r0, =_gt_XYbuttons	@; Sino... r0 = @_gt_XYbuttons

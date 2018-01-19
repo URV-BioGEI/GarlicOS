@@ -27,7 +27,21 @@ int _start(int arg)
 	else if (arg > 3) arg = 3;		// valor mínimo del argumento
 
 	int lengthv2, lengthv1, i;
-	char v1[28], v2[28], vr[57];
+	char v1[28], v2[28], vr[57], xy;
+	
+	/* _ga_getxybuttons: Devuelve el estado de los botones X e Y (bit 1 y 0) */
+	while (1)
+	{
+		xy = GARLIC_getXYbuttons();
+		if (xy == 3) GARLIC_printf("\nNi X ni Y pulsados");
+		else if (xy == 2) GARLIC_printf("\nX pulsada");
+		else if (xy == 1) GARLIC_printf("\nY pulsada");
+		else if (xy == 0)
+		{
+			GARLIC_printf("\nX e Y pulsados");
+			break;
+		}
+	} 
 
 	for (i=0; i<57; i++) vr[i] = ' ';
 	GARLIC_printf("*Introdueix un string*\n");
