@@ -56,9 +56,6 @@ void _gt_initKB()
 		- IRQ_FIFO_NOT_EMPTY: Per a rebre informacio sobre iteraccio tactil amb el teclat
 		*/
 	irqEnable(IRQ_IPC_SYNC | IRQ_FIFO_NOT_EMPTY);	
-
-	/* Activación de todas las IRQ (interrupt master enable)  */
-	REG_IME=IME_ENABLE;
 	
 	/* Inicializamos procesador gráfico en el modo 0 (los 4 fondos en modo texto) */
 	videoSetModeSub(MODE_0_2D);

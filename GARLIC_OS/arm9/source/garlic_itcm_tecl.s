@@ -55,15 +55,11 @@
 	@;		
 	
 _gt_getstring:
-	push {r1-r7, lr}
+	push {r1-r7, r12, lr}
 
 	@; Ahora registraremos el proceso en la cola de espera del KB
-	
-	ldr r3, =_gd_nKeyboard			@; Cargamos la @ de la varible que tiene el numero de procesos esperando 
-	ldrsb r4, [r3]					@; r4 = num procesos
-	cmp r4, #16						@; Si el nombre de processos es igual a la mida maxima de la cua
-	moveq r0, #-1					@; Carreguem un -1 a r0
-	beq .L_getstring_error			@; I sortim de la rutina
+	ldr r3, =_gd_nKeyboard			@; r3 = @_gd_Keyboardl
+	ldrb r4, [r3]					@; r4 = _gd_Keyboardl
 	ldr r5, =_gd_Keyboard			@; cargamos @base de la cola de espera del KB (vector de char)
 	strb r2, [r5, r4]				@; guardamos el zócalo recibido por parámetro a la posicion
 	add r4, #1						@; sumamos 1 al índice
@@ -71,24 +67,24 @@ _gt_getstring:
 	
 	@; Mirem que la interficie estigui mostrada
 	
-	ldr r4, =_gt_kbvisible			@; Cargamos @ de _gt_visible
+	ldr r4, =_gt_kbvisible			@; r4 = @ _gt_visible
 	ldrb r3, [r4]					@; r3 = _gt_visible
 	cmp r3, #1						@; Si esta mostrada, vol dir que algu l'esta utilitzant
 	beq .Lgtgetstr_pidzcode			@; Per tant passem aquest pas. Sino...
 	mov r5, r0						@; r5 = @ string. Salvamos la dirección del string en r5
 	mov r0, r2						@; Passada de parametres a _gt_showKB (espera el número de zócalo por r0)
-	push {r0-r5, r12}
+	push {r0-r3}
 	bl _gt_showKB 					@; mostramos la interficie para el proceso que llama a getstring
-	pop {r0-r5, r12}
+	pop {r0-r3}
 	mov r0, r5						@; Recuperamos en r0 @ string
  
-	@; Ara posarem a 1 el segon bit de mes pes de la variable _gd_pidz per indicar que es tracta dun proces que espera KB
+	@; Ara posarem a 1 el bit de mes pes de la variable _gd_pidz per indicar que es tracta dun proces que espera KB
 .Lgtgetstr_pidzcode:
 	ldr r3, = _gd_pidz				@; r3 = @_gd_pidz
 	ldr r4, [r3]					@; r4 = _gd_pidz
-	orr r4, r4, #0x40000000			@; fiquem a 1 el segon bit de més pes del pidz
+	orr r4, r4, #0x80000000			@; fiquem a 1 el bit de més pes del pidz
 	str r4, [r3]					@; Actualitzem la variable
-	bl _gp_rsiVBL					@; Cridem a _gp_rsiVL per a forçar que es salvi el context del proces
+	bl _gp_WaitForVBlank			@; Cridem a wait or virtual blank  per a forçar que es salvi el context del proces
 	
 	@; aqui continuara el proces que hagi sigut tret de la cua d'espera amb la rsi
 
@@ -97,6 +93,7 @@ _gt_getstring:
 	@;el número total de caracteres leídos (excluido el centinela).
 	ldr r3, =_gt_inputl				@; carreguem @ base de la variable de nombre de caracters
 	ldrb r2, [r3]					@; r2 = nombre de caracters d'input
+	add r2, #1						@; Sumem un a r2 per a tenir en compte el caracter centinella
 	cmp r1, r2						@; Comparem el nombre de caracters d'input i la capacitat del string destí
 	movlo r2, r1					@; r2 = nombre de caracters maxim (valor més limitant)
 	
@@ -108,7 +105,9 @@ _gt_getstring:
 	
 .Lgtgetstr_copystr:
 	ldrsb r3, [r4, r5]				@; Carreguem signed (per a reconeixer caracter centinella) sobre r3. Conté el vector a tractar
-	add r3, #32						@; Factor de correcció per a transformar al codi ASCII
+	cmp r3, #-1						@; Si el caracter a llegir es -1 (final de linia)
+	beq .Lgtgetstr_copystrfi		@; Afegim caracter de final de linia i sortim
+	@;SI o estem al final
 	strb r3, [r0, r5]				@; Guardem sobre l'string que rebem per parametre
 	add r5, #1						@; Incrementem comptador
 	cmp r5, r2						@; Si el comptador no es igual al valor maxim 
@@ -117,13 +116,11 @@ _gt_getstring:
 	mov r6, #0						@; Afegim el caracter de final de string (el \0 de tota la, vida)
 	strb r6, [r0, r5]				@; Guardem el caracter de final de linia
 	
-	push {r0-r5}
+	push {r0-r3}
 	bl _gt_resetKB					@; resetegem per al següent us
 	bl _gt_hideKB					@; Amaguem interficie de teclat
-	pop {r0-r5}
-	
-	mov r0, r2						@; Retorn de parametres
-	
+	pop {r0-r3}
+		
 	@; Ara mostrarem la interficie per al següent proces que utilitzara el teclat. Per a fer-ho cal que primer eliminem 
 	@; el primer proces que espera teclat (aixo ho fara la rsi) per a que al carregar _gd_Keybard[0] obtinguem el socol 
 	@; del seguent proces
@@ -132,19 +129,17 @@ _gt_getstring:
 	cmp r4, #0						@; Si el nombre de processos es 0, sortim sense mostrar interficie
 	beq .L_getstring_error			@; Sortim
 	ldr r0, =_gd_Keyboard			@; Carreguem @ cua de teclat	
-	ldrb r0, [r0]					@; Carreguem el primer byte (següent proces)
-	push {r0-r5, r12}
+	ldrb r0, [r0]					@; Carreguem el primer byte (socol del següent proces)
+	push {r0-r3}
 	bl _gt_showKB 					@; mostramos la interficie para el proceso en la posicion 0 de la cola
-	pop {r0-r5, r12}
+	pop {r0-r3}
+	
 	mov r0, r2						@; Retorn de parametres
-
 .L_getstring_error:
-	pop {r1-r7, pc}			
+	pop {r1-r7, r12, pc}			
+		
 	
-	
-	
-	
-		.global _gt_cursorini
+	.global _gt_cursorini
 	@; Inicialitza el cursor en la primera posicio
 _gt_cursorini:
 	push {r0-r1, lr}
@@ -171,7 +166,6 @@ _gt_resetKB:
 	mov r3, #0					@; r3 = 0 (casella transparent)
 	strb r3, [r0] 				@; cursor a la posicio 0
 	strh r3, [r2, r1] 			@; borra el cursor de la posicio on estigui
-
 	bl _gt_cursorini			@; posa cursor a la primera posicio grafica
 
 	mov r0, #0					@; r0 = 0 (comptador)
@@ -197,7 +191,7 @@ _gt_resetKB:
 	@;Parámetros:
 	@; R0: pos -> index del caracter a actualitzar
 _gt_updatechar:
-	push {r0-r2, lr}
+	push {r0-r3, lr}
 
 	ldr r1, =_gt_mapbasebox		@; r1 = @@_gt_mapbasebox
 	ldr r1, [r1] 				@; r1 = @_gt_mapbasebox
@@ -206,23 +200,23 @@ _gt_updatechar:
 	ldrsb r2, [r2, r0]			@; carrega a r2 el caracter a on apunta l'index passat per parametre (signed per a centinella)
 	cmp r2, #-1					@; Si el caracter que ens estan dient que actualitzem es el de final de linea
 
-	moveq r2, #0				@; Posem el caracter negre com de buit 
+	moveq r2, #0				@; Posem el caracter negre com de buit
+	moveq r3, #95				@; rajola blanca
+	@;Sino
 	subne r2, #32				@; Restem per a corregir (transformem ASCII en codificació rajola)
-	@;addeq r2, #128				@; Indiquem rajoles blaves
-	@;addne r2, #96				@; Apliquem els dos canvis alhora
+	movne r3, #128+95			@; rajola blava
+	
 	lsl r0, #1					@; Multipliquem per dos el desplaçament (anem amb halfwords)
 	strh r2, [r1, r0]			@; I guardem sobre el mapa de rajoletes a la posicio que toca. 
-	beq .L_gt_updatechar_exit	@; Sortim si era un caracter buit
 
 	ldr r1, =_gt_mapbaseinfo	
 	ldr r1, [r1]				@; Obtenim punter
 	add r1, r0					@; Calculem desplaçament (@ mapbase + desplaçament fins rajoles quadre de text + posicio ultim caracter) 
 	add r1, #(32*2+1)*2
-	mov r2, #128+95				@; Carreguem rajola blava
-	strh r2, [r1]				@; La guardem a la posicio
+	strh r3, [r1]				@; Guardem la rajola seleccionada (de text o de buit) a la posicio que toca
 
 .L_gt_updatechar_exit:
-	pop {r0-r2, pc}
+	pop {r0-r3, pc}
 	
 .global _gt_movecursor
 	@; Mueve el cursor una posicion a la derecha si r0==0 i sinolo mueve a la izquierda
@@ -265,8 +259,8 @@ _gt_movecursor:
 	add r5, r0 					
 	add r5, r0 					@; Sumem la pos que falta (posicio del costat en un vector de halfwords)	
 
-	mov r4, #128+97				@; carreguem un 0 a r3
-	strh r4, [r3, r5]			@; I borrem el cursor
+	ldr r4, =128*2+97				@; carreguem un cursor a r4
+	strh r4, [r3, r5]			@; I posem el cursor a la nova posicio
 .L_gt_movecursor_end:
 	pop {r0-r6, pc}
 	
@@ -347,12 +341,7 @@ _gt_rsi_IPC_SYNC:
 _gt_rsi_IPC_FIFO: 
 	push {r0-r8, lr}
 	mov r2, #0x04100000 		@; r2 = @IPC_FIFO_RECV
-	ldr r3, [r2]				@; r3 = IPC_FIFO_RECV
-	
-	mov r4, #0					@; Carreguem un 0 a r4
-	str r4, [r2]				@; Resetegem registre amb 0 per a que no es produeixin mes interrupcions ///
-	
-	mov r2, r3	 				@; r2 = IPC_FIFO_RECV. Carreguem el missatge procedent de l'arm7
+	ldr r2, [r2]				@; r3 = IPC_FIFO_RECV
 	
 	ldr r0, =_gt_kbvisible		@; Comprovem la visibilitat del teclat
 	ldrb r0, [r0]
@@ -432,6 +421,9 @@ _gt_rsi_IPC_FIFO:
 	cmp r5, #0					@; Si _gt_inputl és 0
 	beq .L_IPC_FIFO_end			@; Sortim perque el select no farà res
 	
+	sub r5, #1					@; Per tant hi haura un caracter menys
+	strb r5, [r3]				@; Actualitzem variable
+	
 	ldr r6, =_gt_cursor_pos		@; r6 = @ index cursor
 	ldrb r4, [r6] 				@; r4 = index cursor
 	mov r0, r4					@; Guardem index cursor a r0 per a passar parametres
@@ -447,8 +439,6 @@ _gt_rsi_IPC_FIFO:
 	b .L_IPC_FIFO_paintkeys
 	
 .L_IPC_FIFO_DEL_MIDDLE:
-	sub r5, #1					@; Per tant hi haura un caracter menys
-	strb r5, [r3]				@; Actualitzem variable
 	
 	mov r0, r4					@; Restaurem l'índex a r0
 	add r5, #1					@; Cal tenir en compte que encara estem tractant l'string original
@@ -480,12 +470,11 @@ _gt_rsi_IPC_FIFO:
 	mvn r4, r4					@; r4 = !r4 (NOT del bits a la variable)
 	and r4, r4, #1				@; Conservem un sol bit (boolean) r4 = !_gt_CAPS_lock
 	strb r4, [r3]				@; Actualitzem el valor de la variable
-	push {r0-r5}				@; Salvem registres
+	push {r0-r3, r12}			@; Salvem registres
 	bl _gt_graf					@; Cridem a la funcio _gt_graf, que ens fa tot el que necesitem
-	pop {r0-r5}					@; Recuperem
-	b .L_IPC_FIFO_paintkeys		@; Anem a pintar rajoletes
+	pop {r0-r3,r12}				@; Recuperem
+	b .L_IPC_FIFO_end			@; Sortim
 
-	
 .L_IPC_FIFO_SPACE:
 	ldr r3, =_gt_cursor_pos		@; r3 = @ posicio del cursor
 	ldrb r4, [r3]				@; r4 = posicio del cursor
@@ -532,7 +521,7 @@ _gt_rsi_IPC_FIFO:
 	ldr r4, =_gt_inputl			@; r4 = @ _gt_inputl
 	ldrb r5, [r4]				@; r5 = _gt_inputls
 	cmp r0, r5					@; Si
-	bne .L_IPC_FIFO_putkey_notend @; Si pos cursor != _gt_inputl, no estem pel final per tant actualitzem directament
+	bne .L_IPC_FIFO_paintkeys	@; Si pos cursor != _gt_inputl, no estem pel final per tant actualitzem directament
 	add r5, #1
 	strb r5, [r4]
 	
@@ -541,6 +530,11 @@ _gt_rsi_IPC_FIFO:
 	
 	@; Passem a pintar les tecles directament
 .L_IPC_FIFO_paintkeys:
+	
+	and r3, r2, #0x7			@; Obbtenim codi de casella
+	cmp r3, #2					@; Comparem amb 2
+	beq .L_IPC_FIFO_end			@; Si es la tecla caps sortim perque tot ho fa _gt_graf
+
 	lsr r3, r2, #10				@; r3 = Obtenim el codi de bits que ens indica el desplaçament al mapa de rajoles 
 	lsr r4, r3, #9				@; r4 = Obtenim el nombre de rajoles a pintar
 	ldr r7, =0x1FF				@; r7 = la mascara de 9 bits

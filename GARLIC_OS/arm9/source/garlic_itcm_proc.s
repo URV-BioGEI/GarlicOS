@@ -265,17 +265,12 @@ _gp_actualizarDelay:
 _gp_salvarProc:
 	push {r8-r11, lr}
 	ldr r8, [r6]  			@; obteim el PID més zócalo
-	lsr r10, r8, #30		@; carreguem els DOS bits de més pes del id + zócalo. Modificat per progT
+	lsr r10, r8, #31		@; carreguem el bit de més pes del id + zócalo. 
 	and r8, r8, #15			@; r8= num de zócalo, ens quedem amb els 4 bits de menys pes del pidz
 	ldr r9, =_gd_qReady		@; carreguem en r9 la direccio de la cua de Ready
 	@; noves instruccions pel cas d'un procés retardat
-	cmp r10, #2 @; Modificat per progT
-	@; tst r10, #2
-	@; bne .L_salvarProc_Delay
-	beq .L_salvarProc_Delay	@; si el procés s'ha de retardar, es salva el seu estat pero no es fica en la cua de Ready
-	@; ...
-	cmp r10, #1				@; progT: Si el proces esta esperant entrada per teclat
-	beq .L_salvarProc_Delay	@; progT: es salva el seu estat pero no es fica en la cua de Ready
+	cmp r10, #1				@; Si el proces esta esperant entrada per teclat o esta retardat per temps
+	beq .L_salvarProc_Delay	@; es salva el seu estat pero no es fica en la cua de Ready
 
 	strb r8, [r9, r5]		@; guardem el nombre de zocalo del procés en l'última posició de la cua de Ready
 	add r5, #1				@; incrementem el nombre de processos en la cua de Ready
@@ -639,12 +634,10 @@ _gp_matarProc:
 	@; progT: Elimina el proces rebut per parametre de la cua de teclat i compacta el vector d'espera a teclat
 	@; KEYBOARD
 	
-	@; PRE= Hi ha un proces esperant a ser matat a la cua de teclat & nomes hi ha una instancia com a maxim de cada proces
+	@; PRE=  hi ha una instancia com a maxim de cada proces
 .L_Keyboard:
 	ldr r6, =_gd_nKeyboard		@; r6 = @_gd_nKeyboard
 	ldrb r2, [r6]				@; r2 = _gd_nKeyboard
-	@;sub r2, #1					@; disminuim en un el nombre de processos
-	@;strb r2, [r1]				@; actualitzem el nombre de processos
 	mov r3, #0					@; r3 = 0 // comptador
 	ldr r1, =_gd_Keyboard		@; r1 = @_gd_Keyboard
 .L_Keyboard_search:
@@ -662,7 +655,7 @@ _gp_matarProc:
 	subeq r2, #1				@; Restem 1 al nombre de processos
 	streqb r2, [r6]				@; Actualitzem la variable nKeyboard
 	beq .L_fi_matarProc			@; I sortim
-	ldrb r5, [r1, r4]
+	ldrb r5, [r1, r4]			@; Sino
 	strb r5, [r1, r3]			@; el proces a i+1 matxaca al proces a la posicio i
 	add r3, #1					@; r3 = r3 + 1 // i++
 	b .L_Keyboard_reorder		@; Diferent: tornem a iterar per a seguir compactant 

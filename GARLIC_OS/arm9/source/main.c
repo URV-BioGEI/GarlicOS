@@ -210,7 +210,6 @@ int main(int argc, char **argv) {
 	//intFunc start;
 	//int mtics, v;
 	int key;
-	char xy;
 	inicializarSistema();
 	_gt_showKB(0);
 	//while (1) _gp_WaitForVBlank();		// retardo del proceso de sistema
