@@ -6,6 +6,9 @@
 
 
 #include <GARLIC_API.h>			/* definición de las funciones API de GARLIC */
+unsigned int prueba[20] = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29,
+				31, 37, 41, 43, 47, 53, 59, 61, 67, 71,
+};
 
 int _start(int arg)				/* función de inicio : no se usa 'main' */
 {
@@ -16,28 +19,40 @@ int _start(int arg)				/* función de inicio : no se usa 'main' */
 	GARLIC_printf("-- Programa CUAD  -  PID (%d) --\n", GARLIC_pid());
 	//obtengo el numero de numeros y creo un array con el tamaño
 	int sinpotencia = arg+1;
-	int size = sinpotencia;
-	size = sinpotencia*sinpotencia*sinpotencia*sinpotencia*sinpotencia;
+	int size;
 	
 	//lleno el array de numeros random
 	int contador;
-	int valor;
 	int cuadrado;
 	int total=0;
 	unsigned int cociente, mod;
+	GARLIC_printf("Numeros: ");
+	if(arg==0)
+	{
+		size = 20;
+		for (contador=0; contador<size; contador++){
+			mod = prueba[contador];
+			GARLIC_printf("%d ", mod);
+			cuadrado = mod*mod;
+			total= total + cuadrado;
+		}
+	} 
+	else 
+	{
+		size = sinpotencia*sinpotencia*sinpotencia*sinpotencia*sinpotencia;
 	for (contador=0; contador<size; contador++){
 		GARLIC_divmod(GARLIC_random(), 100, &cociente, &mod);
 		GARLIC_printf("%d ", mod);
 		cuadrado = mod*mod;
-		//GARLIC_printf("%d ", cuadrado);
 		total= total + cuadrado;
+	} 
 	}
 	
 	//realizo división
 	unsigned int cocientea, moda;
 	GARLIC_divmod(total,size, &cocientea, &moda);
 	total=cocientea;
-	GARLIC_printf("\n %d <-Suma de numeros a cuadrado entre n. ", total);
+	GARLIC_printf("Suma de numeros a cuadrado entre n: \n %d", total);
 	
 	
 	//realizo la raiz cuadrada
@@ -59,8 +74,6 @@ int _start(int arg)				/* función de inicio : no se usa 'main' */
 		z=z+1;
 		
 	}while(z<25);
-	
-	int j=0;
 	
 	GARLIC_printf("La size es: %d \n", size);
 	GARLIC_printf("La media cuadrática es: %d \n con %d \n", x, y);

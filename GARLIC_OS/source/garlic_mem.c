@@ -1,6 +1,6 @@
 /*------------------------------------------------------------------------------
 
-	"garlic_mem.c" : fase 2 / programador M
+	"garlic_mem.c" : fase 2 / programador M /Manuel Ruiz Botella
 
 	Funciones de carga de un fichero ejecutable en formato ELF, para GARLIC 2.0
 
@@ -146,7 +146,7 @@ intFunc _gm_cargarPrograma(int zocalo, char *keyName)
 	Elf32_Addr dir_ref2;
 	Elf32_Word size_prog2;
 	Elf32_Off desp_prog;
-	Elf32_Addr dir_ref;
+	Elf32_Addr dir_ref = segments_table.p_paddr;;
 	Elf32_Word size_prog;
 	unsigned int prim_pos2=0;
 	unsigned int prim_pos=0;
@@ -170,25 +170,33 @@ intFunc _gm_cargarPrograma(int zocalo, char *keyName)
 			desp_prog = segments_table.p_offset;
 			dir_ref = segments_table.p_paddr;
 			size_prog = segments_table.p_memsz;
-			//copia direcciones en memoria
 			
 			
-			prim_pos = (int) _gm_reservarMem( zocalo, size_prog, (unsigned char) i); //se queda aquí.
+			//reserva memoria, devuelve la primera posición o 
+			prim_pos = (int) _gm_reservarMem( zocalo, size_prog, (unsigned char) i); 
 			
-			_gs_copiaMem((const void *) &buffer[desp_prog],  (void *) prim_pos, size_prog);
-			
-			if(num_st == 1)
+			if(prim_pos!=0)
 			{
-				_gm_reubicar( buffer, dir_ref, (unsigned int *) prim_pos, 0XFFFFFFFF, (unsigned int*) 0);
+				_gs_copiaMem((const void *) &buffer[desp_prog],  (void *) prim_pos, size_prog);
+				if(num_st == 1)
+				{	
+					_gm_reubicar( buffer, dir_ref, (unsigned int *) prim_pos, 0XFFFFFFFF, (unsigned int*) 0);
+				}
+				//damos valor a la dirección inicial de donde se encuentra el programa en memoria
+				dirprog = (int) prim_pos+entry-dir_ref;
 			}
-			//damos valor a la dirección inicial de donde se encuentra el programa en memoria
-			dirprog = (int) prim_pos+entry-dir_ref;
+			else 
+			{
+				_gm_liberarMem(zocalo);
+			}
+			
+			
 			
 			
 			
 		}
 		//comprueba que sea del tipo PT_LOAD y hace el segmento de datos en caso de que exista
-		else if(segment_type == 1 && i == 1){
+		else if(segment_type == 1 && i == 1 && prim_pos !=0){
 			
 			
 			if (_gm_first_mem_pos > END_MEM) 
@@ -205,14 +213,14 @@ intFunc _gm_cargarPrograma(int zocalo, char *keyName)
 			
 			
 			prim_pos2 = (int) _gm_reservarMem( zocalo, size_prog2, (unsigned char) i);
-			
-			_gs_copiaMem((const void *) &buffer[desp_prog2],  (void *) prim_pos2, size_prog2);
-			
-
-			if(num_st ==2) 
+			if(prim_pos2 !=0)
 			{
+				_gs_copiaMem((const void *) &buffer[desp_prog2],  (void *) prim_pos2, size_prog2);
 				_gm_reubicar(buffer, dir_ref, (unsigned int *) prim_pos, dir_ref2, (unsigned int *) prim_pos2);
-				//_gm_first_mem_pos = _gm_first_mem_pos+size_prog2+size_prog;
+			}
+			else
+			{
+				_gm_liberarMem(zocalo);
 			}
 		}
 		if(i==0 && num_st!=1){
@@ -259,10 +267,17 @@ int _gm_listaProgs(char* progs[])
 				if(strlen(pent->d_name)==8)
 				{
 					char *buffer;
+					char *prueba;
 					buffer = (char*) malloc (sizeof(char)*4);
-					strncpy(buffer, pent->d_name, 4);
-					progs[i]=buffer;
-					i++;
+					prueba=buffer;
+					strncpy(buffer, pent->d_name,8);
+					strcpy(prueba, &buffer[4]);
+					if(strcmp(prueba, ".elf")==0)
+					{
+						strncpy(buffer, pent->d_name, 4);
+						progs[i]=buffer;
+						i++;
+					}
 				}
 			}
 	return i;

@@ -84,7 +84,7 @@ int escogerNumero(const unsigned char numeros[], int num_opciones)
 
 	for (j = 0; j < num_opciones; j++)
 	{								// mostrar opciones
-		_gg_escribir("%c: %d\n", indicadoresTeclas[j], numeros[j], 0);
+		_gg_escribir("%c: %d \n", indicadoresTeclas[j], numeros[j], 0);
 	}
 	return numeros[leerTecla(num_opciones)];
 }
@@ -171,7 +171,7 @@ int main(int argc, char **argv) {
 				if (start)
 				{	_gp_crearProc(start, zocalo, progs[ind_prog], zocalo-1);
 					_gg_escribir("*** Programa cargado!\n\n\t", 0, 0, 0);
-					_gg_escribir("%d: %s.elf\n\n", zocalo, (unsigned int) progs[ind_prog], 0);
+					_gg_escribir("%d: %s .elf\n\n", zocalo, (unsigned int) progs[ind_prog], 0);
 				}
 			}
 		}
