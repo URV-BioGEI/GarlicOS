@@ -173,7 +173,7 @@ void _gt_initKB()
 	_gt_mapbaseinfo[222]=128+95;
 	
 	 //Inicialitzem input 
-	for (i = 0; i < 28; i++) _gt_input[i] = -1;
+	for (i = 0; i < 31; i++) _gt_input[i] = -1;
 	
 		/* Inicialitzem comptador de processos */
 	_gd_nKeyboard = 0; 

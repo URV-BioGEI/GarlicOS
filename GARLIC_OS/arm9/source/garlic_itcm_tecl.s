@@ -230,13 +230,13 @@ _gt_movecursor:
 	ldr r3, =_gt_inputl
 	ldrb r3, [r3]				@; r3 = Inputlength
 	ldr r2, =_gt_cursor_pos
-	ldrb r1, [r2]				@; r1 = posicio del cursor
+	ldrb r1, [r2]				@; r1 = posicio del cursor 
 	
 	cmp r0, #0					@; Si anem a la dreta
 	cmpeq r1, r3				@; SI la posicio del cursor i la quantitat de tecles es igual
 	beq .L_gt_movecursor_end	@; Sortim perque no farem res
-	cmp r1, #29					@; aquest es implicitament un cmpne. @;si la pos del cursor es maxima
-	beq .L_gt_movecursor_end	@;Sortim
+	cmpeq r1, #30				@; aquest es implicitament un cmpne. @;si la pos del cursor es maxima i anem a la dreta
+	beq .L_gt_movecursor_end	@; Sortim
 	cmp r0, #0					@; Si la direccio es esquerra
 	cmpne r1, #1				@; i estem a la posicio 0
 	blt .L_gt_movecursor_end	@; sortim
@@ -252,14 +252,17 @@ _gt_movecursor:
 	
 	cmp r0, #0
 	moveq r0, #1				@; Si tirem a la dreta posem un 1
-	
+
 	add r1, r0 					@; sumem o restem una posicio al cursor
 	strb r1, [r2]				@; actualitzem el cursor
+	
+	cmpeq r1, #30				@; Si estem a la posicio ultima, no dibuixem el cursor (cursor virtual a la pos. 30)
+	beq .L_gt_movecursor_end	@; Sortim directament
 	
 	add r5, r0 					
 	add r5, r0 					@; Sumem la pos que falta (posicio del costat en un vector de halfwords)	
 
-	ldr r4, =128*2+97				@; carreguem un cursor a r4
+	ldr r4, =128*2+97			@; carreguem un cursor a r4
 	strh r4, [r3, r5]			@; I posem el cursor a la nova posicio
 .L_gt_movecursor_end:
 	pop {r0-r6, pc}
@@ -300,7 +303,6 @@ _gt_rsi_IPC_SYNC:
 	push {r0-r1, lr}
 	ldr r0, =0x04000180 		@; Carreguem direccio del registre de control/dades IPC_SYNC
 	ldr r0, [r0]				@; Carreguem el sseu contingut
-	@;mvn r0, r0					@; Neguem per a canviar els bits i fer que apretar sigui 1
 	and r0, r0, #0x3			@; Fem un clean dels dos primers bit, ja que son els unics que ens interessen
 	
 	ldr r1, =_gt_XYbuttons		@; r1 = @_gt_XYbuttons
@@ -332,10 +334,6 @@ _gt_rsi_IPC_SYNC:
 	@;		de baldosas.
 	@;		bit 22: Si está a 1 indica que la tecla se acaba de dejar de pulsar y por tanto debe volver al estado original
 	@;		(baldosas normales). Para estos casos el mensaje és exactamente igual al de la IRQ anterior
-
-
-
-
 
 	.global _gt_rsi_IPC_FIFO
 _gt_rsi_IPC_FIFO: 
@@ -370,23 +368,21 @@ _gt_rsi_IPC_FIFO:
 	beq .L_IPC_FIFO_KEY_RIGHT
 								@; Si es tracta de un 7 ( tecla especial)
 	@; Amaguem el teclat
-	push {r0-r5}
+	push {r0-r3, r12}
 	bl _gt_hideKB
-	pop {r0-r5}
+	pop {r0-r3, r12}
 	b .L_IPC_FIFO_end
 	
 .L_IPC_FIFO_KEY_RIGHT:
 	
 	mov r0, #0
 	bl _gt_movecursor
-	
 	b .L_IPC_FIFO_paintkeys		@; Anem a pintar rajoletes
 	
 .L_IPC_FIFO_KEY_LEFT:
 
 	mov r0, #1
 	bl _gt_movecursor
-
 	b .L_IPC_FIFO_paintkeys		@; Anem a pintar caselles 
 
 .L_IPC_FIFO_INTRO:
@@ -472,12 +468,15 @@ _gt_rsi_IPC_FIFO:
 	strb r4, [r3]				@; Actualitzem el valor de la variable
 	push {r0-r3, r12}			@; Salvem registres
 	bl _gt_graf					@; Cridem a la funcio _gt_graf, que ens fa tot el que necesitem
-	pop {r0-r3,r12}				@; Recuperem
+	pop {r0-r3, r12}			@; Recuperem
 	b .L_IPC_FIFO_end			@; Sortim
 
 .L_IPC_FIFO_SPACE:
 	ldr r3, =_gt_cursor_pos		@; r3 = @ posicio del cursor
 	ldrb r4, [r3]				@; r4 = posicio del cursor
+	cmp r4, #30					@; Si estem out of bounds
+	beq .L_IPC_FIFO_end			@; Sortim
+	
 	ldr r5, =_gt_inputl			@; r5 = @ numero de caracters
 	ldrb r6, [r5]				@; r6 = numero de caracters
 	
@@ -513,14 +512,15 @@ _gt_rsi_IPC_FIFO:
 	ldrb r1, [r5, r3]			@; r1 = caracter Carreguem el caracter de la posicio de l'array que toca
 	ldr r0, =_gt_cursor_pos		
 	ldrb r0, [r0]				@; r0 = pos cursor. Obtenim la posicio del cursor
-	
+	cmp r0, #30					@; si la posicio del cursor es la 30 (out of bounds)
+	beq .L_IPC_FIFO_end			@; sortim
 .L_IPC_FIFO_putkey_notend:
 	bl _gt_putchar				@; Posem el caracter
 	bl _gt_updatechar			@; Actualitzem el caracter
 	
 	ldr r4, =_gt_inputl			@; r4 = @ _gt_inputl
 	ldrb r5, [r4]				@; r5 = _gt_inputls
-	cmp r0, r5					@; Si
+	cmp r0, r5					@; Si 
 	bne .L_IPC_FIFO_paintkeys	@; Si pos cursor != _gt_inputl, no estem pel final per tant actualitzem directament
 	add r5, #1
 	strb r5, [r4]

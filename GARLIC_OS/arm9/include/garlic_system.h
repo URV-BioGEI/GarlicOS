@@ -106,9 +106,6 @@ extern u16* _gt_mapbasecursor;
 // Indica si el teclado se muestra por pantalla 
 extern bool _gt_kbvisible;
 
-/*// Señal de RSI 
-extern char _gd_kbsignal;*/
-
 // Array de procesos esperando para entrada por teclado con su índice correspondiente
 extern char _gd_Keyboard[16];
 extern char _gd_nKeyboard;
@@ -117,7 +114,7 @@ extern char _gd_nKeyboard;
 extern char _gt_inputl;			
 
 // Vector de caracters introduits
-extern char _gt_input[28];
+extern char _gt_input[31];
 
 // Posició del cursor
 extern char _gt_cursor_pos;
@@ -137,15 +134,6 @@ extern bool _gt_CAPS_lock;
 // Sets de caracters per al teclat
 extern char _gt_charsetmin[4][30];
 extern char _gt_charsetmaj[4][30];
-
-/*// Estructura de juego de caracteres 
-struct _gt_charset
-{
- char set[4][30];
-};
-
-// array de dos posicions que contiene los dos juegos de caracteres disponible
-extern struct _gt_charset _gt_set[2];*/
 
 //ProgM
 // Variable para indicar la primera posicion de memoria del programa

@@ -99,7 +99,7 @@ _gd_kbsignal: .space 2
 _gt_inputl: .space 1
 
 	.global _gt_input			@; Vector de 30 caracteres introducidos. Ha passat de 28 a 30 perque ara el text box es mes gran
-_gt_input: .space 30*1
+_gt_input: .space 31*1
 
 	.global _gt_cursor_pos	 	@; Posició del cursor
 _gt_cursor_pos: .space 1
