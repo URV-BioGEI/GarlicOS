@@ -101,35 +101,15 @@ bool comprobarPantallaTactil(void)
 //------------------------------------------------------------------------------
 int main() {
 //------------------------------------------------------------------------------
-	short x, y,pulsacio = 0;
+	short x, y;
 	char buttons = 0, oldbuttons = 0;
-	bool dinsderang, keyhold = false;
-	unsigned int posarrayx, posarrayy, codi, numcaselles, missatge = 0, i=0; 
-	
-	/* Vector per a simular diferents pulsacions al teclat. 
-		Tecla +			"+"
-		Tecla DEL 		""
-		Tecla SPACE		" " 
-		Tecla |			" |"
-		Tecla :			" |:"
-		Tecla <=		" |:"	
-		Tecla <=		" |:"
-		Tecla a			" a:"
-		Tecla CAPS		" a:"
-		Tecla A			" A:"
-		Tecla =>		" A:"
-		Tecla L			" AL"
-		Tecla E			" ALE"
-		Tecla I			" ALEI"
-		Tecla X			" ALEIX"
-		Tecla INTRO		envia string anterior*/
-	short proves[32]={20,36,244,50,33,85,227,36, 188,84,216,82,216,82,54,66,29,65,51,69,236,83,181,67,74,50, 154,50, 75,82, 229,69};
-
+	bool dinsderang, keyhold = false, primerapulsacio = false;
+	unsigned int posarrayx, posarrayy, codi, numcaselles, missatgeanterior, missatge = 0, tics = 0; 
 	
 	irqInit(); // iniciem sistema irq de l'arm 7
 	
-	touchInit();
-	//readUserSettings();			// configurar parámetros lectura Touch Screen
+	touchInit(); // iniciem sistema tactil
+	readUserSettings();			// configurar parámetros lectura Touch Screen
 	REG_IPC_FIFO_CR = IPC_FIFO_ENABLE | IPC_FIFO_SEND_CLEAR; //  | IPC_FIFO_RECV_IRQ | 1 << 15 | 1 << 10
 	irqEnable(IRQ_VBLANK);	
 		
@@ -154,8 +134,6 @@ int main() {
 		// Comprovem si s'ha apretat la pantalla tactil
 		if (comprobarPantallaTactil()) // Aquesta funcio emmagatzema a tempPos la posicio en pixels. Aparentment no e funciona (sempre retorna 0)
 		{
-			if (!keyhold) // si encara no s'ha alliberat la tecla de la pulsacio anterior,no ffem res (evita autorepeat)
-			{
 				x = tempPos.px;					// leer posición (x, y)
 				y = tempPos.py; 
 				
@@ -237,24 +215,29 @@ int main() {
 				posarrayx = x-1; // corregim per a que la pos de x coincideixi amb la del array
 				if (dinsderang)
 				{
-					/*if (pulsacio == 30)
-					{			 
-						pulsacio = 0;
+					missatgeanterior = missatge;
+					missatge = (numcaselles & 0x7) << 19 | ((y * 32 + x) & 0x1FF) << 10 | ((posarrayy * 30 + posarrayx) & 0x7F) << 3 | (codi & 0x7);
+					if (missatgeanterior == missatge)
+					{
+						if (tics < 10) tics++;
+						else
+						{
+							tics = 0;
+							REG_IPC_FIFO_TX = missatge;
+						}
 					}
 					else
 					{
-						pulsacio=pulsacio+2;
-					}*/
+						REG_IPC_FIFO_TX	= missatge;
+					}
 					keyhold = true;
-					missatge = (numcaselles & 0x7) << 19 | ((y * 32 + x) & 0x1FF) << 10 | ((posarrayy * 30 + posarrayx) & 0x7F) << 3 | (codi & 0x7);
-					REG_IPC_FIFO_TX	= missatge;
 				}
-			}
 		}
 		else if (keyhold) // Aquest es el cas on la pantalla no ha estat premuda. Cal comprovar si en l'anterior comprovacio s'havia apretat  apretat una tecla ja que si es aixi s'enviara un missatge per a borrar aquella tecla (despintar les rajoletes) si o s'havia apretat res, o farem res
 		{
 			REG_IPC_FIFO_TX	= missatge | 0x400000; // passem el mateix missatge que abans pero possem el bit de desapretar a 1
 			keyhold = false;
+			missatgeanterior = 0;
 		}
 	} while (1);
 return 0;
