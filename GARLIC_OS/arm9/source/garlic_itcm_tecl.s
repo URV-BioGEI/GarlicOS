@@ -389,10 +389,9 @@ _gt_rsi_IPC_FIFO:
 	beq .L_IPC_FIFO_KEY_RIGHT
 								@; Si es tracta de un 7 ( tecla especial)
 	@; matem el proces que posseeix actualment la interficie de teclat
-	ldr r0, =_gd_Keyboard
-	ldrb r0, [r0]
+
 	push {r0-r3, r12}
-	bl _gp_matarProc
+	bl _gt_hideKB
 	pop {r0-r3, r12}
 	b .L_IPC_FIFO_end
 	

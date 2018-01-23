@@ -184,9 +184,6 @@ void _gt_initKB()
 	/* inicialitzem el cursor*/
 	_gt_cursorini();
 	
-	/* Amaguem el teclat */
-	_gt_hideKB();
-	
 	/* Indiquem que el bloc majúscules està desactivat */
 	_gt_CAPS_lock = 1;
 	
@@ -195,6 +192,9 @@ void _gt_initKB()
 	
 	/* Inicialitzem l'estat dels botons com si no estiguessin sent apretats*/
 	_gt_XYbuttons = 3;
+	
+	/* Amaguem el teclat */
+	_gt_hideKB();
 }
 
 void _gt_graf()
