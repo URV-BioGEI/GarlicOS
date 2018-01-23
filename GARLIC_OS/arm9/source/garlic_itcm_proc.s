@@ -515,6 +515,7 @@ _gp_retardarProc:
 	mov r1, #60					@; r1=60
 	mul r3, r0, r1				@; r3= nombre de tics a esperar
 	@; construir un word amb el zocalo i el número de tics a retardar
+	bl _gp_inhibirIRQs		@; inhibim les interrupcions
 	ldr r4, =_gd_pidz			@; obtim la variable _gd_pidz on hi ha (Identificador de proceso + zócalo actual)
 	ldr r5, [r4]				@; obtenim l'identificador + zócalo del procés
 	cmp r5, #0					@; mirem si el procés en execució és el SO
@@ -533,6 +534,7 @@ _gp_retardarProc:
 	@; fiquem a 1 el bit de més pes de _gd_pidz
 	orr r5, r5, #0x80000000		@; fiquem a 1 el bit de més pes del pidz
 	str r5, [r4]				@; guardem el valor en la variabl global
+	bl _gp_desinhibirIRQs		@; habilitem les interrupcions
 	@; forzar cesión de la CPU invocando a la función _gp_WaitForVBlank()
 	bl _gp_WaitForVBlank		@; invoquem la funció WaitForVBlank
 .LfinalRetardarProc:
