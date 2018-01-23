@@ -289,13 +289,9 @@ void _gt_showKB(char zoc)
 
 void _gt_hideKB()
 {
-	
 	bgHide(_gt_bginfo);		// amaguem tots els background
 	bgHide(_gt_bgbox);
 	bgHide(_gt_bgcursor);
 	
-	_gt_kbvisible = false;	// indiquem que teclat amagat
-
-	//_gt_resetKB();
-	
+	_gt_kbvisible = false;	// indiquem que teclat amagat	
 }

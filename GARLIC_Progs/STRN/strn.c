@@ -44,7 +44,7 @@ int _start(int arg)
 	} 
 
 	for (i=0; i<57; i++) vr[i] = ' ';
-	GARLIC_printf("*Introdueix un string*\n");
+	GARLIC_printf("\n*Introdueix un string*\n");
 
 	lengthv1 = GARLIC_getstring(v1, 28);
 

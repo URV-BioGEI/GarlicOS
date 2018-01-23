@@ -91,26 +91,33 @@ _gt_getstring:
 	@; copiar el string leído sobre el vector que se ha pasado por parámetro, filtrando el número de caracteres leido 
 	@;total de caracteres y añadiendo el centinela, y devolviendo
 	@;el número total de caracteres leídos (excluido el centinela).
+	
+	@;	if (inputl>=string_long) 
+	@;		for ( i = 0; i < string_long-1; i++)
+	@;			strout[i] = input[i];
+	@;	else
+	@;		for ( i = 0; i < inputl; i++)
+	@;			strout[i] = input[i];
+	@;	strout[i] = \0;
+	@; 	return i-1
+	
 	ldr r3, =_gt_inputl				@; carreguem @ base de la variable de nombre de caracters
 	ldrb r2, [r3]					@; r2 = nombre de caracters d'input
-	add r2, #1						@; Sumem un a r2 per a tenir en compte el caracter centinella
-	cmp r1, r2						@; Comparem el nombre de caracters d'input i la capacitat del string destí
-	movlo r2, r1					@; r2 = nombre de caracters maxim (valor més limitant)
 	
+	cmp r2, r1						@; Comparem el nombre de caracters d'input i la capacitat del string destí
+	movge r2, r1					@; r2 = nombre de caracters maxim
+	subge r2, #1					@; Restem si es cert
 	cmp r2, #0						@; Si no hi ha res al buffer sortim. 
 	beq .Lgtgetstr_copystrfi		@; 
-	
+		
 	ldr r4, =_gt_input				@; r4 = @ base del vector de input
 	mov r5, #0						@; r5 = comptador. Inicialitzem comptador
 	
 .Lgtgetstr_copystr:
-	ldrsb r3, [r4, r5]				@; Carreguem signed (per a reconeixer caracter centinella) sobre r3. Conté el vector a tractar
-	cmp r3, #-1						@; Si el caracter a llegir es -1 (final de linia)
-	beq .Lgtgetstr_copystrfi		@; Afegim caracter de final de linia i sortim
-	@;SI o estem al final
+	ldrb r3, [r4, r5]				@; Carreguem sobre r3. Conté el caracter a tractar
 	strb r3, [r0, r5]				@; Guardem sobre l'string que rebem per parametre
 	add r5, #1						@; Incrementem comptador
-	cmp r5, r2						@; Si el comptador no es igual al valor maxim 
+	cmp r5, r2						@; Si el comptador no es igual al valor maxim (iterem fins a la posicio string_long-2 inclosa o inputl-1) 
 	bne .Lgtgetstr_copystr			@; tornem a iterar
 .Lgtgetstr_copystrfi:
 	mov r6, #0						@; Afegim el caracter de final de string (el \0 de tota la, vida)
@@ -121,6 +128,8 @@ _gt_getstring:
 	bl _gt_hideKB					@; Amaguem interficie de teclat
 	pop {r0-r3}
 		
+	mov r0, r2						@; Retorn de parametres
+
 	@; Ara mostrarem la interficie per al següent proces que utilitzara el teclat. Per a fer-ho cal que primer eliminem 
 	@; el primer proces que espera teclat (aixo ho fara la rsi) per a que al carregar _gd_Keybard[0] obtinguem el socol 
 	@; del seguent proces
@@ -183,6 +192,18 @@ _gt_resetKB:
 	mov r1, #0					@; r1 = 0
 	strb r1, [r3]				@; reiniciem la quantitat de input
 	
+	@; Degut a que el missatge per a despintar les caselles del start no se sol rebre cal fer-ho manualment 
+	ldr r0, =_gt_mapbaseinfo
+	ldr r0, [r0]
+	ldr r2, =564
+	add r0, r2
+	mov r1, #128+95
+	mov r2, #0
+.Lgtr_Introkeys:
+	strh r1, [r0, r2]
+	add r2, #2
+	cmp r2, #10
+	bne .Lgtr_Introkeys
 	pop {r0-r4, pc}
 	
 	
@@ -367,9 +388,11 @@ _gt_rsi_IPC_FIFO:
 	cmp r3, #6					@; Si es tracta de un 6 ( tecla =>)
 	beq .L_IPC_FIFO_KEY_RIGHT
 								@; Si es tracta de un 7 ( tecla especial)
-	@; Amaguem el teclat
+	@; matem el proces que posseeix actualment la interficie de teclat
+	ldr r0, =_gd_Keyboard
+	ldrb r0, [r0]
 	push {r0-r3, r12}
-	bl _gt_hideKB
+	bl _gp_matarProc
 	pop {r0-r3, r12}
 	b .L_IPC_FIFO_end
 	
@@ -390,21 +413,24 @@ _gt_rsi_IPC_FIFO:
 	ldrb r1, [r0]				@; r1 = _gd_nKeyboard
 	sub r1, #1					@; disminuim en un el nombre de processos
 	strb r1, [r0]				@; actualitzem el nombre de processos
-	cmp r1, #0					@; Si no hi ha cap procés sortim (situacio impossible, activada per debug //)
-	beq .L_IPC_FIFO_end 		@; Sortim
-	mov r3, #0					@; inicialitzem comptador
+	
 	ldr r5, =_gd_Keyboard		@; Carreguem direccio r5 = @ _gd_Keyboard
 	ldrb r0, [r5]				@; Salvem socol del proces per a colocarlo despres a la cua de ready
-.Lgtrsi_START_move:
+	
+	cmp r1, #0					@; Si es 0, no cal que fem recorregut 
+	beq .L_IPC_FIFO_READY
+	mov r3, #0					@; inicialitzem comptador
+	.L_IPC_FIFO_START_MOVE:
 	add r3, #1					@; afegim un al comptador
 	ldrb r4, [r5, r3]			@; carreguem a r4 el socol del proces a _gd_Keyboard[i+1]
 	sub r3, #1					@; restem 1 per a anar a la posicio anterior
 	strb r4, [r5, r3]			@; guardem a la posicio _gd_Keyboard[i] movent un proces
 	add r3, #1					@; Afegim 1 per a compensar el que hem restat abans
 	cmp r1, r3					@; mirem si hem arribat al final de la cua de processos
-	bne .Lgtrsi_START_move		@; si no hem arribat saltem
+	bne .L_IPC_FIFO_START_MOVE	@; si no hem arribat saltem
+	.L_IPC_FIFO_READY:
 	ldr r1, =_gd_nReady			@; Carreguem direccio de nReady
-	ldr r3, [r1]				@; obtenim el nombre de processos esperant (es un word)
+	ldr r3, [r1]				@; obtenim el nombre de processos esperant (es un word, el toful es pensa que li sobren els bytes)
 	ldr r4, =_gd_qReady			@; Obtenim direccio de la cua de ready
 	strb r0, [r4, r3]			@; Posem el nou proces a la ultima posicio de la cua de ready
 	add r3, #1					@; Afegim un proces esperant
