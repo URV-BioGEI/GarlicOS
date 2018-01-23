@@ -122,9 +122,6 @@ extern char _gt_cursor_pos;
 // buffer de caracteres temporal usado por _gt_writePID(char zoc) para contener el PID de un proceso
 extern char _gt_PIDZ_tmp[6];
 
-// Variable per a normalitzar la velocitat de reacció dels botons per part de la rsi de teclat
-extern char _gt_button_tics;
-
 // Variable que conté l'estat dels botons X i Y (bit 0 = 1;bit 1 = 1; apretats, si estan a 0 soltats)
 extern char _gt_XYbuttons;
 
