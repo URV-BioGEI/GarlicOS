@@ -2,4 +2,10 @@
 GARLIC_OS/arm7/MAKE.exe.stackdump
 GARLIC_OS/arm7/build/
 GARLIC_Progs/**/*.s
-GARLIC_Progs/BORR/BORR.s
+GARLIC_Progs/**/*.o
+GARLIC_API/GARLIC_API.o
+GARLIC_OS/GARLIC_OS.nds
+GARLIC_OS/arm7/arm7.elf
+GARLIC_OS/arm9/arm9.elf
+GARLIC_OS/arm9/build/
+GARLIC_OS/nitrofiles/Programas/*.elf
