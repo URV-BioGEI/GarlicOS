@@ -254,8 +254,8 @@ _start:
 	add	r3, r3, #1
 	mov	r2, r3
 	ldr	r3, [sp, #8]
-	cmp	r3, r2
-	bcc	.L8
+	cmp	r2, r3
+	bhi	.L8
 	ldr	r0, .L13+24
 	bl	GARLIC_printf
 	ldr	r3, [sp, #12]
@@ -286,8 +286,8 @@ _start:
 	lsl	r3, r3, #2
 	mov	r2, r3
 	ldr	r3, [sp, #12]
-	cmp	r3, r2
-	bcc	.L11
+	cmp	r2, r3
+	bhi	.L11
 	ldr	r0, .L13+40
 	bl	GARLIC_printf
 	mov	r3, #0
@@ -333,4 +333,4 @@ _start:
 	.word	.LC28
 	.word	.LC29
 	.size	_start, .-_start
-	.ident	"GCC: (devkitARM release 47) 7.1.0"
+	.ident	"GCC: (devkitARM release 46) 6.3.0"

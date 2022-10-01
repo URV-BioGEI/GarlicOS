@@ -1190,10 +1190,10 @@ factorizar:
 	cmp	r3, #1
 	bls	.L20
 	ldr	r3, [sp, #12]
-	lsr	r3, r3, #1
-	ldr	r2, [sp, #8]
+	lsr	r2, r3, #1
+	ldr	r3, [sp, #8]
 	cmp	r2, r3
-	bls	.L21
+	bcs	.L21
 .L20:
 	ldr	r3, [sp, #12]
 	cmp	r3, #1
@@ -1365,8 +1365,8 @@ _start:
 	ldr	r3, [sp, #32]
 	ldr	r2, [r2, r3, lsl #2]
 	ldr	r3, [sp, #20]
-	mul	r1, r2, r3
-	str	r1, [sp, #20]
+	mul	r3, r2, r3
+	str	r3, [sp, #20]
 	ldr	r3, [sp, #28]
 	add	r3, r3, #1
 	str	r3, [sp, #28]
@@ -1377,8 +1377,8 @@ _start:
 	ldrb	r3, [r3]	@ zero_extendqisi2
 	mov	r2, r3
 	ldr	r3, [sp, #28]
-	cmp	r3, r2
-	bcc	.L37
+	cmp	r2, r3
+	bhi	.L37
 	ldr	r3, [sp, #32]
 	add	r3, r3, #1
 	str	r3, [sp, #32]
@@ -1420,4 +1420,4 @@ _start:
 	.word	.LC4
 	.word	.LC5
 	.size	_start, .-_start
-	.ident	"GCC: (devkitARM release 47) 7.1.0"
+	.ident	"GCC: (devkitARM release 46) 6.3.0"

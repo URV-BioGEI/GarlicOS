@@ -61,14 +61,14 @@ _start:
 	str	r3, [sp, #64]
 	ldr	r3, [sp, #68]
 	ldr	r2, [sp, #68]
-	mul	r1, r2, r3
+	mul	r3, r2, r3
 	ldr	r2, [sp, #68]
-	mul	r3, r2, r1
+	mul	r3, r2, r3
 	ldr	r2, [sp, #68]
-	mul	r1, r3, r2
-	ldr	r3, [sp, #68]
-	mul	r2, r1, r3
-	str	r2, [sp, #64]
+	mul	r3, r2, r3
+	ldr	r2, [sp, #68]
+	mul	r3, r2, r3
+	str	r3, [sp, #64]
 	mov	r3, #0
 	str	r3, [sp, #80]
 	mov	r3, #0
@@ -86,12 +86,12 @@ _start:
 	mov	r1, r3
 	ldr	r0, .L8+4
 	bl	GARLIC_printf
-	ldr	r1, [sp, #36]
+	ldr	r3, [sp, #36]
 	ldr	r2, [sp, #36]
-	mul	r3, r2, r1
-	str	r3, [sp, #44]
+	mul	r3, r2, r3
+	str	r3, [sp, #60]
 	ldr	r2, [sp, #80]
-	ldr	r3, [sp, #44]
+	ldr	r3, [sp, #60]
 	add	r3, r2, r3
 	str	r3, [sp, #80]
 	ldr	r3, [sp, #84]
@@ -115,37 +115,37 @@ _start:
 	ldr	r3, [sp, #80]
 	str	r3, [sp, #76]
 	mov	r3, #0
-	str	r3, [sp, #60]
+	str	r3, [sp, #56]
 	mov	r3, #0
 	str	r3, [sp, #72]
 .L6:
 	ldr	r3, [sp, #76]
 	ldr	r2, [sp, #76]
-	mul	r1, r2, r3
-	ldr	r2, [sp, #80]
-	add	r3, r2, r1
-	str	r3, [sp, #56]
+	mul	r2, r3, r2
+	ldr	r3, [sp, #80]
+	add	r3, r2, r3
+	str	r3, [sp, #52]
 	ldr	r3, [sp, #76]
 	lsl	r3, r3, #1
-	str	r3, [sp, #52]
-	ldr	r0, [sp, #56]
-	ldr	r1, [sp, #52]
+	str	r3, [sp, #48]
+	ldr	r0, [sp, #52]
+	ldr	r1, [sp, #48]
 	add	r3, sp, #20
 	add	r2, sp, #24
 	bl	GARLIC_divmod
 	ldr	r3, [sp, #24]
 	str	r3, [sp, #76]
-	ldr	r1, [sp, #36]
+	ldr	r3, [sp, #36]
 	ldr	r2, .L8+12
-	mul	r3, r2, r1
-	str	r3, [sp, #60]
-	ldr	r0, [sp, #60]
+	mul	r3, r2, r3
+	str	r3, [sp, #56]
+	ldr	r0, [sp, #56]
 	add	r3, sp, #12
 	add	r2, sp, #16
 	ldr	r1, .L8+12
 	bl	GARLIC_divmod
 	ldr	r3, [sp, #16]
-	str	r3, [sp, #60]
+	str	r3, [sp, #56]
 	ldr	r3, [sp, #72]
 	add	r3, r3, #1
 	str	r3, [sp, #72]
@@ -153,11 +153,11 @@ _start:
 	cmp	r3, #24
 	ble	.L6
 	mov	r3, #0
-	str	r3, [sp, #48]
+	str	r3, [sp, #44]
 	ldr	r1, [sp, #64]
 	ldr	r0, .L8+16
 	bl	GARLIC_printf
-	ldr	r2, [sp, #60]
+	ldr	r2, [sp, #56]
 	ldr	r1, [sp, #76]
 	ldr	r0, .L8+20
 	bl	GARLIC_printf
@@ -176,4 +176,4 @@ _start:
 	.word	.LC3
 	.word	.LC4
 	.size	_start, .-_start
-	.ident	"GCC: (devkitARM release 47) 7.1.0"
+	.ident	"GCC: (devkitARM release 46) 6.3.0"

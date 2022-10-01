@@ -68,13 +68,9 @@ _start:
 	sub	sp, sp, #44
 	str	r0, [sp, #4]
 	ldr	r3, [sp, #4]
-	add	r2, r3, #1
-	mov	r3, r2
-	lsl	r3, r3, #5
-	sub	r3, r3, r2
-	lsl	r3, r3, #2
-	add	r3, r3, r2
-	lsl	r3, r3, #4
+	add	r3, r3, #1
+	mov	r2, #2000
+	mul	r3, r2, r3
 	str	r3, [sp, #16]
 	mov	r3, #0
 	str	r3, [sp, #36]
@@ -94,24 +90,24 @@ _start:
 .L10:
 	ldr	r3, [sp, #20]
 	ldr	r2, [sp, #20]
-	mul	r0, r3, r2
+	mul	r2, r3, r2
 	ldr	r3, [sp, #24]
 	ldr	r1, [sp, #24]
-	mul	r2, r1, r3
-	sub	r3, r0, r2
+	mul	r3, r1, r3
+	sub	r3, r2, r3
 	str	r3, [sp, #12]
 	ldr	r3, [sp, #20]
-	lsl	r1, r3, #1
+	lsl	r3, r3, #1
 	ldr	r2, [sp, #24]
-	mul	r3, r2, r1
+	mul	r3, r2, r3
 	str	r3, [sp, #8]
 	ldr	r3, [sp, #20]
 	ldr	r2, [sp, #20]
-	mul	r0, r3, r2
+	mul	r2, r3, r2
 	ldr	r3, [sp, #24]
 	ldr	r1, [sp, #24]
-	mul	r2, r1, r3
-	add	r3, r0, r2
+	mul	r3, r1, r3
+	add	r3, r2, r3
 	str	r3, [sp, #36]
 	ldr	r2, [sp, #36]
 	ldr	r3, [sp, #16]
@@ -178,4 +174,4 @@ _start:
 	.word	.LC1
 	.word	.LC2
 	.size	_start, .-_start
-	.ident	"GCC: (devkitARM release 47) 7.1.0"
+	.ident	"GCC: (devkitARM release 46) 6.3.0"

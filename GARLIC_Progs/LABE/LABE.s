@@ -107,10 +107,10 @@ init_lab:
 .L4:
 	ldr	r3, .L16+4
 	ldr	r3, [r3]
-	sub	r3, r3, #1
-	ldr	r2, [sp, #28]
+	sub	r2, r3, #1
+	ldr	r3, [sp, #28]
 	cmp	r2, r3
-	bcc	.L5
+	bhi	.L5
 	mov	r3, #1
 	str	r3, [sp, #28]
 	b	.L6
@@ -133,20 +133,20 @@ init_lab:
 .L7:
 	ldr	r3, .L16+8
 	ldr	r3, [r3]
-	sub	r3, r3, #1
-	ldr	r2, [sp, #24]
+	sub	r2, r3, #1
+	ldr	r3, [sp, #24]
 	cmp	r2, r3
-	bcc	.L8
+	bhi	.L8
 	ldr	r3, [sp, #28]
 	add	r3, r3, #1
 	str	r3, [sp, #28]
 .L6:
 	ldr	r3, .L16+4
 	ldr	r3, [r3]
-	sub	r3, r3, #1
-	ldr	r2, [sp, #28]
+	sub	r2, r3, #1
+	ldr	r3, [sp, #28]
 	cmp	r2, r3
-	bcc	.L9
+	bhi	.L9
 	ldr	r3, .L16+8
 	ldr	r2, [r3]
 	mov	r3, r2
@@ -158,9 +158,9 @@ init_lab:
 	ldr	r2, .L16+4
 	ldr	r2, [r2]
 	sub	r2, r2, #2
-	mul	r1, r2, r3
-	ldr	r0, .L16+12
-	umull	r2, r3, r1, r0
+	mul	r3, r2, r3
+	ldr	r2, .L16+12
+	umull	r1, r3, r2, r3
 	lsr	r3, r3, #5
 	str	r3, [sp, #20]
 	ldr	r2, .L16+16
@@ -477,10 +477,10 @@ init_chars:
 	bl	GARLIC_printchar
 	ldr	r3, .L23
 	ldr	r3, [r3]
-	lsr	r3, r3, #1
-	ldr	r2, [sp, #16]
+	lsr	r2, r3, #1
+	ldr	r3, [sp, #16]
 	cmp	r2, r3
-	bcs	.L20
+	bls	.L20
 	ldr	r1, .L23+12
 	ldr	r2, [sp, #20]
 	mov	r3, r2
@@ -1230,4 +1230,4 @@ _start:
 	.word	laby
 	.word	points
 	.size	_start, .-_start
-	.ident	"GCC: (devkitARM release 47) 7.1.0"
+	.ident	"GCC: (devkitARM release 46) 6.3.0"

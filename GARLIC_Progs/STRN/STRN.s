@@ -22,7 +22,7 @@
 	.ascii	"\012X e Y pulsados\000"
 	.align	2
 .LC4:
-	.ascii	"*Introdueix un string*\012\000"
+	.ascii	"\012*Introdueix un string*\012\000"
 	.align	2
 .LC5:
 	.ascii	"\012Longitud de l'string: %d\000"
@@ -356,4 +356,4 @@ _start:
 	.word	.LC10
 	.word	.LC11
 	.size	_start, .-_start
-	.ident	"GCC: (devkitARM release 47) 7.1.0"
+	.ident	"GCC: (devkitARM release 46) 6.3.0"

@@ -1,6 +1,5 @@
-*.d
-*.o
-*.elf
-*.nds
-*.pnps
-*.DS_Store
+.Fullrun.sh.swp
+GARLIC_OS/arm7/MAKE.exe.stackdump
+GARLIC_OS/arm7/build/
+GARLIC_Progs/**/*.s
+GARLIC_Progs/BORR/BORR.s

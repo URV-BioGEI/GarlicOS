@@ -126,4 +126,4 @@ _start:
 .L11:
 	.word	.LC0
 	.size	_start, .-_start
-	.ident	"GCC: (devkitARM release 47) 7.1.0"
+	.ident	"GCC: (devkitARM release 46) 6.3.0"
