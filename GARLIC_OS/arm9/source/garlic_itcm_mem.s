@@ -33,7 +33,7 @@ _gm_reubicar:
 		
 	.LBuclesecciones:
 		cmp r5, #0			@; compara numero de entradas con contador 
-		beq .LFin
+		beq .LFinReubicar
 		sub r5, #1			@; añade uno al contador
 		ldr r0, [r8, r11]	@; carga el tipo de la sección
 		cmp r0, #9
@@ -82,7 +82,7 @@ _gm_reubicar:
 		add r11,#8
 		b .LBuclesecciones
 
-	.LFin:
+	.LFinReubicar:
 	
 	pop {r0-r12,pc}
 	
@@ -242,7 +242,7 @@ _gm_rsiTIMER1:
 		ldr r10, =_gd_pcbs
 		ldr r6, =_gd_stacks
 		
-		mov r3, #4				@; r3 = numero maximo de procesos TODO write with variable
+		mov r3, #16				@; r3 = numero maximo de procesos
 		mov r0, #0				@; r0 = indice para recorrer _gd_pcbs
 		
 		mov r8, #512 			@; r8 = tamaño del stack de un proceso
@@ -263,7 +263,7 @@ _gm_rsiTIMER1:
 		cmp r0, #0				@; Si es SO
 		ldreq r9, =0x0b003d00	@; @ System Stack
 		beq .LProcesoSOStack
-			
+		
 		mul r7, r0, r8			@; r7 = num zocalo * tamaño de la pila
 		add r9, r6, r7			@; r9 = puntero al principio de la pila del proceso i 
 	

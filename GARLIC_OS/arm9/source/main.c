@@ -132,7 +132,7 @@ void gestionSincronismos()
 			{	// actualizar visualización de tabla de zócalos
 				// liberar la memoria del proceso terminado
 				//_gm_liberarMem(i);
-				_gg_escribirLineaTabla(i, (i == _gi_za ? 2 : 3));
+				_gg_escribirLineaTabla(i, (i == _gi_za ? 2 : 3));  // Borrar nombre
 				_gg_escribir("%0* %d: proceso terminado\n", i, 0, 0);
 				_gd_sincMain &= ~mask;		// poner bit a cero
 			}
