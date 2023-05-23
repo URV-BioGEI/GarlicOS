@@ -94,17 +94,6 @@ void seleccionarPrograma()
 	intFunc start;
 	int ind_prog, argumento;
 
-	/*for (i = 1; i < 16; i++)		// buscar si hay otro proceso en marcha
-		if (_gd_pcbs[i].PID != 0)
-		{	_gd_pcbs[i].PID = 0;
-			_gd_nReady = 0;				// eliminar el proceso de cola de READY
-			_gd_wbfs[i].pControl = 0;	// resetear el contador de filas y caracteres
-			_gg_escribir("%3* %d: proceso destruido\n", i, 0, 0);
-			_gg_escribirLineaTabla(i, (i == _gi_za ? 2 : 3));
-			if (i != _gi_za)			// si no se trata del propio zócalo actual
-				_gg_generarMarco(i, 3);
-			break;					// abortar bucle
-		}*/
 	_gp_matarProc(_gi_za);
 	_gd_wbfs[_gi_za].pControl = 0;	// resetear el contador de filas y caracteres
 	_gg_escribir("%3* %d: proceso destruido\n", _gi_za, 0, 0);
@@ -204,12 +193,10 @@ void inicializarSistema() {
 //------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 //------------------------------------------------------------------------------
-	//intFunc start;
-	//int mtics, v;
+
 	int key;
 	inicializarSistema();
-	//_gt_showKB(0);
-	//while (1) _gp_WaitForVBlank();		// retardo del proceso de sistema
+
 	_gg_escribir("%3********************************", 0, 0, 0);
 	_gg_escribir("%1*                              *", 0, 0, 0);
 	_gg_escribir("%2* Sistema%1 Operativo%3 GARLIC 2.0 *", 0, 0, 0);
@@ -220,7 +207,6 @@ int main(int argc, char **argv) {
 
 	while (1)						// bucle infinito
 	{
-		//_gg_escribir("%c", _ga_getxybuttons(), 0, 0);
 		scanKeys();
 		key = keysDown();			// leer botones y controlar la interfaz
 		if (key != 0)				// de usuario

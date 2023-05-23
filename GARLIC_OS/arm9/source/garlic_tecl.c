@@ -27,8 +27,6 @@ char _gt_majset[4][30] = {{' ', '+', ' ', '!', ' ', '"', ' ', '#', ' ', '$', ' '
 	//_gt_set[1].set = _gt_minset;
 void _gt_initKB()
 {
-	//lcdMainOnTop();
-
 	int i;
 	
 	/* Instalem la rsi del IRQ IPC SYNC de la NDS:
@@ -57,12 +55,6 @@ void _gt_initKB()
 		*/
 	irqEnable(IRQ_IPC_SYNC | IRQ_FIFO_NOT_EMPTY);	
 	
-	/* Inicializamos procesador gráfico en el modo 0 (los 4 fondos en modo texto) */
-	//videoSetModeSub(MODE_0_2D);
-	
-	/* Asignamos el banco de memoria B como fondo principal*/
-	//vramSetBankC(VRAM_C_SUB_BG_0x06200000); // ya se hace en initgrafB quiza por eso no se ve la tabla
-	
 	/*	arg 0: Layer, capa de fondo. (0-3) siendo 0 más prioritario
 			bg1	-> cursor
 			bg1	-> linea de texto
@@ -84,16 +76,6 @@ void _gt_initKB()
 	_gt_mapbasebox = bgGetMapPtr(_gt_bgbox);
 	_gt_mapbasecursor = bgGetMapPtr(_gt_bgcursor);
 		
-	/* Descomprimimos las baldosas de GARLIC y los copiamos en la posición de mem 
-	donde estan definidas la posicion de las baldosas en uno de los fondos, debido 
-	a que se ha indicado que todos los mapas tienen su mapa de baldosas en el mismo 
-	sitio solamente necesitamos hacer una copia */
-	//decompress(garlic_fontTiles, bgGetGfxPtr(_gt_bgbox), LZ77Vram);
-	
-	/* Copiamos la paleta de colores de GARLIC en la paleta de colores del procesador 
-	secundario */
-	//dmaCopy(garlic_fontPal, BG_PALETTE_SUB, garlic_fontPalLen);
-	
 	/* Carreguem els missatges */
 				/*   I  n  p  u  t     f  o   r    z  0 0      (  P  I  D    0000         )  :		*/
 	int str1[26] = {41,78,80,85,84,0,70,79,82,0,90,16,16,0,8,48,41,36,0,16,16,16,16,16,9,26};
@@ -104,9 +86,6 @@ void _gt_initKB()
 	for(i=0; i<(32*12); i++){
 		_gt_mapbaseinfo[i]=(128*3)+95;
 	}
-	
-	// Cursor
-	//_gt_mapbasecursor[166]=128*3+113;
 
 	// Quadre per l'esquerra
 	_gt_mapbasebox[32*2]=32*3+2;
@@ -298,7 +277,6 @@ void _gt_hideKB()
 	bgHide(_gt_bgcursor);
 	
 	bgShow(_gs_bgtable);
-
 	
 	_gt_kbvisible = false;	// indiquem que teclat amagat	
 }
