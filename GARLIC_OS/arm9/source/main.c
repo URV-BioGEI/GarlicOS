@@ -161,10 +161,10 @@ void inicializarSistema() {
 
 	_gg_iniGrafA();			// inicializar procesadores gráficos
 	_gs_iniGrafB();
-	/*for (v = 0; v < 4; v++)	// para todas las ventanas
+	for (int v = 0; v < 16; v++)	// para todas las ventanas
 	{	_gg_generarMarco(v, 0);
 		_gd_wbfs[v].pControl = 0;		// inicializar los buffers de ventana
-	}*/
+	}
 	_gs_dibujarTabla();
 
 	_gd_seed = *punixTime;	// inicializar semilla para números aleatorios con
