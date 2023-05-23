@@ -12,7 +12,7 @@
 	.global _gd_pidz	 		@; Identificador de proceso + zócalo actual
 _gd_pidz:	.word 0
 
-	.global _gd_pidCount		@; Contador global de PIDs
+	.global _gd_pidCount		@; Contador global de PIDs
 _gd_pidCount:	.word 0
 
 	.global _gd_tickCount		@; Contador global de tics
@@ -106,9 +106,6 @@ _gt_cursor_pos: .space 1
 
 	.global _gt_PIDZ_tmp		@; Buffer de caracters que s'utilitza com a variable temporal per a mostrar PID i socol per pantalla
 _gt_PIDZ_tmp: .space 6
-
-	.global _gt_button_tics		@; Variable per a normalitzar la velocitat de reacció dels botons per part de la rsi de teclat
-_gt_button_tics: .space 1
 	
 	.global _gt_XYbuttons		@; Variable que conté l'estat dels botons X i Y (bit 0 = 1; X apretat, sino soltat, bit 1 = 1; Y apretat, sino soltat)
 _gt_XYbuttons: .space 1
@@ -116,8 +113,6 @@ _gt_XYbuttons: .space 1
 	.global _gt_CAPS_lock		@; Variable booleana que indica si el bloc majúscules es troba activat (true) o n (false)
 _gt_CAPS_lock: .space 1		
 
-	.global _gt_inner_IF		@; ///Si la variable es 0 no shan d'atendre interrupcions d'escriptura (hold) si esta a 1 nomes s'atenen interrupcions de soltar tecla (release)
-_gt_inner_IF: .space 1		
 
 .end
 
