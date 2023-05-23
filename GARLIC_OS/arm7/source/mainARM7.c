@@ -91,7 +91,7 @@ int main() {
 	unsigned int posarrayx, posarrayy, codi, numcaselles, missatgeanterior = 1, missatge = 0, tics = 0; 
 	
 	irqInit(); // iniciem sistema irq de l'arm 7
-	touchInit(); // iniciem sistema tactil
+	//touchInit(); // iniciem sistema tactil
 	readUserSettings();			// configurar parámetros lectura Touch Screen
 	REG_IPC_FIFO_CR = IPC_FIFO_ENABLE | IPC_FIFO_SEND_CLEAR; //  | IPC_FIFO_RECV_IRQ | 1 << 15 | 1 << 10l
 	irqEnable(IRQ_VBLANK);	
