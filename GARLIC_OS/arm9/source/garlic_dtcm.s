@@ -72,6 +72,9 @@ quociente: .space 4
 	.global residuo
 residuo: .space 4
 
+	.global _gm_zocMem
+_gm_zocMem:	.space 768			@; vector de ocupación de franjas mem.
+
 @;VARIABLES GLOBALS AFEGIDES
 
 @; progT
