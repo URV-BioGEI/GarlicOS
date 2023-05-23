@@ -248,7 +248,7 @@ _gs_iniGrafB:
 
  @; bg0B = bgInitSub(0, BgType_Text8bpp, BgSize_T_256x256, map_base, tile_base);
 	ldr r0, =0x04001008			@; R0 = dir. registro control REG_BG0CNT_SUB
-	mov r1, #0x84				@; R1 -> priority = 0 (bits 1..0 = 00)
+	mov r1, #0b10000100			@; R1 -> priority = 0 (bits 1..0 = 00)
 								@; 		 tile_base = 1 (bits 5..2 = 0001)
 								@;		 BgType_Text8bpp (bit 7 = 1)
 								@;		 map_base = 0 (bits 12..8 = 00000)

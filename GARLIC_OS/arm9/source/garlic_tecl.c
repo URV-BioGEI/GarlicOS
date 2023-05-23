@@ -58,10 +58,10 @@ void _gt_initKB()
 	irqEnable(IRQ_IPC_SYNC | IRQ_FIFO_NOT_EMPTY);	
 	
 	/* Inicializamos procesador gráfico en el modo 0 (los 4 fondos en modo texto) */
-	videoSetModeSub(MODE_0_2D);
+	//videoSetModeSub(MODE_0_2D);
 	
 	/* Asignamos el banco de memoria B como fondo principal*/
-	vramSetBankC(VRAM_C_SUB_BG_0x06200000);
+	//vramSetBankC(VRAM_C_SUB_BG_0x06200000); // ya se hace en initgrafB quiza por eso no se ve la tabla
 	
 	/*	arg 0: Layer, capa de fondo. (0-3) siendo 0 más prioritario
 			bg1	-> cursor
@@ -72,25 +72,27 @@ void _gt_initKB()
 		arg 3: MapBase = n -> @fondo + n*2KB; @base -> 0x0600 0000
 		arg 4: TileBase = n -> @fondo + n*16KB 
 	*/
-	_gt_bginfo = bgInitSub(BG_PRIORITY(2), BgType_Text8bpp, BgSize_T_256x256, 4, 1);
-	_gt_bgbox = bgInitSub(BG_PRIORITY(1), BgType_Text8bpp, BgSize_T_256x256, 5, 1);
-	_gt_bgcursor = bgInitSub(BG_PRIORITY(0), BgType_Text8bpp, BgSize_T_256x256, 6, 1);
+	_gt_bginfo = bgInitSub(3, BgType_Text8bpp, BgSize_T_256x256, 4, 1);
+	_gt_bgbox = bgInitSub(2, BgType_Text8bpp, BgSize_T_256x256, 5, 1);
+	_gt_bgcursor = bgInitSub(1, BgType_Text8bpp, BgSize_T_256x256, 6, 1);
+	
+	_gs_bgtable =  bgInitSub(0, BgType_Text8bpp, BgSize_T_256x256, 0, 1);
 	
 	/* Inicializamos las variables globales de dirección del mapa de baldosas de los diferentes
 	fondos */
 	_gt_mapbaseinfo = bgGetMapPtr(_gt_bginfo);
 	_gt_mapbasebox = bgGetMapPtr(_gt_bgbox);
 	_gt_mapbasecursor = bgGetMapPtr(_gt_bgcursor);
-	
+		
 	/* Descomprimimos las baldosas de GARLIC y los copiamos en la posición de mem 
 	donde estan definidas la posicion de las baldosas en uno de los fondos, debido 
 	a que se ha indicado que todos los mapas tienen su mapa de baldosas en el mismo 
 	sitio solamente necesitamos hacer una copia */
-	decompress(garlic_fontTiles, bgGetGfxPtr(_gt_bgbox), LZ77Vram);
+	//decompress(garlic_fontTiles, bgGetGfxPtr(_gt_bgbox), LZ77Vram);
 	
 	/* Copiamos la paleta de colores de GARLIC en la paleta de colores del procesador 
 	secundario */
-	dmaCopy(garlic_fontPal, BG_PALETTE_SUB, garlic_fontPalLen);
+	//dmaCopy(garlic_fontPal, BG_PALETTE_SUB, garlic_fontPalLen);
 	
 	/* Carreguem els missatges */
 				/*   I  n  p  u  t     f  o   r    z  0 0      (  P  I  D    0000         )  :		*/
@@ -284,6 +286,8 @@ void _gt_showKB(char zoc)
 	bgShow(_gt_bgbox);
 	bgShow(_gt_bgcursor);
 	
+	bgHide(_gs_bgtable);
+	
 	_gt_writePIDZ(zoc);	// escribim el pidz del procés rebut per parametre en la finestreta
 }
 
@@ -292,6 +296,9 @@ void _gt_hideKB()
 	bgHide(_gt_bginfo);		// amaguem tots els background
 	bgHide(_gt_bgbox);
 	bgHide(_gt_bgcursor);
+	
+	bgShow(_gs_bgtable);
+
 	
 	_gt_kbvisible = false;	// indiquem que teclat amagat	
 }

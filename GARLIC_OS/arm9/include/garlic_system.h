@@ -88,6 +88,8 @@ extern int _gd_res;				// resultat del residu
 
 extern char _gd_percentatge[4];	// string amb el percentatge d'ús de CPU
 
+extern int _gs_bgtable;  // Pointer to the mapbase of the table of process of the inferior secreen
+
 //------------------------------------------------------------------------------
 //	Rutinas de gestión de teclado (garlic_dtcm)
 //------------------------------------------------------------------------------

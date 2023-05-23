@@ -163,7 +163,7 @@ void inicializarSistema() {
 	_gs_iniGrafB();
 	
 	_gs_dibujarTabla();
-
+	
 	_gd_seed = *punixTime;	// inicializar semilla para números aleatorios con
 	_gd_seed <<= 16;		// el valor de tiempo real UNIX, desplazado 16 bits
 

@@ -4,3 +4,8 @@
 *.nds
 *.pnps
 *.DS_Store
+arm7/build
+arm7/MAKE.exe.stackdump
+GARLIC_OS/arm7/MAKE.exe.stackdump
+GARLIC_OS/arm7/build
+.Fullrun.sh.swp
