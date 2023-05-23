@@ -51,6 +51,10 @@ _gd_res:	.word 0				@; resultat del residu
 	.global _gd_percentatge
 _gd_percentatge:	.space 4	@; string amb el percentatge d'ús de CPU
 
+@; Variable para progT para poder ocultar la tabla de procesos
+
+	.global _gs_bgtable
+_gs_bgtable:	.space 4	@; Dirección del mapa de baldosas de la tabla de procesos
 
 @; progM
 	.global quo
@@ -112,6 +116,7 @@ _gt_XYbuttons: .space 1
 
 	.global _gt_CAPS_lock		@; Variable booleana que indica si el bloc majúscules es troba activat (true) o n (false)
 _gt_CAPS_lock: .space 1		
+
 
 
 .end
