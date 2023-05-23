@@ -232,7 +232,7 @@ _gm_rsiTIMER1:
 		
 		mov r4, r2, lsl #2	@; r4 =  indice * 2^2
 		ldr r0, [r3,r4]		@; r0 = pid + zocalo
-		and r0, #0xF		@; r0 = 4 bits bajos de _gd_pidz (numero de zocalo)
+		mov r0, r0, lsr #24
 		
 		bl _gm_pintaEstado
 		b .LRecorrerBlocked
