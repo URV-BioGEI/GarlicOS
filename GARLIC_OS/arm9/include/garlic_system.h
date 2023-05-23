@@ -252,6 +252,14 @@ extern int _gm_listaProgs(char* progs[]);
 */
 extern intFunc _gm_cargarPrograma(char *keyName);
 
+/* _gm_rsiTIMER1:	manejador de interrupciones del TIMER1 de la plataforma NDS,
+				que refrescará periódicamente la información de la tabla de
+				procesos relativa al uso de la pila y el estado del proceso */
+extern void _gm_rsiTIMER1();
+
+extern int quociente;
+
+extern int residuo;
 
 //------------------------------------------------------------------------------
 //	Rutinas de soporte a la gestión de memoria (garlic_itcm_mem.s)

@@ -14,7 +14,7 @@
 extern int * punixTime;		// puntero a zona de memoria con el tiempo real
 
 const short divFreq0 = -33513982/1024;		// frecuencia de TIMER0 = 1 Hz
-
+const short divFreq1 = -33513982/(1024*7);	// frecuencia de TIMER1 = 7 Hz
 const short divFreq2 = -33513982/(1024*4);	// frecuencia de TIMER2 = 4 Hz
 
 const char espaisBlanc[] ="   ";
@@ -130,6 +130,8 @@ void gestionSincronismos()
 		{
 			if (_gd_sincMain & mask)
 			{	// actualizar visualización de tabla de zócalos
+				// liberar la memoria del proceso terminado
+				//_gm_liberarMem(i);
 				_gg_escribirLineaTabla(i, (i == _gi_za ? 2 : 3));
 				_gg_escribir("%0* %d: proceso terminado\n", i, 0, 0);
 				_gd_sincMain &= ~mask;		// poner bit a cero
@@ -174,6 +176,11 @@ void inicializarSistema() {
 	irqEnable(IRQ_TIMER0);				// instalar la RSI para el TIMER0
 	TIMER0_DATA = divFreq0; 
 	TIMER0_CR = 0xC3;  	// Timer Start | IRQ Enabled | Prescaler 3 (F/1024)
+	
+	irqSet(IRQ_TIMER1, _gm_rsiTIMER1);
+	irqEnable(IRQ_TIMER1);				// instalar la RSI para el TIMER1
+	TIMER1_DATA = divFreq1; 
+	TIMER1_CR = 0xC3;  	// Timer Start | IRQ Enabled | Prescaler 3 (F/1024)
 
 	irqSet(IRQ_TIMER2, _gg_rsiTIMER2);
 	irqEnable(IRQ_TIMER2);			// instalar la RSI para el TIMER2

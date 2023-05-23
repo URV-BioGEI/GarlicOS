@@ -66,6 +66,12 @@ _gm_first_mem_pos: .word 0x01002000
 	.global res
 res:    .space 4
 
+	.global quociente
+quociente: .space 4
+	
+	.global residuo
+residuo: .space 4
+
 @;VARIABLES GLOBALS AFEGIDES
 
 @; progT
